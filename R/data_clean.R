@@ -58,9 +58,12 @@ remove_cyc_with_miss <- function(comb_dat, var_nm, fw_incl, use_na) {
 
 remove_days_no_sex <- function(comb_dat, var_nm) {
 
+    # obtain the column index for the intercourse variable
+    sex_col_idx <- which(colnames(comb_dat) == var_nm$sex)
+
     # obtain the indices of days in the data for which intercourse occured (may
     # include missing)
-    yes_sex_bool <- map_sex_to_bool(comb_dat[[var_nm]])
+    yes_sex_bool <- map_vec_to_bool(comb_dat[[sex_col_idx]])
 
     # keep all days in which intercourse occured or was missing
     keep_idx <- which(is.na(yes_sex_bool) | yes_sex_bool)
@@ -70,29 +73,28 @@ remove_days_no_sex <- function(comb_dat, var_nm) {
 
     # return data subset to only days in which intercourse occured or was
     # missing
-    sex_idx <- which(colnames(comb_dat) == var_nm$sex)
-    comb_dat[keep_idx, -sex_idx, drop = FALSE]
+    comb_dat[keep_idx, -sex_col_idx, drop = FALSE]
 }
 
 
 
 
 
-map_to_bool <- function(sex_vec) {
+map_vec_to_bool <- function(sex_vec) {
 
     allowed_yes <- c("y", "Y", "yes", "Yes")
 
     if (is.logical(sex_vec)) {
         return(sex_vec)
     }
-    else if (is.numeric) {
+    else if (is.numeric(sex_vec)) {
         return(sex_vec != 0)
     }
     else if (is.factor(sex_vec) || is.character(sex_vec)) {
         return(sex_vec %in% allowed_yes)
     }
     else {
-        # should have already verified the form of intercourse status
+        # illegal form of intercourse status
         stop("invalid form of sex_vec")
     }
 }

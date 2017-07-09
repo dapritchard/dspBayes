@@ -1,4 +1,4 @@
-get_model_obj <- function(comb_dat, var_nm, dsp_model) {
+derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
 
     # construct lists with each element a vector indexing all the observations
     # in the daily data for a given subject or cycle, respectively
@@ -35,7 +35,7 @@ get_model_obj <- function(comb_dat, var_nm, dsp_model) {
 
 
 get_subj_idx <- function(comb_dat, var_nm) {
-    id_vec <- unique(comb_dat[[var_nm$id]])
+    id_vec <- comb_dat[[var_nm$id]]
     unique_id_vec <- unique(id_vec)
     lapply(unique_id_vec, function(x) which(id_vec == x))
 }
@@ -71,7 +71,7 @@ day_to_cyc_preg <- function(comb_dat, var_nm, cyc_idx_list) {
 
         curr_idx <- cyc_idx_list[[i]]
 
-        curr_preg_vec <- map_to_bool(day_preg_vec[curr_idx])
+        curr_preg_vec <- map_vec_to_bool(day_preg_vec[curr_idx])
         if (length(table(curr_preg_vec)) > 1L) {
             msg <- paste0("inconsistent pregnancy data for subject ", curr_id,
                           "and cycle ", curr_cyc)
@@ -81,14 +81,14 @@ day_to_cyc_preg <- function(comb_dat, var_nm, cyc_idx_list) {
         cyc_preg_vec[i] <- curr_preg_vec[1L]
     }
 
-    # ensure that pregnancy is not constant over cycles
-    if (all(preg_vec)) {
-        stop("all of the cycles resulted in a pregnancy", call. = FALSE)
-    } else if (all(! preg_vec)) {
-        stop("none of the cycles resulted in a pregnancy", call. = FALSE)
-    }
+    # # ensure that pregnancy is not constant over cycles
+    # if (all(cyc_preg_vec)) {
+    #     stop("all of the cycles resulted in a pregnancy", call. = FALSE)
+    # } else if (all(! cyc_preg_vec)) {
+    #     stop("none of the cycles resulted in a pregnancy", call. = FALSE)
+    # }
 
-    preg_vec
+    cyc_preg_vec
 }
 
 
@@ -105,7 +105,7 @@ expand_model_rhs <- function(comb_dat, dsp_model) {
 
 
 
-var_categ_status <- get_var_categ_status(cov_miss_info, n_vars) {
+get_var_categ_status <- function(cov_miss_info, n_vars) {
 
     # the k-th element of `var_categ_status` tracks whether the k-th column in
     # the design matrix is a binary or continuous variable

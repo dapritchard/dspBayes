@@ -52,20 +52,33 @@ merge_dsp_data <- function(daily, cycle, baseline, var_nm, min_days_req) {
 
 
 
-get_var_nm <- function(formula, baseline, cycle, daily, id_name, cyc_name, sex_name, fw_name) {
+consolidate_var_nm <- function(dsp_model,
+                               baseline,
+                               cycle,
+                               daily,
+                               id_name,
+                               cyc_name,
+                               sex_name,
+                               fw_name) {
 
-    var_nm <- list()
+    # `all_nm` is the union of all of the variables that we need across the
+    # various datasets.  `all_base`, `all_cyc`, and `all_day` are the names of
+    # all of the variables in the model that are in the various datasets.
+    all_nm <- c(id_name, cyc_name, sex_name, fw_name, all.vars(dsp_model))
+    all_base <- colnames(baseline)[colnames(baseline) %in% all_nm]
+    all_cyc <- colnames(cycle)[colnames(cycle) %in% all_nm]
+    all_day <- colnames(daily)[colnames(daily) %in% all_nm]
 
-    # the union of all of the variables that we need across the various datasets
-    model_var_nm$all <- c(id_name, cyc_name, sex_name, fw_name, all.vars(formula))
-
-    # store name info for convenience
-    var_nm$id  <- id_name
-    var_nm$cyc <- cyc_name
-    var_nm$sex <- sex_name
-    var_nm$fw  <- fw_name
-
-    var_nm
+    # collect into a single list
+    list(id       = id_name,
+         cyc      = cyc_name,
+         sex      = sex_name,
+         fw       = fw_name,
+         preg     = all.vars(dsp_model)[1L],
+         all      = all_nm,
+         all_base = all_base,
+         all_cyc  = all_cyc,
+         all_day  = all_day)
 }
 
 

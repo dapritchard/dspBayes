@@ -188,7 +188,7 @@ dspDat <- function(dsp_model,
                    sex_name,
                    fw_name,
                    fw_incl,
-                   use_na      = "none"
+                   use_na      = "none",
                    min_days    = 0L,
                    return_comb = FALSE) {
 
@@ -230,13 +230,13 @@ dspDat <- function(dsp_model,
                                  sex_name,
                                  fw_name)
 
-    comb_dat <- merge_dsp_dat(daily, cycle, baseline, var_nm, min_days_req)
+    comb_dat <- merge_dsp_data(daily, cycle, baseline, var_nm, min_days_req)
 
     clean_dat <- remove_cyc_with_miss(comb_dat, var_nm, fw_incl, use_na)
 
     sex_obs_dat <- remove_days_no_sex(comb_dat, var_nm)
 
-    dspDat_obj <- get_model_obj(comb_dat, var_nm, dsp_model)
+    dspDat_obj <- derive_model_obj(sex_obs_dat, var_nm, dsp_model)
 
     #### TODO check if data is collinear or constant within outcome ####
 
