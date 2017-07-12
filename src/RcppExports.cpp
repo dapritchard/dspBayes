@@ -6,20 +6,18 @@
 using namespace Rcpp;
 
 // dsp_sampler
-void dsp_sampler();
-RcppExport SEXP dspBayes_dsp_sampler() {
+void dsp_sampler(Rcpp::NumericMatrix U);
+RcppExport SEXP dspBayes_dsp_sampler(SEXP USEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    dsp_sampler();
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type U(USEXP);
+    dsp_sampler(U);
     return R_NilValue;
 END_RCPP
 }
 
-RcppExport SEXP dspBayes_timesTwo(SEXP);
-
 static const R_CallMethodDef CallEntries[] = {
-    {"dspBayes_dsp_sampler", (DL_FUNC) &dspBayes_dsp_sampler, 0},
-    {"dspBayes_timesTwo", (DL_FUNC) &dspBayes_timesTwo, 1},
+    {"dspBayes_dsp_sampler", (DL_FUNC) &dspBayes_dsp_sampler, 1},
     {NULL, NULL, 0}
 };
 
