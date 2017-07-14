@@ -22,7 +22,7 @@ public:
     const double m_bnd_u;
 
     // number of observations in the data
-    const int m_nobs;
+    const int m_n_obs;
 
     // points to the beginning and one past the end of the data for U_h
     const double* m_Uh;

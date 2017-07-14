@@ -51,26 +51,39 @@ double GammaCateg::sample_gammma(double* U_prod_beta, const double* W, const dou
 
 // calculate the value of a_h tilde for fixed h, which is defined as:
 //
-//     a_h + sum_{ijk} u_{ijkh} * W_{ijk}
+//     a_h + sum_ijk u_ijkh * W_ijk
 //
 
 // ******* rework.  most W_ijk are 0.  *************
 
-double GammaCateg::calc_a_tilde(const double* W) {
+double GammaCateg::calc_a_tilde(const WGen W) {
 
-    double sumval = m_hyp_a;
+    double* w_vals, *w_days_idx;
+    int curr_w_day;
+    double sum_val;
 
-    // each iteration adds u_{ijkh} * W_{ijk} to `sumval`
-    for (int r = 0; r < m_nobs; ++r) {
+    w_vals = W.vals();
+    w_days_idx = W.days_idx();
+    sum_val = m_hyp_a;
 
-	// case: U_{ijkh} has value of 1, so add W_{ijk} to the running total.
-	// Otherwise U_{ijkh} has value of 0, so we can just ignore.
-	if (m_Uh[r]) {
-	    sumval += W[r];
+    // each iteration adds `u_ijkh * W_ijk` to `sum_val`
+    for (int r = 0; r < m_n_obs; ++r) {
+
+	// case: the r-th day corresponds to a random (i.e. possibly nonzero)
+	// `W_ijk`, so add the value of `u_ijkh * W_ijk` to `sum_val`
+	if (r == *w_days_idx) {
+
+	    // case: `U_ijkh` has value of 1, so add `W_ijk` to the running
+	    // total.  Otherwise `U_ijkh` has value of 0, so we can just ignore.
+	    if (m_Uh[r]) {
+		sum_val += *w_vals++;
+	    }
+
+	    ++w_days_idx;
 	}
     }
 
-    return sumval;
+    return sum_val;
 }
 
 
@@ -91,8 +104,8 @@ double GammaCateg::calc_a_tilde(const double* W) {
 
 double GammaCateg::calc_b_tilde(double* U_prod_beta, const double* xi) {
 
-    // initialize `sumval` to take the first term in the expression
-    double sumval = m_hyp_b;
+    // initialize `sum_val` to take the first term in the expression
+    double sum_val = m_hyp_b;
 
     // each iteration checks whether `r` corresponding to index ijk satisfies
     // the consitions of the outer sum, and if so, adds the value of the expression
@@ -110,12 +123,12 @@ double GammaCateg::calc_b_tilde(double* U_prod_beta, const double* xi) {
 	    // included in the outer sum, so add the value of the expression to
 	    // the running total
 	    if (X[r]) {
-		sumval += exp(log(xi[ d2s[r] ]) + U_prod_beta[r]);
+		sum_val += exp(log(xi[ d2s[r] ]) + U_prod_beta[r]);
 	    }
 	}
     }
 
-    return sumval;
+    return sum_val;
 }
 
 

@@ -1,29 +1,53 @@
-#ifndef DSP_BAYES_W_GEN_H_
-#define DSP_BAYES_W_GEN_H_
+#ifndef DSP_BAYES_SRC_W_GEN_H
+#define DSP_BAYES_SRC_W_GEN_H
+
 
 class WGen {
 
 public:
 
-    // storage for the W_ijk and sum_k W_ijk.  Note that we only provide storage
-    // for cycles that a pregnancy occurs, because these are the only cycles for
-    // which W is random.
-    int* m_W;
-    int* m_w_sum;
+    // storage for the `W_ijk` and `sum_k W_ijk`.  Note that we only provide
+    // storage for cycles that a pregnancy occurs, because these are the only
+    // cycles for which W is random.
+    //
+    // `m_w_vals` has storage for each day in the day-specific data that occurs
+    // during a cycle in which a pregnancy occurs, and `m_w_sums` has storage
+    // for each cycle in which a pregnancy occurs.
+    int* m_w_vals;
+    int* m_w_sums;
 
-    const int* m_preg_cyc_idx;
+    // maps the r-th element of `m_w_vals` to the t-th index in the day-specific
+    // data.  In other words, if `m_w_days_idx[r]` has a value of `t`, then
+    // `m_w_vals[r]` is the value of `m_w_vals` for the `t`-th day.
+    const int* m_w_days_idx;
 
+    // maps the r-th element of `m_w_sums` to the t-th index in the
+    // cycle-specific data.  In other words, if `m_w_cyc_idx[r]` has a value of
+    // `t`, then `m_w_sums[r]` is the value of `m_w_sums` for the `t`-th cycle.
+    const int* m_w_cyc_idx;
+
+    // the elements of `m_preg_cyc` each map a cycle to a block of days in the
+    // day-specific data
     const DayBlock* m_preg_cyc;
-    const DayBlock* m_preg_end;
 
-    m_n_preg_cyc;
+    // the number of cycles in the data in which a pregnancy occurred.  This
+    // value provides the amount of storage that is associated with `m_w_sums`,
+    // `m_w_cyc_idx`, and `m_preg_cyc`.
+    const int m_n_preg_cyc;
 
-    double* m_pois_mean;
+    // some scratch storage that we use to place multinomial probabilities into
+    double* m_mult_probs;
+
 
     WGen(Rcpp::List& preg_cyc_list);
+    ~WGen();
 
-    int* preg_cyc_idx() { return m_preg_cyc_idx; }
-    int* w_sum() { return m_w_sum; }
+    const int* WGen::sample(XiGen& xi, double* exp_uprod_beta);
+
+    const int* vals() { return m_w_vals; }
+    const int* sum_vals() { return m_w_sum; }
+    const int n_preg_cyc() { return m_n_preg_cyc; }
 };
+
 
 #endef
