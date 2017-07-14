@@ -11,6 +11,8 @@ public:
     int* m_W;
     int* m_w_sum;
 
+    const int* m_preg_cyc_idx;
+
     const DayBlock* m_preg_cyc;
     const DayBlock* m_preg_end;
 
@@ -20,7 +22,8 @@ public:
 
     WGen(Rcpp::List& preg_cyc_list);
 
-
+    int* preg_cyc_idx() { return m_preg_cyc_idx; }
+    int* w_sum() { return m_w_sum; }
 };
 
 #endef

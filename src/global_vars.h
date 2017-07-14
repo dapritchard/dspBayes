@@ -11,7 +11,6 @@ struct DayBlock {
 
 
 struct PregCyc : public Dayblock {
-    int W_idx;
     int subj_idx;
 };
 
