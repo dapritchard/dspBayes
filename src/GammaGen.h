@@ -4,6 +4,8 @@
 #include "Rcpp.h"
 
 
+
+
 class GammaGen {
 
 public:

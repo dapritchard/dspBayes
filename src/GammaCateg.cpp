@@ -54,6 +54,8 @@ double GammaCateg::sample_gammma(double* U_prod_beta, const double* W, const dou
 //     a_h + sum_{ijk} u_{ijkh} * W_{ijk}
 //
 
+// ******* rework.  most W_ijk are 0.  *************
+
 double GammaCateg::calc_a_tilde(const double* W) {
 
     double sumval = m_hyp_a;
