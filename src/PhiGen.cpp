@@ -3,12 +3,29 @@
 #include "ProposalFcns.h"
 
 using std::log;
+using std::lgamma;
 
 
-double PhiGen::sample() {
+
+
+PhiGen::PhiGen(Rcpp::NumericVector phi_hyper) :
+    // initialization list
+    m_hyp_c1(phi_hyper["c1"]),
+    m_hyp_c2(phi_hyper["c2"]),
+    m_delta(phi_hyper["delta"]),
+    m_phi_val(phi_hyper["mean"]),
+    m_accept_ctr(0),
+    m_is_same_as_prev(false),
+    m_prev_log_norm_const(0) {
+}
+
+
+
+
+double PhiGen::sample(const XiGen& xi) {
 
     // sample the proposal value for Metropolis step
-    proposal_val = ProposalFcns::abs_unif(m_val, m_delta);
+    proposal_val = ProposalFcns::abs_unif(m_phi_val, m_delta);
 
     // calculate `log(r)` where `r` is the acceptance ratio for the Metropolis
     // step
@@ -58,7 +75,7 @@ double PhiGen::calc_log_r(const XiGen& xi, double proposal_val) {
 double PhiGen::update_phi(double log_r, double proposal_val) {
 
     if (log(R::unif_rand()) < log_r) {
-	m_val = proposal_val;
+	m_phi_val = proposal_val;
 	m_is_same_as_prev = false;
 	++m_accept_ctr;
     }
@@ -66,7 +83,7 @@ double PhiGen::update_phi(double log_r, double proposal_val) {
 	m_is_same_as_prev = true;
     }
 
-    return m_val;
+    return m_phi_val;
 }
 
 
@@ -91,8 +108,8 @@ double PhiGen::calc_log_proportion_dgamma_xi(const XiGen& xi, double proposal_va
     double* xi_vals;
     int n_subj;
 
-    n_subj = xi.n_subj();
     xi_vals = xi.vals();
+    n_subj = xi.n_subj();
 
     // calculate the log of the normalizing constant for the proposal value
     numer_log_norm_const = m_n_subj * log_dgamma_norm_const(proposal_val);
@@ -101,10 +118,10 @@ double PhiGen::calc_log_proportion_dgamma_xi(const XiGen& xi, double proposal_va
     // the current value is the same as the previous (i.e. the proposal value
     // was not accepted), then the term need not be calculated again.
     if (m_is_same_as_prev) {
-	denom_log_norm_const = m_prev_log_norm_const;
+	denom_log_norm_const = m__log_norm_const;
     } else {
-	denom_log_norm_const = m_n_subj * log_dgamma_norm_const(m_val);
-	m_prev_log_norm_const = denom_log_norm_const;
+	denom_log_norm_const = m_n_subj * log_dgamma_norm_const(m_phi_val);
+	m__log_norm_const = denom_log_norm_const;
     }
 
     // calculate the ratio of the normalizing constants
@@ -118,7 +135,7 @@ double PhiGen::calc_log_proportion_dgamma_xi(const XiGen& xi, double proposal_va
 	log_kernel_ratio += log(curr_xi) - curr_xi;
     }
     // mutiply in the `phi^{*} - phi^(s)` term
-    log_kernel_ratio *= proposal_val - m_val;
+    log_kernel_ratio *= proposal_val - m_phi_val;
 
     return numer_log_norm_const - denom_log_norm_const + log_kernel_ratio;
 }
@@ -142,7 +159,7 @@ double PhiGen::calc_log_proportion_dgamma_phi(const XiGen& xi, double proposal_v
     double term1, term2;
 
     // (c_1 - 1) * log(phi^{*} / phi^(s))
-    term1 = (m_hyp_c1 - 1) * log(proposal_val - m_val);
+    term1 = (m_hyp_c1 - 1) * log(proposal_val - m_phi_val);
     // c2 * (phi^{*} - phi^(s))
     term2 = m_hyp_c2 * phi_diff;
 

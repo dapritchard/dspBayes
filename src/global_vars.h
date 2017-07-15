@@ -4,15 +4,6 @@
 extern int* d2s;
 
 
-struct DayBlock {
-    int day_beg_idx;
-    int n_days;
-};
-
-
-struct PregCyc : public Dayblock {
-    int subj_idx;
-};
 
 
 // each element corresponds to a cycle index with a pregnancy

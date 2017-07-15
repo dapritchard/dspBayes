@@ -18,15 +18,15 @@ public:
     const double m_hyp_a;
     const double m_hyp_b;
     const double m_hyp_p;
-    const double m_bnd_l
+    const double m_bnd_l;
     const double m_bnd_u;
-
-    // number of observations in the data
-    const int m_n_obs;
 
     // points to the beginning and one past the end of the data for U_h
     const double* m_Uh;
-    // onst double* m_Uh_end;
+
+    // number of observations in the data
+    const int m_n_days;
+
 
     GammaGen(Rcpp::NumericMatrix& U, int h);
 

@@ -1,12 +1,41 @@
-// #include "Rcpp.h"
+#include "Rcpp.h"
 #include "WGen.h"
 
-WGen::WGen(Rcpp::List& cycs_w_preg) {}
+
+WGen::WGen(Rcpp::List& preg_cyc,
+	   Rcpp::IntegerVector& w_days_idx,
+	   Rcpp::IntegerVector& w_cyc_idx,
+	   int fw_len) :
+    // initialization list
+    m_w_vals(new int[w_len]),
+    m_w_sums(new int[preg_cyc.size()]),
+    m_w_days_idx(w_days_idx.begin()),
+    m_w_cyc_idx(w_cyc_idx.begin()),
+    m_preg_cyc(new DayBlock[preg_cyc.size()]),
+    m_n_preg_cyc(n_preg_cyc),
+    m_mult_probs(new double[fw_len]) {
+
+    // create `DayBlock` structs that provide the indices in the day-specific
+    // data that correspond to the t-th pregnancy cycle
+    for (int t = 0; t < m_n_preg_cyc; ++t) {
+	m_preg_cyc[t] = DayBock(preg_cyc[t]["beg_idx"], preg_cyc[t]["n_days"]);
+    }
+}
 
 
 
 
-const int* WGen::sample(XiGen& xi, double* exp_uprod_beta) {
+WGen::~WGen() {
+    delete m_w_vals;
+    delete m_w_sums;
+    delete m_mult_probs;
+    delete m_preg_cyc;
+}
+
+
+
+
+const int* WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 
     // point to the beginning of the arrays storing the `W_ijk` and `sum_k
     // W_ijk`
@@ -14,6 +43,9 @@ const int* WGen::sample(XiGen& xi, double* exp_uprod_beta) {
     int* curr_w_sum = m_w_sums;
     // point to the beginning of the array storing the current values of `xi`
     const double* xi_vals = xi.vals();
+    // point to the beginning of the array storing the current values of `X_ijk
+    // * exp( u_{ijk}^T beta )`
+    const double* exp_uprod_beta = u_prod_beta.exp_vals();
 
     // each iteration samples new values for the `W_ijk` that were both (i) in
     // cycles that resulted in a pregnancy and were also (ii) days in which
@@ -23,7 +55,7 @@ const int* WGen::sample(XiGen& xi, double* exp_uprod_beta) {
 
 	// the day-specific index and number of days in the current cycle
 	PregCyc curr_cyc = m_preg_cyc[q];
-	int curr_beg_idx = curr_cyc.day_beg_idx;
+	int curr_beg_idx = curr_cyc.beg_idx;
 	int curr_n_days = curr_cyc.n_days;
 	int curr_subj_idx = curr_cyc.subj_idx;
 

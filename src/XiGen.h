@@ -1,13 +1,14 @@
 #ifndef DSP_BAYES_SRC_XI_GEN_H
 #define DSP_BAYES_SRC_XI_GEN_H
 
-#include "global_vars.h"
+#include "Rcpp.h"
+#include "DayBlock.h"
 
 
 class XiGen {
 
     // storage for the `xi_i` values
-    double* m_xi;
+    double* m_xi_vals;
 
     // the elements of `m_subj` each map an individual to a block of days from
     // the day-specific data
@@ -17,7 +18,7 @@ class XiGen {
     // storage that is associated with `m_n_subj`.
     const int m_n_subj;
 
-    XiGen();
+    XiGen(Rcpp::NumericVector xi_initial, Rcpp::List subj_days);
     ~XiGen();
 
     const double* XiGen::sample(WGen W, PhiGen phi, double* exp_uprod_beta);

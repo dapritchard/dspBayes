@@ -21,7 +21,7 @@ GammaCateg::GammaCateg() :
 // `m_beta_val`, and `m_gam_val` to reflect the newly sampled value of
 // gamma_h.
 
-double GammaCateg::sample_gammma(double* U_prod_beta, const double* W, const double* xi) {
+double GammaCateg::sample_gammma(const double* W, const double* xi, UProdBeta u_prod_beta) {
 
     double a_tilde, b_tilde, p_tilde;
 

@@ -39,13 +39,16 @@ public:
     double* m_mult_probs;
 
 
-    WGen(Rcpp::List& preg_cyc_list);
+    WGen(Rcpp::List& preg_cyc,
+	 Rcpp::IntegerVector& w_days_idx,
+	 Rcpp::IntegerVector& w_cyc_idx,
+	 int fw_len);
     ~WGen();
 
-    const int* WGen::sample(XiGen& xi, double* exp_uprod_beta);
-
+    const int* WGen::sample(XiGen& xi, UProdBeta& u_prod_beta);
     const int* vals() { return m_w_vals; }
     const int* sum_vals() { return m_w_sum; }
+    const int* days_idx() { return m_w_days_idx; }
     const int n_preg_cyc() { return m_n_preg_cyc; }
 };
 
