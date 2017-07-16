@@ -180,17 +180,17 @@
 # Mung data into format for use by mcmc sampler ================================
 
 dspDat <- function(dsp_model,
-                   baseline    = NULL,
-                   cycle       = NULL,
+                   baseline     = NULL,
+                   cycle        = NULL,
                    daily,
                    id_name,
                    cyc_name,
                    sex_name,
                    fw_name,
                    fw_incl,
-                   use_na      = "none",
-                   min_days    = 0L,
-                   return_comb = FALSE) {
+                   use_na       = "none",
+                   req_min_days = 0L,
+                   return_comb  = FALSE) {
 
     # TODO: check valid input
     # TODO: clean up summary fcn
@@ -230,7 +230,7 @@ dspDat <- function(dsp_model,
                                  sex_name,
                                  fw_name)
 
-    comb_dat <- merge_dsp_data(daily, cycle, baseline, var_nm, min_days_req)
+    comb_dat <- merge_dsp_data(daily, cycle, baseline, var_nm, req_min_days)
 
     clean_dat <- remove_cyc_with_miss(comb_dat, var_nm, fw_incl, use_na)
 

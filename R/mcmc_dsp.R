@@ -10,6 +10,12 @@ dsp <- function(dspDat,
                 progQuants = seq(0.1, 1.0, 0.1)) {
 
 
-    U <- matrix(1:25, 5, 5)
-    dsp_sampler()
+    dsp_sampler(U,
+                preg_cyc_list,
+                w_days_idx,
+                w_cyc_idx,
+                fw_len,
+                xi,
+                subj_days_list,
+                phi_hyper)
 }

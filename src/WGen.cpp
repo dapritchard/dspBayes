@@ -1,5 +1,8 @@
 #include "Rcpp.h"
 #include "WGen.h"
+#include "DayBlock.h"
+
+
 
 
 WGen::WGen(Rcpp::List& preg_cyc,
@@ -7,35 +10,29 @@ WGen::WGen(Rcpp::List& preg_cyc,
 	   Rcpp::IntegerVector& w_cyc_idx,
 	   int fw_len) :
     // initialization list
-    m_w_vals(new int[w_len]),
+    m_w_vals(new int[w_days_idx.size()]),
     m_w_sums(new int[preg_cyc.size()]),
     m_w_days_idx(w_days_idx.begin()),
     m_w_cyc_idx(w_cyc_idx.begin()),
-    m_preg_cyc(new DayBlock[preg_cyc.size()]),
-    m_n_preg_cyc(n_preg_cyc),
+    m_preg_cyc(PregCyc::list_to_arr(preg_cyc)),
+    m_n_preg_cyc(preg_cyc.size()),
     m_mult_probs(new double[fw_len]) {
-
-    // create `DayBlock` structs that provide the indices in the day-specific
-    // data that correspond to the t-th pregnancy cycle
-    for (int t = 0; t < m_n_preg_cyc; ++t) {
-	m_preg_cyc[t] = DayBock(preg_cyc[t]["beg_idx"], preg_cyc[t]["n_days"]);
-    }
 }
 
 
 
 
 WGen::~WGen() {
-    delete m_w_vals;
-    delete m_w_sums;
-    delete m_mult_probs;
-    delete m_preg_cyc;
+    delete[] m_w_vals;
+    delete[] m_w_sums;
+    delete[] m_mult_probs;
+    delete[] m_preg_cyc;
 }
 
 
 
 
-const int* WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
+void WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 
     // point to the beginning of the arrays storing the `W_ijk` and `sum_k
     // W_ijk`
@@ -60,7 +57,7 @@ const int* WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 	int curr_subj_idx = curr_cyc.subj_idx;
 
 	// variable to store the value of `sum_k W_ijk` for the current cycle
-	double sum_val = 0;
+	double curr_sum_val = 0;
 
 	// each iteration calculates `X_ijk * exp( u_{ijk}^T beta )` for the
 	// v-th day in the current cycle with a random `W_ijk` in the cycle,
@@ -69,21 +66,20 @@ const int* WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 	for (int v = 0; v < curr_n_days; ++v) {
 
 	    // day-specific index of the v-th day in the current cycle
-	    r = curr_beg_idx + v;
+	    int r = curr_beg_idx + v;
 
 	    // copy and add in the `X_ijk * exp( u_{ijk}^T beta )` term to the running
 	    // total for `sum_k W_ijk`
-	    m_mult_probs[v] = exp_uprod_beta[r];
-	    curr_w_sum += m_mult_probs[v];
+	    curr_sum_val += m_mult_probs[v] = exp_uprod_beta[r];
 	}
 
 	// normalize the multinomial probabilities
 	for (int v = 0; v < curr_n_days; ++v) {
-	    m_mult_probs[v] /= curr_w_sum;
+	    m_mult_probs[v] /= curr_sum_val;
 	}
 
 	// calculate `xi_i * sum_k { X_ijk * exp( u_{ijk}^T beta ) }`
-	double pois_mean = xi_vals[ curr_subj_idx ] * exp(curr_w_sum);
+	double pois_mean = xi_vals[ curr_subj_idx ] * exp(curr_sum_val);
 
 	// sample new `sum_k W_ijk`
 	*curr_w_sum = R::rpois(pois_mean);
@@ -93,9 +89,8 @@ const int* WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 
 	// update pointers to point to the next elements of `W_ijk` and `sum_k
 	// W_ijk`
-	curr_w += n_days;
+	curr_w += curr_n_days;
 	++curr_w_sum;
     }
 
-    return m_w_vals;
 }

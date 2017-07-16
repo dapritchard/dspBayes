@@ -25,7 +25,7 @@ public:
 };
 
 
-void update_exp() {
+void UProdBeta::update_exp() {
     for (int i = 0; i < m_n_days; i++) {
 	m_exp_vals[i] = std::exp(m_vals[i]);
     }

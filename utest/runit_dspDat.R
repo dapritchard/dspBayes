@@ -7,7 +7,6 @@ fw_name <- "reverseDay"
 fw_incl <- -17:-13
 model_formula <- formula(pregInd ~ 0 + factor(reverseDay) + age + bmi + gravid + cycleLen + lube)
 
-
 dspDat_obj <- dspDat(model_formula,
                      baseline,
                      cycle,
@@ -17,6 +16,6 @@ dspDat_obj <- dspDat(model_formula,
                      sex_name,
                      fw_name,
                      fw_incl,
-                     use_na      = "all",
-                     min_days    = 0L,
-                     return_comb = FALSE)
+                     use_na       = "all",
+                     req_min_days = 0L,
+                     return_comb  = FALSE)

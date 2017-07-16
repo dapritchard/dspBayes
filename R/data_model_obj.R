@@ -37,7 +37,10 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
 get_subj_idx <- function(comb_dat, var_nm) {
     id_vec <- comb_dat[[var_nm$id]]
     unique_id_vec <- unique(id_vec)
-    lapply(unique_id_vec, function(x) which(id_vec == x))
+    lapply(unique_id_vec, function(x) {
+        curr_idx <- which(id_vec == x)
+        c(beg_idx = head(curr_idx, 1L), n_days = length(curr_idx))
+    })
 }
 
 
@@ -52,8 +55,9 @@ get_cyc_idx <- function(comb_dat, var_nm) {
 
         curr_id <- keypairs[i, var_nm$id]
         curr_cyc <- keypairs[i, var_nm$cyc]
-        cyc_idx_list[[i]] <- (comb_dat[[var_nm$id]] == curr_id &
-                              comb_dat[[var_nm$cyc]] == curr_cyc) %>% which
+        curr_idx <- which(comb_dat[[var_nm$id]] == curr_id &
+                          comb_dat[[var_nm$cyc]] == curr_cyc)
+        cyc_idx_list[[i]] <- c(beg_idx = head(curr_idx, 1L), n_days = length(curr_idx))
     }
 
     cyc_idx_list

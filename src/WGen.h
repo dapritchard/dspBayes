@@ -1,6 +1,10 @@
 #ifndef DSP_BAYES_SRC_W_GEN_H
 #define DSP_BAYES_SRC_W_GEN_H
 
+class XiGen;
+#include "DayBlock.h"
+#include "UProdBeta.h"
+
 
 class WGen {
 
@@ -28,7 +32,7 @@ public:
 
     // the elements of `m_preg_cyc` each map a cycle to a block of days in the
     // day-specific data
-    const DayBlock* m_preg_cyc;
+    const PregCyc* m_preg_cyc;
 
     // the number of cycles in the data in which a pregnancy occurred.  This
     // value provides the amount of storage that is associated with `m_w_sums`,
@@ -45,12 +49,15 @@ public:
 	 int fw_len);
     ~WGen();
 
-    const int* WGen::sample(XiGen& xi, UProdBeta& u_prod_beta);
+    void sample(XiGen& xi, UProdBeta& u_prod_beta);
     const int* vals() { return m_w_vals; }
-    const int* sum_vals() { return m_w_sum; }
+    const int* sum_vals() { return m_w_sums; }
     const int* days_idx() { return m_w_days_idx; }
     const int n_preg_cyc() { return m_n_preg_cyc; }
+
 };
 
 
-#endef
+#include "XiGen.h"
+
+#endif

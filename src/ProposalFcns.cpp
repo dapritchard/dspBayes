@@ -1,10 +1,7 @@
-class ProposalGen {
 
 
-};
 
-
-double ProposalGen::abs_unif(double val, double delta) {
+double ProposalFcns::abs_unif(double val, double delta) {
 
     // sample from a `unif(val - delta, val + delta)` distribution.  The
     // expression below is due to the fact that the formula to sample a `unif(a,
