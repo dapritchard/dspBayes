@@ -7,23 +7,25 @@
 #define GAMMA_GEN_TYPE_SMOOTH 3
 
 
-GammaGen::GammaGen(Rcpp::NumericMatrix& U, Rcpp::NumericVector& coef_specs) :
+GammaGen::GammaGen(const Rcpp::NumericMatrix& U,
+		   const Rcpp::NumericVector& coef_specs) :
     // initialization list
     m_beta_val(0),
     m_gam_val(1),
-    m_hyp_p(coef_specs["hyp_p"]),
     m_hyp_a(coef_specs["hyp_a"]),
     m_hyp_b(coef_specs["hyp_b"]),
+    m_hyp_p(coef_specs["hyp_p"]),
     m_bnd_l(coef_specs["bnd_l"]),
-    m_bnd_u(coef_specs["bnd_u"])
-    m_Uh(U.begin() + coef_specs("h") * U.nrow()),
+    m_bnd_u(coef_specs["bnd_u"]),
+    m_Uh(U.begin() + ((int) coef_specs["h"]) * U.nrow()),
     m_n_days(U.nrow())  {
 }
 
 
 
 
-GammaGen** GammaGen::list_to_arr(Rcpp::List& gamma_specs) {
+GammaGen** GammaGen::list_to_arr(const Rcpp::NumericMatrix& U,
+				 const Rcpp::List& gamma_specs) {
 
     GammaGen** gamma = new GammaGen*[gamma_specs.size()];
 
@@ -33,7 +35,7 @@ GammaGen** GammaGen::list_to_arr(Rcpp::List& gamma_specs) {
 	// `gamma_specs[t]`
 	switch(gamma_specs[t]["type"]) {
 	case GAMMA_GEN_TYPE_CATEG:
-	    gamma[t] = new GammaCateg(gamma_specs[t]);
+	    gamma[t] = new GammaCateg(U, gamma_specs[t]);
 	    break;
 	case GAMMA_GEN_TYPE_ADAPT:
 	    // ******************** TODO

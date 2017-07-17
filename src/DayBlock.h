@@ -6,15 +6,23 @@
 
 struct DayBlock {
 
-    const int beg_idx;
-    const int n_days;
+    int beg_idx;
+    int n_days;
 
-    // DayBlock() : beg_idx(0), n_days(0) {}
+    DayBlock() : beg_idx(0), n_days(0) {}
 
     DayBlock(int beg_idx, int n_days) :
 	beg_idx(beg_idx),
 	n_days(n_days) {
     }
+
+    // DayBlock& operator=(const DayBlock& rhs) {
+    // 	if (&rhs != this) {
+    // 	    beg_idx = rhs.beg_idx;
+    // 	    n_days = rhs.n_days;
+    // 	}
+    // 	return *this;
+    // }
 
     static DayBlock* list_to_arr(Rcpp::List& block_list);
 };
@@ -22,7 +30,9 @@ struct DayBlock {
 
 struct PregCyc : public DayBlock {
 
-    const int subj_idx;
+    int subj_idx;
+
+    PregCyc() : DayBlock(), subj_idx(0) {}
 
     PregCyc(int beg_idx, int n_days, int subj_idx) :
 	DayBlock(beg_idx, n_days),

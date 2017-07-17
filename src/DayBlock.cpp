@@ -16,8 +16,9 @@ DayBlock* DayBlock::list_to_arr(Rcpp::List& block_list) {
 
     // each iteration constructs a new struct based upon the information
     // provided by the t-th element of `block_list`
-    for (int t = 0; t < m_n_subj; ++t) {
-	block_arr[t] = DayBlock(block_list[t]["beg_idx"], block_list[t]["n_days"]);
+    for (int t = 0; t < block_list.size(); ++t) {
+	block_arr[t] = DayBlock(block_list[t]["beg_idx"],
+				block_list[t]["n_days"]);
     }
 
     return block_arr;
@@ -40,7 +41,7 @@ PregCyc* PregCyc::list_to_arr(Rcpp::List& block_list) {
 
     // each iteration constructs a new struct based upon the information
     // provided by the t-th element of `block_list`
-    for (int t = 0; t < m_n_subj; ++t) {
+    for (int t = 0; t < block_list.size(); ++t) {
 	block_arr[t] = PregCyc(block_list[t]["beg_idx"],
 			       block_list[t]["n_days"],
 			       block_list[t]["subj_idx"]);

@@ -33,7 +33,7 @@ public:
     GammaGen(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& coef_specs);
     virtual ~GammaGen();
 
-    static GammaGen** list_to_arr(Rcpp::List gamma_specs);
+    static GammaGen** list_to_arr(const Rcpp::NumericMatrix& U, const Rcpp::List& gamma_specs);
     // virtual double samp_gam(const std::vector<double>& U_prod_beta,
     // 			    const std::vector<double>& W);
 
