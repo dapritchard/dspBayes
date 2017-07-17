@@ -31,8 +31,9 @@ public:
 
 
     GammaGen(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& coef_specs);
+    virtual ~GammaGen();
 
-    static GammaGen* list_to_arr(Rcpp::List gamma_list);
+    static GammaGen** list_to_arr(Rcpp::List gamma_specs);
     // virtual double samp_gam(const std::vector<double>& U_prod_beta,
     // 			    const std::vector<double>& W);
 
@@ -62,12 +63,12 @@ public:
 
     GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
 
-    void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta);
-    double calc_a_tilde(const WGen& W);
-    double calc_b_tilde(const UProdBeta& u_prod_beta, const XiGen& xi);
+    void sample(WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const double* X);
+    double calc_a_tilde(WGen& W);
+    double calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const double* X);
     double calc_p_tilde(double a_tilde, double b_tilde);
     double sample_gamma(double a_tilde, double b_tilde, double p_tilde);
-    void add_uh_prod_beta_h(double* U_prod_beta_no_h);
+    void add_uh_prod_beta_h(UProdBeta& u_prod_beta_no_h);
     double log_dgamma_norm_const(double a, double b);
     double log_dgamma_trunc_const(double a, double b);
     double init_log_d2_const_terms();

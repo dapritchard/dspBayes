@@ -34,6 +34,11 @@ public:
     // day-specific data
     const PregCyc* m_preg_cyc;
 
+    // the number of days for which intercourse occured during a cycle that
+    // resulted in a pregnancy.  This value provides the amount of storage that
+    // is associated with `m_w_vals`.
+    const int m_n_days;
+
     // the number of cycles in the data in which a pregnancy occurred.  This
     // value provides the amount of storage that is associated with `m_w_sums`,
     // `m_w_cyc_idx`, and `m_preg_cyc`.
@@ -53,7 +58,8 @@ public:
     const int* vals() { return m_w_vals; }
     const int* sum_vals() { return m_w_sums; }
     const int* days_idx() { return m_w_days_idx; }
-    const int n_preg_cyc() { return m_n_preg_cyc; }
+    int n_days() { return m_n_days; }
+    int n_preg_cyc() { return m_n_preg_cyc; }
 
 };
 

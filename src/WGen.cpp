@@ -15,6 +15,7 @@ WGen::WGen(Rcpp::List& preg_cyc,
     m_w_days_idx(w_days_idx.begin()),
     m_w_cyc_idx(w_cyc_idx.begin()),
     m_preg_cyc(PregCyc::list_to_arr(preg_cyc)),
+    m_n_days(w_days_idx.size()),
     m_n_preg_cyc(preg_cyc.size()),
     m_mult_probs(new double[fw_len]) {
 }

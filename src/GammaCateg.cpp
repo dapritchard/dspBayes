@@ -26,7 +26,7 @@ GammaCateg::GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& 
 // `m_beta_val`, and `m_gam_val` to reflect the newly sampled value of
 // gamma_h.
 
-void GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta) {
+void GammaCateg::sample(WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const double* X) {
 
     double a_tilde, b_tilde, p_tilde;
 
@@ -37,11 +37,11 @@ void GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta) 
     // the side-effect of changing the values of the data pointed to by
     // `u_prod_beta` to instead have the values given by `U * beta - U_h *
     // beta_h`.
-    b_tilde = calc_b_tilde(u_prod_beta, xi);
+    b_tilde = calc_b_tilde(u_prod_beta, xi, X);
     p_tilde = calc_p_tilde(a_tilde, b_tilde);
 
     // sample a new value for gamma_h and update beta_h
-    m_gam_val = sample_gammma(a_tilde, b_tilde, p_tilde);
+    m_gam_val = sample_gamma(a_tilde, b_tilde, p_tilde);
     m_beta_val = log(m_gam_val);
 
     // change the values of the data pointed to by `u_prod_beta` to take the
@@ -56,34 +56,33 @@ void GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta) 
 //
 //     a_h + sum_ijk u_ijkh * W_ijk
 //
+// This requires merely stepping through the indices `ijk` that correspond to
+// cycles in which a pregnancy occured and checking whether `u_ijkh` has a value
+// of 1 for those indices.
 
-// ******* rework.  most W_ijk are 0.  *************
+double GammaCateg::calc_a_tilde(WGen& W) {
 
-double GammaCateg::calc_a_tilde(const WGen& W) {
+    // a pointer to the values of W, the indices that the values correspond to,
+    // and one past the end of the values of W
+    const int* w_vals = W.vals();
+    const int* w_days_idx = W.days_idx();
+    const int* w_end = w_days_idx + W.n_days();
 
-    double* w_vals, *w_days_idx;
-    int curr_w_day;
-    double sum_val;
+    // initialize `sum_val` to the first term in the sum
+    double sum_val = m_hyp_a;
 
-    w_vals = W.vals();
-    w_days_idx = W.days_idx();
-    sum_val = m_hyp_a;
+    // each iteration adds `u_ijkh * W_ijk` to `sum_val` for the indices `ijk`
+    // that occur during cycles in which a pregnancy occured (otherwise `W_ijk`
+    // is guaranteed to be 0)
+    for ( ; w_days_idx < w_end; ++w_days_idx) {
 
-    // each iteration adds `u_ijkh * W_ijk` to `sum_val`
-    for (int r = 0; r < m_n_obs; ++r) {
-
-	// case: the r-th day corresponds to a random (i.e. possibly nonzero)
-	// `W_ijk`, so add the value of `u_ijkh * W_ijk` to `sum_val`
-	if (r == *w_days_idx) {
-
-	    // case: `U_ijkh` has value of 1, so add `W_ijk` to the running
-	    // total.  Otherwise `U_ijkh` has value of 0, so we can just ignore.
-	    if (m_Uh[r]) {
-		sum_val += *w_vals++;
-	    }
-
-	    ++w_days_idx;
+	// case: `U_ijkh` has value of 1, so add `W_ijk` to the running
+	// total.  Otherwise `U_ijkh` has value of 0, so we can just ignore.
+	if (m_Uh[*w_days_idx]) {
+	    sum_val += *w_vals;
 	}
+
+	++w_vals;
     }
 
     return sum_val;
@@ -105,9 +104,10 @@ double GammaCateg::calc_a_tilde(const WGen& W) {
 // the data pointed to by `u_prod_beta` to instead have the values given by `U *
 // beta - U_h * beta_h`.
 
-double GammaCateg::calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi) {
+double GammaCateg::calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const double* X) {
 
-    const double*
+    double* ubeta = u_prod_beta.vals();
+    const double* xi_vals = xi.vals();
 
     // initialize `sum_val` to take the first term in the expression
     double sum_val = m_hyp_b;
@@ -115,20 +115,20 @@ double GammaCateg::calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi) {
     // each iteration checks whether `r` corresponding to index ijk satisfies
     // the consitions of the outer sum, and if so, adds the value of the expression
     // inside of the outer sum to the running total
-    for (int r = 0; r < m_nobs; ++r) {
+    for (int r = 0; r < m_n_days; ++r) {
 
 	// case: U_{ijkh} has a value of 1, so update the ijk-th element of
-	// `u_prod_beta` to have the value of the ijk-th element of `U*beta -
+	// `ubeta` to have the value of the ijk-th element of `U*beta -
 	// U_h*beta_h`.  If U_{ijkh} has a value of 0 then no update is needed.
 	if (m_Uh[r]) {
 
-	    u_prod_beta[r] -= m_beta_val;
+	    ubeta[r] -= m_beta_val;
 
 	    // case: the index ijk that `r` corresponds to is one of the terms
 	    // included in the outer sum, so add the value of the expression to
 	    // the running total
 	    if (X[r]) {
-		sum_val += exp(log(xi[ d2s[r] ]) + u_prod_beta[r]);
+		sum_val += exp(log(xi_vals[ d2s[r] ]) + ubeta[r]);
 	    }
 	}
     }
@@ -169,7 +169,7 @@ double GammaCateg::calc_p_tilde(double a_tilde, double b_tilde) {
 		     + b_tilde
 		     - log_norm_const_tilde);
 
-    return p / (p + exp(log_d2));
+    return m_hyp_p / (m_hyp_p + exp(log_d2));
 }
 
 
@@ -199,17 +199,17 @@ double GammaCateg::sample_gamma(double a_tilde, double b_tilde, double p_tilde) 
 
 	    // calculate `F(m_bnd_l; a_tilde, b_tilde)` and `F(m_bnd_u; a_tilde,
 	    // b_tilde)`
-	    unif_bnd_l = m_bnd_l_is_0 ?
+	    unif_bnd_l = m_bnd_l_is_zero ?
 		0 :
-		pgamma(m_bnd_l, a_tilde, 1 / b_tilde, 0, 0);
+		R::pgamma(m_bnd_l, a_tilde, 1 / b_tilde, 0, 0);
 	    unif_bnd_u = m_bnd_u_is_inf ?
 		1 :
-		pgamma(m_bnd_u, a_tilde, 1 / b_tilde, 0, 0);
+		R::pgamma(m_bnd_u, a_tilde, 1 / b_tilde, 0, 0);
 
 	    // sample a uniform r.v. and return the `unif_rv`-th quantile from
 	    // the gamma distribution
-	    unif_rv = R::unif(unif_bnd_l, unif_bnd_u);
-	    return qgamma(unif_rv, a_tilde, 1 / b_tilde, 0, 0);
+	    unif_rv = R::runif(unif_bnd_l, unif_bnd_u);
+	    return R::qgamma(unif_rv, a_tilde, 1 / b_tilde, 0, 0);
 	}
     }
 }
@@ -221,18 +221,20 @@ double GammaCateg::sample_gamma(double a_tilde, double b_tilde, double p_tilde) 
 // element has the value of the corresponding element of `U_h * beta_h* added to
 // it
 
-void add_uh_prod_beta_h(double* u_prod_beta_no_h) {
+void GammaCateg::add_uh_prod_beta_h(UProdBeta& u_prod_beta_no_h) {
+
+    double* ubeta_no_h = u_prod_beta_no_h.vals();
 
     // each iteration updates the ijk-th element of `U * beta - U_h * beta_h` to
     // instead have the values given by `u_prod_beta`.
-    for (int r = 0; r < m_nobs; ++r) {
+    for (int r = 0; r < m_n_days; ++r) {
 
 	// case: U_{ijkh} has a value of 1, so update the ijk-th element of
 	// `U*beta - U_h*beta_h` to have the value of the ijk-th element of
 	// `u_prod_beta`.  If U_{ijkh} has a value of 0 then no update is
 	// needed.
 	if (m_Uh[r]) {
-	    u_prod_beta_no_h[r] += m_beta_val;
+	    ubeta_no_h[r] += m_beta_val;
 	}
     }
 }
@@ -270,12 +272,12 @@ double GammaCateg::log_dgamma_trunc_const(double a, double b) {
     // if the upper bound is infinity then F(infinity) = 1
     F_upp = (m_bnd_u_is_inf) ?
 	1 :
-	pgamma(m_bnd_u, a, 1/b, 0, 0);
+	R::pgamma(m_bnd_u, a, 1 / b, 0, 0);
 
     // if the lower bound  is 0 then F(0) = 0
     F_low = (m_bnd_l_is_zero) ?
 	0 :
-	pgamma(m_bnd_u, a, 1/b, 0, 0);
+	R::pgamma(m_bnd_u, a, 1/b, 0, 0);
 
     return log(F_upp - F_low);
 }

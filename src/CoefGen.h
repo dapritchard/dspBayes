@@ -6,12 +6,15 @@
 
 class CoefGen {
 
-    const GammaGen** gamma;
+    GammaGen** m_gamma;
 
     const int m_n_psi;
     const int m_n_gamma;
 
-    void sample();
+    CoefGen(Rcpp::List& gamma_list);
+    ~CoefGen();
+
+    void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta);
 };
 
 
