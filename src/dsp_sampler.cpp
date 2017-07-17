@@ -11,14 +11,16 @@ void dsp_sampler(Rcpp::NumericMatrix U,
 		 // xi
 		 Rcpp::NumericVector xi_initial,
 		 Rcpp::List subj_days,
+		 // gamma
+		 Rcpp::List gamma_specs,
 		 // phi
 		 Rcpp::NumericVector phi_hyper) {
 
-    // WGen W(preg_cyc, w_days_idx, w_cyc_idx, fw_len);
-    // XiGen xi(xi_initial, subj_days);
-    // CoefGen coefs();
-    // PhiGen phi();
-    // UProdBeta u_prod_beta(n_days);
+    WGen W(preg_cyc, w_days_idx, w_cyc_idx, fw_len);
+    XiGen xi(xi_initial, subj_days);
+    CoefGen regr_coefs(U, gamma_specs);
+    PhiGen phi(phi_hyper);
+    UProdBeta u_prod_beta(U.size());
 
     // for (int s = 0; s < nSamp; s++) {
 

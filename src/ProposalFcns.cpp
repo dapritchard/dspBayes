@@ -1,4 +1,5 @@
-
+#include "Rcpp.h"
+#include "ProposalFcns.h"
 
 
 double ProposalFcns::abs_unif(double val, double delta) {

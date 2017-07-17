@@ -3,9 +3,9 @@
 #include "GammaGen.h"
 
 
-CoefGen::CoefGen(Rcpp::List& gamma_specs) :
+CoefGen::CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs) :
     // initialization list
-    m_gamma(GammaGen::list_to_arr(gamma_specs)),
+    m_gamma(GammaGen::create_arr(U, gamma_specs)),
     m_n_psi(0),
     m_n_gamma(gamma_specs.size()) {
 }

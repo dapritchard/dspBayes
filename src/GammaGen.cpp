@@ -7,6 +7,8 @@
 #define GAMMA_GEN_TYPE_SMOOTH 3
 
 
+
+
 GammaGen::GammaGen(const Rcpp::NumericMatrix& U,
 		   const Rcpp::NumericVector& coef_specs) :
     // initialization list
@@ -24,8 +26,8 @@ GammaGen::GammaGen(const Rcpp::NumericMatrix& U,
 
 
 
-GammaGen** GammaGen::list_to_arr(const Rcpp::NumericMatrix& U,
-				 const Rcpp::List& gamma_specs) {
+GammaGen** GammaGen::create_arr(const Rcpp::NumericMatrix& U,
+				const Rcpp::List& gamma_specs) {
 
     GammaGen** gamma = new GammaGen*[gamma_specs.size()];
 
