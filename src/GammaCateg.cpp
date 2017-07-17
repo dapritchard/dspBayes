@@ -1,49 +1,52 @@
-#include <cmath>  // log, exp, lgamma
+#include <cmath>  // log, exp
+#include "Rcpp.h"
 #include "GammaGen.h"
 #include "global_vars.h"
 
 using std::log;
 using std::exp;
-using std::lgamma;
+using R::lgammafn_sign;
 
 
 
 
-GammaCateg::GammaCateg() :
+GammaCateg::GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs) :
+    // initialization list
+    GammaGen(U, gamma_specs),
     m_bnd_l_is_zero(m_bnd_l == 0),
-    m_bnd_u_is_inf(m_bnd_u == R_Posinf),
-    m_is_trunc(!m_bnd_l_is_zero || !m_bnd_u_is_inf) {}
+    m_bnd_u_is_inf(m_bnd_u == R_PosInf),
+    m_is_trunc(!m_bnd_l_is_zero || !m_bnd_u_is_inf),
+    m_log_d2_const_terms(calc_log_d2_const_terms()) {
+}
 
 
 
 
-// sample a new value for gamma_h.  As a side-effect, updates `U_prod_beta`,
+// sample a new value for gamma_h.  As a side-effect, updates `u_prod_beta`,
 // `m_beta_val`, and `m_gam_val` to reflect the newly sampled value of
 // gamma_h.
 
-double GammaCateg::sample_gammma(const double* W, const double* xi, UProdBeta u_prod_beta) {
+void GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta) {
 
     double a_tilde, b_tilde, p_tilde;
 
     // calculate a_tilde
     a_tilde = calc_a_tilde(W);
 
-    // calculate b_tilde and p_tilde.  Note that `calc_b_tilde(U_prod_beta)` has
+    // calculate b_tilde and p_tilde.  Note that `calc_b_tilde(u_prod_beta)` has
     // the side-effect of changing the values of the data pointed to by
-    // `U_prod_beta` to instead have the values given by `U * beta - U_h *
+    // `u_prod_beta` to instead have the values given by `U * beta - U_h *
     // beta_h`.
-    b_tilde = calc_b_tilde(U_prod_beta);
+    b_tilde = calc_b_tilde(u_prod_beta, xi);
     p_tilde = calc_p_tilde(a_tilde, b_tilde);
 
     // sample a new value for gamma_h and update beta_h
-    m_gam_val = sample_gam(a_tilde, b_tilde, p_tilde);
+    m_gam_val = sample_gammma(a_tilde, b_tilde, p_tilde);
     m_beta_val = log(m_gam_val);
 
-    // change the values of the data pointed to by `U_prod_beta` to take the
+    // change the values of the data pointed to by `u_prod_beta` to take the
     // values of `U * beta` using the newly sampled value of `gamma_h`
-    add_uh_prod_beta_h(U_prod_beta);
-
-    return m_gam_val;
+    add_uh_prod_beta_h(u_prod_beta);
 }
 
 
@@ -56,7 +59,7 @@ double GammaCateg::sample_gammma(const double* W, const double* xi, UProdBeta u_
 
 // ******* rework.  most W_ijk are 0.  *************
 
-double GammaCateg::calc_a_tilde(const WGen W) {
+double GammaCateg::calc_a_tilde(const WGen& W) {
 
     double* w_vals, *w_days_idx;
     int curr_w_day;
@@ -99,10 +102,12 @@ double GammaCateg::calc_a_tilde(const WGen W) {
 // `U*beta - U_h*beta_h`, a fact that is used in the calculations below.
 //
 // ** important **: this function has the side effect of changing the values of
-// the data pointed to by `U_prod_beta` to instead have the values given by `U *
+// the data pointed to by `u_prod_beta` to instead have the values given by `U *
 // beta - U_h * beta_h`.
 
-double GammaCateg::calc_b_tilde(double* U_prod_beta, const double* xi) {
+double GammaCateg::calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi) {
+
+    const double*
 
     // initialize `sum_val` to take the first term in the expression
     double sum_val = m_hyp_b;
@@ -113,17 +118,17 @@ double GammaCateg::calc_b_tilde(double* U_prod_beta, const double* xi) {
     for (int r = 0; r < m_nobs; ++r) {
 
 	// case: U_{ijkh} has a value of 1, so update the ijk-th element of
-	// `U_prod_beta` to have the value of the ijk-th element of `U*beta -
+	// `u_prod_beta` to have the value of the ijk-th element of `U*beta -
 	// U_h*beta_h`.  If U_{ijkh} has a value of 0 then no update is needed.
 	if (m_Uh[r]) {
 
-	    U_prod_beta[r] -= m_beta_val;
+	    u_prod_beta[r] -= m_beta_val;
 
 	    // case: the index ijk that `r` corresponds to is one of the terms
 	    // included in the outer sum, so add the value of the expression to
 	    // the running total
 	    if (X[r]) {
-		sum_val += exp(log(xi[ d2s[r] ]) + U_prod_beta[r]);
+		sum_val += exp(log(xi[ d2s[r] ]) + u_prod_beta[r]);
 	    }
 	}
     }
@@ -170,22 +175,64 @@ double GammaCateg::calc_p_tilde(double a_tilde, double b_tilde) {
 
 
 
-// change the values of the data pointed to by `U_prod_beta_no_h` so that each
+double GammaCateg::sample_gamma(double a_tilde, double b_tilde, double p_tilde) {
+
+    double unif_bnd_l, unif_bnd_u, unif_rv;
+
+    // case: with probability `p_tilde`, sample a value of 1
+    if (R::unif_rand() < p_tilde) {
+	return 1;
+    }
+
+    // case: with probability `1 - p_tilde`, sample from a possibly truncated
+    // gamma distribution
+    else {
+
+	// if the distribution is not truncated then use the usual routine to sample
+	// a gamma variate
+	if (! m_is_trunc) {
+	    return R::rgamma(a_tilde, 1 / b_tilde);
+	}
+
+	// case: sample from a truncated gamma distribution
+	else {
+
+	    // calculate `F(m_bnd_l; a_tilde, b_tilde)` and `F(m_bnd_u; a_tilde,
+	    // b_tilde)`
+	    unif_bnd_l = m_bnd_l_is_0 ?
+		0 :
+		pgamma(m_bnd_l, a_tilde, 1 / b_tilde, 0, 0);
+	    unif_bnd_u = m_bnd_u_is_inf ?
+		1 :
+		pgamma(m_bnd_u, a_tilde, 1 / b_tilde, 0, 0);
+
+	    // sample a uniform r.v. and return the `unif_rv`-th quantile from
+	    // the gamma distribution
+	    unif_rv = R::unif(unif_bnd_l, unif_bnd_u);
+	    return qgamma(unif_rv, a_tilde, 1 / b_tilde, 0, 0);
+	}
+    }
+}
+
+
+
+
+// change the values of the data pointed to by `u_prod_beta_no_h` so that each
 // element has the value of the corresponding element of `U_h * beta_h* added to
 // it
 
-void add_uh_prod_beta_h(double* U_prod_beta_no_h) {
+void add_uh_prod_beta_h(double* u_prod_beta_no_h) {
 
     // each iteration updates the ijk-th element of `U * beta - U_h * beta_h` to
-    // instead have the values given by `U_prod_beta`.
+    // instead have the values given by `u_prod_beta`.
     for (int r = 0; r < m_nobs; ++r) {
 
 	// case: U_{ijkh} has a value of 1, so update the ijk-th element of
 	// `U*beta - U_h*beta_h` to have the value of the ijk-th element of
-	// `U_prod_beta`.  If U_{ijkh} has a value of 0 then no update is
+	// `u_prod_beta`.  If U_{ijkh} has a value of 0 then no update is
 	// needed.
 	if (m_Uh[r]) {
-	    U_prod_beta_no_h[r] += m_beta_val;
+	    u_prod_beta_no_h[r] += m_beta_val;
 	}
     }
 }
@@ -199,7 +246,7 @@ void add_uh_prod_beta_h(double* U_prod_beta_no_h) {
 //     log(b^a / gamma(a)) = a * log(b) - log( gamma(b) )
 
 double GammaCateg::log_dgamma_norm_const(double a, double b) {
-    return a * log(b) + lgamma(b);
+    return a * log(b) + lgammafn_sign(b, NULL);
 }
 
 
@@ -244,7 +291,7 @@ double GammaCateg::log_dgamma_trunc_const(double a, double b) {
 //              int{ G(x; a, b) }dx
 //
 
-double calc_log_d2_const_terms() {
+double GammaCateg::calc_log_d2_const_terms() {
 
     return (log(1 - m_hyp_p)
 	    + log_dgamma_norm_const(m_hyp_a, m_hyp_b)

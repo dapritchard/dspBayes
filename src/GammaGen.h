@@ -2,6 +2,8 @@
 #define DSP_BAYES_GAMMA_GEN_H_
 
 #include "Rcpp.h"
+#include "WGen.h"
+#include "XiGen.h"
 
 
 
@@ -10,7 +12,7 @@ class GammaGen {
 
 public:
 
-    // current value of gamma_h
+    // current value of beta_h and exp(beta_h), i.e. gamma_h
     double m_beta_val;
     double m_gam_val;
 
@@ -21,17 +23,20 @@ public:
     const double m_bnd_l;
     const double m_bnd_u;
 
-    // points to the beginning and one past the end of the data for U_h
+    // points to the beginning of the data for U_h
     const double* m_Uh;
 
     // number of observations in the data
     const int m_n_days;
 
 
-    GammaGen(Rcpp::NumericMatrix& U, int h);
+    GammaGen(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& coef_specs);
 
+    static GammaGen* list_to_arr(Rcpp::List gamma_list);
     // virtual double samp_gam(const std::vector<double>& U_prod_beta,
     // 			    const std::vector<double>& W);
+
+    virtual void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta);
 
     // virtual void set_ar_param(double prev_gam_val);
 
@@ -54,52 +59,57 @@ public:
     // `GammaCateg::calc_p_tilde`.
     const double m_log_d2_const_terms;
 
-    double sample_gammma(double* U_prod_beta, const double* W, const double* xi);
-    double calc_a_tilde(const double* W);
-    double calc_b_tilde(double* U_prod_beta, const double* xi);
+
+    GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
+
+    void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta);
+    double calc_a_tilde(const WGen& W);
+    double calc_b_tilde(const UProdBeta& u_prod_beta, const XiGen& xi);
     double calc_p_tilde(double a_tilde, double b_tilde);
+    double sample_gamma(double a_tilde, double b_tilde, double p_tilde);
     void add_uh_prod_beta_h(double* U_prod_beta_no_h);
     double log_dgamma_norm_const(double a, double b);
     double log_dgamma_trunc_const(double a, double b);
     double init_log_d2_const_terms();
+    double calc_log_d2_const_terms();
 };
 
 
 
 
-class GammaContAux : public GammaGen {
+/* class GammaContAux : public GammaGen { */
 
-public:
+/* public: */
 
-    // // whether M == 1 (i.e no effect in the model)
-    // bool M_is_one;
-
-
-};
+/*     // // whether M == 1 (i.e no effect in the model) */
+/*     // bool M_is_one; */
 
 
-
-
-class GammaContMetr : public GammaGen {
-
-public:
-
-    // Metropolis-Hastings tuning parameter.  Specifies the probability of
-    // selecting 1 as the proposal value.
-    double mh_pi;
-
-};
+/* }; */
 
 
 
 
-class GammaMeanShrink : public GammaGen {
+/* class GammaContMetr : public GammaGen { */
 
-public:
+/* public: */
+
+/*     // Metropolis-Hastings tuning parameter.  Specifies the probability of */
+/*     // selecting 1 as the proposal value. */
+/*     double mh_pi; */
+
+/* }; */
 
 
 
-};
+
+/* class GammaMeanShrink : public GammaGen { */
+
+/* public: */
+
+
+
+/* }; */
 
 
 #endif
