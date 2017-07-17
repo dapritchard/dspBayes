@@ -15,7 +15,8 @@ dsp <- function(dspDat,
                 w_days_idx,
                 w_cyc_idx,
                 fw_len,
-                xi,
+                xi_initial,
                 subj_days_list,
-                phi_hyper)
+                gamma_specs_list,
+                phi_hyper_list)
 }

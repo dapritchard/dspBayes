@@ -21,17 +21,15 @@ public:
     double* vals() { return m_vals; }
     double* exp_vals() { return m_exp_vals; }
     int n_days() { return m_n_days; }
-    void update_exp(double* X);
-};
 
-
-void UProdBeta::update_exp(double* X) {
-    for (int i = 0; i < m_n_days; i++) {
-	m_exp_vals[i] = X[i] ?
-	    std::exp(m_vals[i]) :
-	    0;
+    void update_exp(double* X) {
+	for (int i = 0; i < m_n_days; i++) {
+	    m_exp_vals[i] = X[i] ?
+		std::exp(m_vals[i]) :
+		0;
+	}
     }
-}
+};
 
 
 #endif

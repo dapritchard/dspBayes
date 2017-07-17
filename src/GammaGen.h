@@ -4,6 +4,7 @@
 #include "Rcpp.h"
 #include "WGen.h"
 #include "XiGen.h"
+#include "UProdBeta.h"
 
 
 
@@ -31,16 +32,11 @@ public:
 
 
     GammaGen(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& coef_specs);
-    virtual ~GammaGen();
+    virtual ~GammaGen() {}
+
+    virtual void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) = 0;
 
     static GammaGen** create_arr(const Rcpp::NumericMatrix& U, const Rcpp::List& gamma_specs);
-    // virtual double samp_gam(const std::vector<double>& U_prod_beta,
-    // 			    const std::vector<double>& W);
-
-    virtual void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta);
-
-    // virtual void set_ar_param(double prev_gam_val);
-
 
 };
 
@@ -63,9 +59,9 @@ public:
 
     GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
 
-    void sample(WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const double* X);
-    double calc_a_tilde(WGen& W);
-    double calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const double* X);
+    void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X);
+    double calc_a_tilde(const WGen& W);
+    double calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const int* X);
     double calc_p_tilde(double a_tilde, double b_tilde);
     double sample_gamma(double a_tilde, double b_tilde, double p_tilde);
     void add_uh_prod_beta_h(UProdBeta& u_prod_beta_no_h);

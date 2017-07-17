@@ -7,6 +7,8 @@
 
 class CoefGen {
 
+public:
+
     GammaGen** m_gamma;
 
     const int m_n_psi;
@@ -15,7 +17,7 @@ class CoefGen {
     CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs);
     ~CoefGen();
 
-    void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta);
+    void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X);
 };
 
 

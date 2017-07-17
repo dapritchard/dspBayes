@@ -55,11 +55,11 @@ public:
     ~WGen();
 
     void sample(XiGen& xi, UProdBeta& u_prod_beta);
-    const int* vals() { return m_w_vals; }
-    const int* sum_vals() { return m_w_sums; }
-    const int* days_idx() { return m_w_days_idx; }
-    int n_days() { return m_n_days; }
-    int n_preg_cyc() { return m_n_preg_cyc; }
+    const int* vals() const { return m_w_vals; }
+    const int* sum_vals() const { return m_w_sums; }
+    const int* days_idx() const { return m_w_days_idx; }
+    int n_days() const { return m_n_days; }
+    int n_preg_cyc() const { return m_n_preg_cyc; }
 
 };
 

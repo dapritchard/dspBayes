@@ -10,7 +10,7 @@
 XiGen::XiGen(Rcpp::NumericVector xi_initial, Rcpp::List subj_days) :
     // initialization list
     m_xi_vals(xi_initial.begin()),
-    m_subj(init_subj(subj_days)),
+    m_subj(PregCyc::list_to_arr(subj_days)),
     m_n_subj(subj_days.size()) {
 }
 

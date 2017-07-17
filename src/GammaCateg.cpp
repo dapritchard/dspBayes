@@ -26,7 +26,7 @@ GammaCateg::GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& 
 // `m_beta_val`, and `m_gam_val` to reflect the newly sampled value of
 // gamma_h.
 
-void GammaCateg::sample(WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const double* X) {
+void GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) {
 
     double a_tilde, b_tilde, p_tilde;
 
@@ -60,7 +60,7 @@ void GammaCateg::sample(WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const 
 // cycles in which a pregnancy occured and checking whether `u_ijkh` has a value
 // of 1 for those indices.
 
-double GammaCateg::calc_a_tilde(WGen& W) {
+double GammaCateg::calc_a_tilde(const WGen& W) {
 
     // a pointer to the values of W, the indices that the values correspond to,
     // and one past the end of the values of W
@@ -104,7 +104,7 @@ double GammaCateg::calc_a_tilde(WGen& W) {
 // the data pointed to by `u_prod_beta` to instead have the values given by `U *
 // beta - U_h * beta_h`.
 
-double GammaCateg::calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const double* X) {
+double GammaCateg::calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const int* X) {
 
     double* ubeta = u_prod_beta.vals();
     const double* xi_vals = xi.vals();

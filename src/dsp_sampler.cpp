@@ -1,19 +1,23 @@
 #include "Rcpp.h"
-#include "GammaGen.h"
+#include "CoefGen.h"
+#include "PhiGen.h"
+#include "WGen.h"
+#include "XiGen.h"
+
+int* d2s;
+
+
+
 
 // [[Rcpp::export]]
 void dsp_sampler(Rcpp::NumericMatrix U,
-		 // W
 		 Rcpp::List preg_cyc,
 		 Rcpp::IntegerVector w_days_idx,
 		 Rcpp::IntegerVector w_cyc_idx,
 		 int fw_len,
-		 // xi
 		 Rcpp::NumericVector xi_initial,
 		 Rcpp::List subj_days,
-		 // gamma
 		 Rcpp::List gamma_specs,
-		 // phi
 		 Rcpp::NumericVector phi_hyper) {
 
     WGen W(preg_cyc, w_days_idx, w_cyc_idx, fw_len);
@@ -31,7 +35,7 @@ void dsp_sampler(Rcpp::NumericMatrix U,
     // 	xi.sample(W, phi, u_prod_beta);
 
     // 	// update the regression coefficients gamma and psi
-    // 	coefs.sample();
+    // 	regr_coefs.sample();
     // 	u_prod_beta.update_exp();
 
     // 	// update phi, the variance parameter for xi

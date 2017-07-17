@@ -23,7 +23,7 @@ CoefGen::~CoefGen() {
 
 
 
-void CoefGen::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta) {
+void CoefGen::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) {
 
     GammaGen** end = m_gamma + m_n_gamma;
 
@@ -32,7 +32,7 @@ void CoefGen::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta) {
     for (GammaGen** curr_gamma = m_gamma; curr_gamma != end; ++curr_gamma) {
 
 	// update the regression coefficient gamma_h
-	(*curr_gamma)->sample(W, xi, u_prod_beta);
+	(*curr_gamma)->sample(W, xi, u_prod_beta, X);
 
 	++curr_gamma;
 
