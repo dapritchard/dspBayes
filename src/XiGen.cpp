@@ -1,35 +1,40 @@
 #include "Rcpp.h"
 #include "XiGen.h"
-#include "PhiGen.h"
-#include "DayBlock.h"
-#include "UProdBeta.h"
 
 
 
 
-XiGen::XiGen(Rcpp::NumericVector xi_initial, Rcpp::List subj_days) :
+XiGen::XiGen(Rcpp::List subj_days, int n_samp) :
     // initialization list
-    m_xi_vals(xi_initial.begin()),
-    m_subj(PregCyc::list_to_arr(subj_days)),
+    m_xi_vals(new double[subj_days.size() * n_samp]),
+    m_output_start(m_xi_vals),
+    m_output_end(m_output_start + (subj_days.size() * n_samp)),
+    m_subj(DayBlock::list_to_arr(subj_days)),
     m_n_subj(subj_days.size()) {
+
+    // initialize values for all subjects to 1 (i.e. no fecundability effect)
+    for (int i = 0; i < m_n_subj; ++i) {
+	m_xi_vals[i] = 1;
+    }
 }
 
 
 
 
 XiGen::~XiGen() {
+    delete[] m_xi_vals;
     delete[] m_subj;
 }
 
 
 
 
-void XiGen::sample(WGen W, PhiGen phi, UProdBeta& u_prod_beta) {
+void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& u_prod_beta) {
 
     int curr_idx, curr_end;
     double curr_w_sum, curr_sum_exp_ubeta;
 
-    const int* w_days_idx = W.days_idx();
+    const int* w_cyc_idx = W.cyc_idx();
     const int* w_sum_vals = W.sum_vals();
     const double* exp_uprod_beta = u_prod_beta.exp_vals();
     double phi_val = phi.val();
@@ -38,9 +43,9 @@ void XiGen::sample(WGen W, PhiGen phi, UProdBeta& u_prod_beta) {
     for (int i = 0; i < m_n_subj; ++i) {
 
 	// obtain `sum_jk W_ijk`
-	if (i == *w_days_idx) {
+	if (i == *w_cyc_idx) {
 	    curr_w_sum = *w_sum_vals++;
-	    ++w_days_idx;
+	    ++w_cyc_idx;
 	}
 	else {
 	    curr_w_sum = 0;
@@ -62,4 +67,5 @@ void XiGen::sample(WGen W, PhiGen phi, UProdBeta& u_prod_beta) {
 	m_xi_vals[i] = R::rgamma(phi_val + curr_w_sum, 1 / (phi_val + curr_sum_exp_ubeta));
     }
 
+    m_xi_vals += m_n_subj;
 }

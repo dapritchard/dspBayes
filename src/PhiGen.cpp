@@ -10,12 +10,15 @@ using R::lgammafn;
 
 
 
-PhiGen::PhiGen(Rcpp::NumericVector phi_hyper) :
+PhiGen::PhiGen(Rcpp::NumericVector phi_hyper, int n_samp) :
     // initialization list
     m_hyp_c1(phi_hyper["c1"]),
     m_hyp_c2(phi_hyper["c2"]),
     m_delta(phi_hyper["delta"]),
     m_phi_val(phi_hyper["mean"]),
+    m_vals(new double[n_samp]),
+    m_output_start(m_vals),
+    m_output_end(m_output_start + n_samp),
     m_accept_ctr(0),
     m_is_same_as_prev(false),
     m_log_norm_const(0) {
@@ -37,7 +40,7 @@ void PhiGen::sample(const XiGen& xi) {
 
     // sample the updated value of phi by either accepting the proposal value or
     // by keeping the current value
-    m_phi_val = update_phi(log_r, proposal_val);
+    m_phi_val = m_vals++ = update_phi(log_r, proposal_val);
 }
 
 

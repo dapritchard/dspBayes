@@ -190,7 +190,7 @@ dspDat <- function(dsp_model,
                    fw_incl,
                    use_na       = "none",
                    req_min_days = 0L,
-                   return_comb  = FALSE) {
+                   keep_data    = TRUE) {
 
     # TODO: check valid input
     # TODO: clean up summary fcn
@@ -230,13 +230,13 @@ dspDat <- function(dsp_model,
                                  sex_name,
                                  fw_name)
 
-    comb_dat <- merge_dsp_data(daily, cycle, baseline, var_nm, req_min_days)
+    comb_dat <- merge_dsp_data(daily, cycle, baseline, var_nm, fw_incl, req_min_days)
 
     clean_dat <- remove_cyc_with_miss(comb_dat, var_nm, fw_incl, use_na)
 
-    sex_obs_dat <- remove_days_no_sex(comb_dat, var_nm)
+    sex_days_dat <- remove_days_no_sex(comb_dat, var_nm)
 
-    dspDat_obj <- derive_model_obj(sex_obs_dat, var_nm, dsp_model)
+    dspDat_obj <- derive_model_obj(sex_days_dat, var_nm, dsp_model)
 
     #### TODO check if data is collinear or constant within outcome ####
 
@@ -245,6 +245,12 @@ dspDat <- function(dsp_model,
     #                       redDat, modelObj, varNames, fw_len, idVec, cycList)
 
     #### TODO: conditionally add objects in to return object
+
+    if (keep_data) {
+        dspDat_obj$comb_dat <- comb_dat
+        dspDat_obj$clean_dat <- clean_dat
+        dspDat_obj$sex_dat <- sex_days_dat
+    }
 
     structure(dspDat_obj, class="dspDat")
 }

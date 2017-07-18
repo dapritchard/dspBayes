@@ -1,4 +1,4 @@
-merge_dsp_data <- function(daily, cycle, baseline, var_nm, min_days_req) {
+merge_dsp_data <- function(daily, cycle, baseline, var_nm, fw_incl, min_days_req) {
 
     # # the union of all of the variables that we need across the various datasets
     # var_nm <- c(id_name, cyc_name, sex_name, fw_name, all.vars(formula))

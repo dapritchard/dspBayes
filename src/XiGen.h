@@ -14,22 +14,27 @@ public:
 
     // storage for the `xi_i` values
     double* m_xi_vals;
+    double* const m_output_start;
+    double* const m_output_end;
 
     // the elements of `m_subj` each map an individual to a block of days from
     // the day-specific data
     const DayBlock* m_subj;
 
-    // the number of subjects in the data.  This value provides the amount of
-    // storage that is associated with `m_n_subj`.
+    // the number of subjects in the data.  This is the amount of data that is
+    // sampled during one MCMC scan.
     const int m_n_subj;
 
-    XiGen(Rcpp::NumericVector xi_initial, Rcpp::List subj_days);
+    XiGen(Rcpp::List subj_days, int n_samp);
     ~XiGen();
 
-    void sample(WGen W, PhiGen phi, UProdBeta& u_prod_beta);
-    const double* vals() const { return m_xi_vals; }
+    void sample(const WGen& W, const PhiGen& phi, const UProdBeta& u_prod_beta);
+
+    const double* vals() const { return m_xi_vals - m_n_subj; }
     const int n_subj() const { return m_n_subj; }
 
+    double* output_start() const { return m_output_start; }
+    double* output_end() const { return m_output_end; }
 };
 
 

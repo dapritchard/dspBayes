@@ -26,7 +26,7 @@ GammaCateg::GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& 
 // `m_beta_val`, and `m_gam_val` to reflect the newly sampled value of
 // gamma_h.
 
-void GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) {
+double GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) {
 
     double a_tilde, b_tilde, p_tilde;
 
@@ -38,15 +38,17 @@ void GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, 
     // `u_prod_beta` to instead have the values given by `U * beta - U_h *
     // beta_h`.
     b_tilde = calc_b_tilde(u_prod_beta, xi, X);
-    p_tilde = calc_p_tilde(a_tilde, b_tilde);
+    // p_tilde = calc_p_tilde(a_tilde, b_tilde);
 
-    // sample a new value for gamma_h and update beta_h
-    m_gam_val = sample_gamma(a_tilde, b_tilde, p_tilde);
-    m_beta_val = log(m_gam_val);
+    // // sample a new value for gamma_h and update beta_h
+    // m_gam_val = sample_gamma(a_tilde, b_tilde, p_tilde);
+    // m_beta_val = log(m_gam_val);
 
-    // change the values of the data pointed to by `u_prod_beta` to take the
-    // values of `U * beta` using the newly sampled value of `gamma_h`
-    add_uh_prod_beta_h(u_prod_beta);
+    // // change the values of the data pointed to by `u_prod_beta` to take the
+    // // values of `U * beta` using the newly sampled value of `gamma_h`
+    // add_uh_prod_beta_h(u_prod_beta);
+
+    return m_gam_val;
 }
 
 

@@ -6,42 +6,65 @@
 
 int* d2s;
 
+#define DSP_BAYES_N_INTER_CHECK 1000
+
+Rcpp::List collect_output(const CoefGen& regr_coefs,
+			  const XiGen& xi,
+			  const PhiGen& phi);
+
+// preg_cycle     used when sampling W
+// w_days_idx     categorical gamma: a_tilde
+// w_cyc_idx      used when sampling xi (first term)
+// fw_len         how much memory to set aside when sampling W in a cycle
+// subj_days      used when sampling xi (second term)
+// gamma_specs    gamma hyperparameters
+// phi_hyper      phi hyperparameters
+
 
 
 
 // [[Rcpp::export]]
-void dsp_sampler(Rcpp::NumericMatrix U,
-		 Rcpp::List preg_cyc,
-		 Rcpp::IntegerVector w_days_idx,
-		 Rcpp::IntegerVector w_cyc_idx,
-		 int fw_len,
-		 Rcpp::NumericVector xi_initial,
-		 Rcpp::List subj_days,
-		 Rcpp::List gamma_specs,
-		 Rcpp::NumericVector phi_hyper) {
+Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
+		       Rcpp::IntegerVector X_rcpp,
+		       Rcpp::List preg_cyc,
+		       Rcpp::IntegerVector w_days_idx,
+		       Rcpp::IntegerVector w_cyc_idx,
+		       Rcpp::List subj_days,
+		       Rcpp::IntegerVector subj_idx,
+		       Rcpp::List gamma_specs,
+		       Rcpp::NumericVector phi_hyper,
+		       int fw_len,
+		       int n_burn,
+		       int n_samp) {
 
+    // create data objects
     WGen W(preg_cyc, w_days_idx, w_cyc_idx, fw_len);
-    XiGen xi(xi_initial, subj_days);
-    CoefGen regr_coefs(U, gamma_specs);
-    PhiGen phi(phi_hyper);
+    XiGen xi(subj_days, n_samp);
+    CoefGen regr_coefs(U, gamma_specs, n_samp);
+    PhiGen phi(phi_hyper, n_samp);
     UProdBeta u_prod_beta(U.size());
+    int* X = X_rcpp.begin();
+    d2s = subj_idx.begin();
 
-    // for (int s = 0; s < nSamp; s++) {
+    // begin sampler loop
+    for (int s = 0; s < 1000; s++) {
 
-    // 	// update the latent day-specific pregnancy variables W
-    // 	W.sample(xi, u_prod_beta);
+    	// update the latent day-specific pregnancy variables W
+    	W.sample(xi, u_prod_beta);
 
-    // 	// update the woman-specific fecundability multipliers xi
-    // 	xi.sample(W, phi, u_prod_beta);
+    	// update the woman-specific fecundability multipliers xi
+    	xi.sample(W, phi, u_prod_beta);
 
-    // 	// update the regression coefficients gamma and psi
-    // 	regr_coefs.sample();
-    // 	u_prod_beta.update_exp();
+    	// update the regression coefficients gamma and psi
+    	regr_coefs.sample(W, xi, u_prod_beta, X);
+    	u_prod_beta.update_exp(X);
 
-    // 	// update phi, the variance parameter for xi
-    // 	phi.sample(xi);
-    // }
+    	// update phi, the variance parameter for xi
+    	phi.sample(xi);
 
+	// check for user interrupt every `DSP_BAYES_N_INTER_CHECK` iterations
+	if (! (s % DSP_BAYES_N_INTER_CHECK)) Rcpp::checkUserInterrupt();
+    }
 
-
+    return collect_output(regr_coefs, xi, phi);
 }

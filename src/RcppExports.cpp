@@ -6,26 +6,29 @@
 using namespace Rcpp;
 
 // dsp_sampler
-void dsp_sampler(Rcpp::NumericMatrix U, Rcpp::List preg_cyc, Rcpp::IntegerVector w_days_idx, Rcpp::IntegerVector w_cyc_idx, int fw_len, Rcpp::NumericVector xi_initial, Rcpp::List subj_days, Rcpp::List gamma_specs, Rcpp::NumericVector phi_hyper);
-RcppExport SEXP dspBayes_dsp_sampler(SEXP USEXP, SEXP preg_cycSEXP, SEXP w_days_idxSEXP, SEXP w_cyc_idxSEXP, SEXP fw_lenSEXP, SEXP xi_initialSEXP, SEXP subj_daysSEXP, SEXP gamma_specsSEXP, SEXP phi_hyperSEXP) {
+void dsp_sampler(Rcpp::NumericMatrix U, Rcpp::IntegerVector X_rcpp, Rcpp::List preg_cyc, Rcpp::IntegerVector w_days_idx, Rcpp::IntegerVector w_cyc_idx, Rcpp::List subj_days, Rcpp::IntegerVector subj_idx, Rcpp::List gamma_specs, Rcpp::NumericVector phi_hyper, int fw_len, int n_burn, int n_samp);
+RcppExport SEXP _dspBayes_dsp_sampler(SEXP USEXP, SEXP X_rcppSEXP, SEXP preg_cycSEXP, SEXP w_days_idxSEXP, SEXP w_cyc_idxSEXP, SEXP subj_daysSEXP, SEXP subj_idxSEXP, SEXP gamma_specsSEXP, SEXP phi_hyperSEXP, SEXP fw_lenSEXP, SEXP n_burnSEXP, SEXP n_sampSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type U(USEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type X_rcpp(X_rcppSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type preg_cyc(preg_cycSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type w_days_idx(w_days_idxSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type w_cyc_idx(w_cyc_idxSEXP);
-    Rcpp::traits::input_parameter< int >::type fw_len(fw_lenSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xi_initial(xi_initialSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type subj_days(subj_daysSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subj_idx(subj_idxSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type gamma_specs(gamma_specsSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type phi_hyper(phi_hyperSEXP);
-    dsp_sampler(U, preg_cyc, w_days_idx, w_cyc_idx, fw_len, xi_initial, subj_days, gamma_specs, phi_hyper);
+    Rcpp::traits::input_parameter< int >::type fw_len(fw_lenSEXP);
+    Rcpp::traits::input_parameter< int >::type n_burn(n_burnSEXP);
+    Rcpp::traits::input_parameter< int >::type n_samp(n_sampSEXP);
+    dsp_sampler(U, X_rcpp, preg_cyc, w_days_idx, w_cyc_idx, subj_days, subj_idx, gamma_specs, phi_hyper, fw_len, n_burn, n_samp);
     return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"dspBayes_dsp_sampler", (DL_FUNC) &dspBayes_dsp_sampler, 9},
+    {"_dspBayes_dsp_sampler", (DL_FUNC) &_dspBayes_dsp_sampler, 12},
     {NULL, NULL, 0}
 };
 

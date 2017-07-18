@@ -34,7 +34,7 @@ public:
     GammaGen(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& coef_specs);
     virtual ~GammaGen() {}
 
-    virtual void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) = 0;
+    virtual double sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) = 0;
 
     static GammaGen** create_arr(const Rcpp::NumericMatrix& U, const Rcpp::List& gamma_specs);
 
@@ -59,7 +59,7 @@ public:
 
     GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
 
-    void sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X);
+    double sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X);
     double calc_a_tilde(const WGen& W);
     double calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const int* X);
     double calc_p_tilde(double a_tilde, double b_tilde);

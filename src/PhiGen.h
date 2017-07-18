@@ -15,8 +15,11 @@ public:
     const double m_hyp_c2;
     const double m_delta;
 
-    // current value of phi
+    // current value of phi and storage for previous values
     double m_phi_val;
+    double* m_vals;
+    double* const m_output_start;
+    double* const m_output_end;
 
     // tracks the number of times that the proposal distribution was accepted
     int m_accept_ctr;
@@ -31,7 +34,9 @@ public:
     double m_log_norm_const;
 
 
-    PhiGen(Rcpp::NumericVector phi_hyper);
+    PhiGen(Rcpp::NumericVector phi_hyper, int n_samp);
+    ~PhiGen() { delete m_output_start; }
+
     double val() const { return m_phi_val; }
     int n_accept() const { return m_accept_ctr; }
     void sample(const XiGen& xi);
@@ -41,6 +46,9 @@ public:
     double calc_log_proportion_dgamma_xi(const XiGen& xi, double proposal_val);
     double calc_log_proportion_dgamma_phi(const XiGen& xi, double proposal_val);
     double log_dgamma_norm_const(double a);
+
+    double* output_start() const { return m_output_start; }
+    double* output_end() const { return m_output_end; }
 
 };
 

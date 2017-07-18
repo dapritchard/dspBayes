@@ -1,6 +1,11 @@
 #include "Rcpp.h"
 #include "DayBlock.h"
 
+using Rcpp::NumericVector;
+using Rcpp::as;
+
+
+
 
 // construct an array of `DayBlock`s based upon an `Rcpp::List` that provides
 // the specifications for each block.  In more detail, an array of `DayBlock`s
@@ -17,8 +22,8 @@ DayBlock* DayBlock::list_to_arr(Rcpp::List& block_list) {
     // each iteration constructs a new struct based upon the information
     // provided by the t-th element of `block_list`
     for (int t = 0; t < block_list.size(); ++t) {
-	block_arr[t] = DayBlock(block_list[t]["beg_idx"],
-				block_list[t]["n_days"]);
+	block_arr[t] = DayBlock(as<NumericVector>(block_list[t])["beg_idx"],
+				as<NumericVector>(block_list[t])["n_days"]);
     }
 
     return block_arr;
@@ -42,9 +47,9 @@ PregCyc* PregCyc::list_to_arr(Rcpp::List& block_list) {
     // each iteration constructs a new struct based upon the information
     // provided by the t-th element of `block_list`
     for (int t = 0; t < block_list.size(); ++t) {
-	block_arr[t] = PregCyc(block_list[t]["beg_idx"],
-			       block_list[t]["n_days"],
-			       block_list[t]["subj_idx"]);
+	block_arr[t] = PregCyc(as<NumericVector>(block_list[t])["beg_idx"],
+			       as<NumericVector>(block_list[t])["n_days"],
+			       as<NumericVector>(block_list[t])["subj_idx"]);
     }
 
     return block_arr;

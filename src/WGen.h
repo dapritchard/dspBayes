@@ -58,6 +58,7 @@ public:
     const int* vals() const { return m_w_vals; }
     const int* sum_vals() const { return m_w_sums; }
     const int* days_idx() const { return m_w_days_idx; }
+    const int* cyc_idx() const { return m_w_cyc_idx; }
     int n_days() const { return m_n_days; }
     int n_preg_cyc() const { return m_n_preg_cyc; }
 

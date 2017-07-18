@@ -73,7 +73,7 @@ remove_days_no_sex <- function(comb_dat, var_nm) {
 
     # return data subset to only days in which intercourse occured or was
     # missing
-    comb_dat[keep_idx, -sex_col_idx, drop = FALSE]
+    comb_dat[keep_idx, , drop = FALSE]
 }
 
 
