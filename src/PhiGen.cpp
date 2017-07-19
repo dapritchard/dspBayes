@@ -40,7 +40,7 @@ void PhiGen::sample(const XiGen& xi) {
 
     // sample the updated value of phi by either accepting the proposal value or
     // by keeping the current value
-    m_phi_val = m_vals++ = update_phi(log_r, proposal_val);
+    m_phi_val = *m_vals++ = update_phi(log_r, proposal_val);
 }
 
 

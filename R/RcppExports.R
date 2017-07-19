@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 dsp_sampler <- function(U, X_rcpp, preg_cyc, w_days_idx, w_cyc_idx, subj_days, subj_idx, gamma_specs, phi_hyper, fw_len, n_burn, n_samp) {
-    invisible(.Call('_dspBayes_dsp_sampler', PACKAGE = 'dspBayes', U, X_rcpp, preg_cyc, w_days_idx, w_cyc_idx, subj_days, subj_idx, gamma_specs, phi_hyper, fw_len, n_burn, n_samp))
+    .Call('_dspBayes_dsp_sampler', PACKAGE = 'dspBayes', U, X_rcpp, preg_cyc, w_days_idx, w_cyc_idx, subj_days, subj_idx, gamma_specs, phi_hyper, fw_len, n_burn, n_samp)
 }
 

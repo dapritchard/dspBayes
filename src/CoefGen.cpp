@@ -26,6 +26,7 @@ CoefGen::~CoefGen() {
     	delete m_gamma[h];
     }
     delete[] m_gamma;
+    delete[] m_output_start;
 }
 
 

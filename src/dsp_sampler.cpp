@@ -47,12 +47,12 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
     d2s = subj_idx.begin();
 
     // begin sampler loop
-    for (int s = 0; s < 1000; s++) {
+    for (int s = 0; s < n_samp; s++) {
 
     	// update the latent day-specific pregnancy variables W
     	W.sample(xi, u_prod_beta);
 
-    	// update the woman-specific fecundability multipliers xi
+    	// // update the woman-specific fecundability multipliers xi
     	xi.sample(W, phi, u_prod_beta);
 
     	// update the regression coefficients gamma and psi
@@ -67,4 +67,6 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
     }
 
     return collect_output(regr_coefs, xi, phi);
+    // Rcpp::List ret;
+    // return ret;
 }
