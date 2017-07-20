@@ -15,7 +15,8 @@ CoefGen::CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs, int n_samp) :
     m_output_start(m_vals),
     m_output_end(m_output_start + (gamma_specs.size() * n_samp)),
     m_n_psi(0),
-    m_n_gamma(gamma_specs.size()) {
+    m_n_gamma(gamma_specs.size()),
+    m_record_status(false) {
 }
 
 
@@ -40,8 +41,15 @@ void CoefGen::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, con
     // the value of `u_prod_beta`.
     for (GammaGen** curr = m_gamma; curr != end; ++curr) {
 
-	// update the regression coefficient gamma_h
-	*m_vals++ = (*curr)->sample(W, xi, u_prod_beta, X);
+	// update the regression coefficient gamma_h.  If we are past the burn
+	// in phase then store the samples in `m_vals`.
+	if (m_record_status) {
+	    *m_vals++ = (*curr)->sample(W, xi, u_prod_beta, X);
+	} else {
+	    // same function call as the first case, but now we don't keep the
+	    // result
+	    (*curr)->sample(W, xi, u_prod_beta, X);
+	}
 
 	// if (++curr != end) {
 	//     curr->set_ar_param(gam_val);

@@ -62,8 +62,16 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
     	// update phi, the variance parameter for xi
     	phi.sample(xi);
 
+	// call the `record` family of functions to inform the various functions
+	// to begin recording their MCMC samples
+	if (s == 0) {
+	    // xi.record();
+	    // regr_coefs.record();
+	    phi.record();
+	}
+
 	// check for user interrupt every `DSP_BAYES_N_INTER_CHECK` iterations
-	if (! (s % DSP_BAYES_N_INTER_CHECK)) Rcpp::checkUserInterrupt();
+	if ((s % DSP_BAYES_N_INTER_CHECK) == 0) Rcpp::checkUserInterrupt();
     }
 
     return collect_output(regr_coefs, xi, phi);

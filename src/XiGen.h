@@ -25,12 +25,15 @@ public:
     // sampled during one MCMC scan.
     const int m_n_subj;
 
+    // tracks whether we are past the burn-in phase
+    bool m_record_status;
+
     XiGen(Rcpp::List subj_days, int n_samp);
     ~XiGen();
 
     void sample(const WGen& W, const PhiGen& phi, const UProdBeta& u_prod_beta);
 
-    const double* vals() const { return m_xi_vals - m_n_subj; }
+    const double* vals() const { return m_xi_vals; }
     const int n_subj() const { return m_n_subj; }
 
     double* output_start() const { return m_output_start; }

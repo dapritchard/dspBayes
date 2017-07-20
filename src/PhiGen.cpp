@@ -15,13 +15,15 @@ PhiGen::PhiGen(Rcpp::NumericVector phi_hyper, int n_samp) :
     m_hyp_c1(phi_hyper["c1"]),
     m_hyp_c2(phi_hyper["c2"]),
     m_delta(phi_hyper["delta"]),
-    m_phi_val(phi_hyper["mean"]),
     m_vals(new double[n_samp]),
     m_output_start(m_vals),
     m_output_end(m_output_start + n_samp),
     m_accept_ctr(0),
+    m_record_status(false),
     m_is_same_as_prev(false),
     m_log_norm_const(0) {
+
+    *m_vals = phi_hyper["mean"];
 }
 
 
@@ -32,7 +34,7 @@ void PhiGen::sample(const XiGen& xi) {
     double proposal_val, log_r;
 
     // sample the proposal value for Metropolis step
-    proposal_val = ProposalFcns::abs_unif(m_phi_val, m_delta);
+    proposal_val = ProposalFcns::abs_unif(*m_vals, m_delta);
 
     // calculate `log(r)` where `r` is the acceptance ratio for the Metropolis
     // step
@@ -40,7 +42,10 @@ void PhiGen::sample(const XiGen& xi) {
 
     // sample the updated value of phi by either accepting the proposal value or
     // by keeping the current value
-    m_phi_val = *m_vals++ = update_phi(log_r, proposal_val);
+    *(m_vals + 1) = update_phi(log_r, proposal_val);
+    if (m_record_status) {
+	++m_vals;
+    }
 }
 
 
@@ -82,7 +87,7 @@ double PhiGen::calc_log_r(const XiGen& xi, double proposal_val) {
 double PhiGen::update_phi(double log_r, double proposal_val) {
 
     if (log(R::unif_rand()) < log_r) {
-	m_phi_val = proposal_val;
+	*m_vals = proposal_val;
 	m_is_same_as_prev = false;
 	++m_accept_ctr;
     }
@@ -90,7 +95,7 @@ double PhiGen::update_phi(double log_r, double proposal_val) {
 	m_is_same_as_prev = true;
     }
 
-    return m_phi_val;
+    return *m_vals;
 }
 
 
@@ -125,7 +130,7 @@ double PhiGen::calc_log_proportion_dgamma_xi(const XiGen& xi, double proposal_va
     if (m_is_same_as_prev) {
 	denom_log_norm_const = m_log_norm_const;
     } else {
-	denom_log_norm_const = n_subj * log_dgamma_norm_const(m_phi_val);
+	denom_log_norm_const = n_subj * log_dgamma_norm_const(*m_vals);
 	m_log_norm_const = denom_log_norm_const;
     }
 
@@ -137,7 +142,7 @@ double PhiGen::calc_log_proportion_dgamma_xi(const XiGen& xi, double proposal_va
 	log_kernel_ratio += log(curr_xi) - curr_xi;
     }
     // mutiply in the `phi^{*} - phi^(s)` term
-    log_kernel_ratio *= proposal_val - m_phi_val;
+    log_kernel_ratio *= proposal_val - *m_vals;
 
     return numer_log_norm_const - denom_log_norm_const + log_kernel_ratio;
 }
@@ -161,9 +166,9 @@ double PhiGen::calc_log_proportion_dgamma_phi(const XiGen& xi, double proposal_v
     double term1, term2;
 
     // (c_1 - 1) * log(phi^{*} / phi^(s))
-    term1 = (m_hyp_c1 - 1) * log(proposal_val / m_phi_val);
+    term1 = (m_hyp_c1 - 1) * log(proposal_val / *m_vals);
     // c2 * (phi^{*} - phi^(s))
-    term2 = m_hyp_c2 * (proposal_val - m_phi_val);
+    term2 = m_hyp_c2 * (proposal_val - *m_vals);
 
     return term1 - term2;
 }

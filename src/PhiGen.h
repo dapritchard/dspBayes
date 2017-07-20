@@ -16,13 +16,15 @@ public:
     const double m_delta;
 
     // current value of phi and storage for previous values
-    double m_phi_val;
     double* m_vals;
     double* const m_output_start;
     double* const m_output_end;
 
     // tracks the number of times that the proposal distribution was accepted
     int m_accept_ctr;
+
+    // tracks whether we are past the burn-in phase
+    bool m_record_status;
 
     // whether the proposal distribution was not accepted so that the value of
     // phi is unchanged from the last scan.  When this is the case then the
@@ -37,9 +39,10 @@ public:
     PhiGen(Rcpp::NumericVector phi_hyper, int n_samp);
     ~PhiGen() { delete m_output_start; }
 
-    double val() const { return m_phi_val; }
-    int n_accept() const { return m_accept_ctr; }
     void sample(const XiGen& xi);
+    double val() const { return *m_vals; }
+    int n_accept() const { return m_accept_ctr; }
+    void record() { m_record_status = true; }
 
     double calc_log_r(const XiGen& xi, double proposal_val);
     double update_phi(double log_r, double proposal_val);

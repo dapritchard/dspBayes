@@ -23,17 +23,29 @@ dsp <- function(dsp_data,
     # some scratch glue code.  create phi specs
     phi_hyper <- c(c1 = 1, c2 = 1, delta = 0.1, mean = 1)
 
-    dsp_sampler(U           = dsp_data$U,
-                X_rcpp      = dsp_data$X,
-                preg_cyc    = dsp_data$preg_cyc_list,
-                w_days_idx  = dsp_data$preg_days_idx,
-                w_cyc_idx   = dsp_data$preg_cyc_idx,
-                subj_days   = dsp_data$subj_idx_list,
-                subj_idx    = dsp_data$days_to_subj_idx,
-                gamma_specs = gamma_hyper_list,
-                phi_hyper   = phi_hyper,
-                fw_len      = 5,
-                n_burn      = 0,
-                n_samp      = 1000)
+    #
+    n_samp <- 100
 
+    out <- dsp_sampler(U           = dsp_data$U,
+                       X_rcpp      = dsp_data$X,
+                       preg_cyc    = dsp_data$preg_cyc_list,
+                       w_days_idx  = dsp_data$preg_days_idx,
+                       w_cyc_idx   = dsp_data$preg_cyc_idx,
+                       subj_days   = dsp_data$subj_idx_list,
+                       subj_idx    = dsp_data$days_to_subj_idx,
+                       gamma_specs = gamma_hyper_list,
+                       phi_hyper   = phi_hyper,
+                       fw_len      = 5,
+                       n_burn      = 0,
+                       n_samp      = n_samp)
+
+    # transpose data
+    out_coefs <- matrix(out$coefs,
+                        nrow = n_samp,
+                        byrow = TRUE,
+                        dimnames = list(NULL, colnames(dsp_data$U)))
+
+    list(coef = out_coefs,
+         xi   = out$xi,
+         phi  = out$phi)
 }

@@ -10,13 +10,13 @@ XiGen::XiGen(Rcpp::List subj_days, int n_samp) :
     m_output_start(m_xi_vals),
     m_output_end(m_output_start + (subj_days.size() * n_samp)),
     m_subj(DayBlock::list_to_arr(subj_days)),
-    m_n_subj(subj_days.size()) {
+    m_n_subj(subj_days.size()),
+    m_record_status(false) {
 
     // initialize values for all subjects to 1 (i.e. no fecundability effect)
     for (int i = 0; i < m_n_subj; ++i) {
     	m_xi_vals[i] = 1;
     }
-    m_xi_vals += m_n_subj;
 }
 
 
@@ -68,5 +68,9 @@ void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& u_prod_bet
     	m_xi_vals[i] = R::rgamma(phi_val + curr_w_sum, 1 / (phi_val + curr_sum_exp_ubeta));
     }
 
-    m_xi_vals += m_n_subj;
+    // if we are past the burn phase then move the pointer past the samples so
+    // that we don't overwrite them
+    if (m_record_status) {
+	m_xi_vals += m_n_subj;
+    }
 }

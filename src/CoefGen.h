@@ -20,6 +20,9 @@ public:
     const int m_n_psi;
     const int m_n_gamma;
 
+    // tracks whether we are past the burn-in phase
+    bool m_record_status;
+
     CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs, int n_samp);
     ~CoefGen();
 
