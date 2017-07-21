@@ -23,11 +23,11 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
 
     var_categ_status <- get_var_categ_status(cov_miss_info)
 
-    list(preg_cyc_list    = preg_cyc_list,
-         preg_days_idx    = preg_days_idx,
-         preg_cyc_idx     = preg_cyc_idx,
-         subj_idx_list    = subj_idx_list,
-         days_to_subj_idx = days_to_subj_idx,
+    list(w_day_blocks     = preg_cyc_list,    # TODO change rhs names?
+         w_to_days_idx    = preg_days_idx,
+         w_cyc_to_cyc_idx = preg_cyc_idx,
+         subj_day_blocks  = subj_idx_list,
+         day_to_subj_idx  = days_to_subj_idx,
          miss_x_idx       = miss_x_idx,
          cov_miss_info    = cov_miss_info,
          var_categ_status = var_categ_status,

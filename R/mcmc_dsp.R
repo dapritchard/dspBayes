@@ -9,35 +9,24 @@ dsp <- function(dsp_data,
                 trackProg  = "percent",
                 progQuants = seq(0.1, 1.0, 0.1)) {
 
-    # some scratch glue code.  create gamma specs
-    gamma_hyper_list <- vector("list", ncol(dsp_data$U))
-    for (i in seq_len(ncol(dsp_data$U))) {
-        gamma_hyper_list[[i]] <- c(type = 0,
-                                   h = i,
-                                   hyp_a = 1,
-                                   hyp_b = 1,
-                                   hyp_p = 0.5,
-                                   bnd_l = 0,
-                                   bnd_u = Inf)
-    }
-    # some scratch glue code.  create phi specs
-    phi_hyper <- c(c1 = 1, c2 = 1, delta = 0.1, mean = 1)
+    # stub functions for gamma and phi specs
+    gamma_hyper_list <- get_gamma_specs(dsp_data)
+    phi_hyper <- get_phi_specs()
 
-    #
     n_samp <- 100
 
-    out <- dsp_sampler(U           = dsp_data$U,
-                       X_rcpp      = dsp_data$X,
-                       preg_cyc    = dsp_data$preg_cyc_list,
-                       w_days_idx  = dsp_data$preg_days_idx,
-                       w_cyc_idx   = dsp_data$preg_cyc_idx,
-                       subj_days   = dsp_data$subj_idx_list,
-                       subj_idx    = dsp_data$days_to_subj_idx,
-                       gamma_specs = gamma_hyper_list,
-                       phi_hyper   = phi_hyper,
-                       fw_len      = 5,
-                       n_burn      = 0,
-                       n_samp      = n_samp)
+    out <- dsp_sampler(U                = dsp_data$U,
+                       X_rcpp           = dsp_data$X,
+                       w_day_blocks     = dsp_data$w_day_blocks,
+                       w_to_days_idx    = dsp_data$w_to_days_idx,
+                       w_cyc_to_cyc_idx = dsp_data$w_cyc_to_cyc_idx,
+                       subj_day_blocks  = dsp_data$subj_day_blocks,
+                       day_to_subj_idx  = dsp_data$day_to_subj_idx,
+                       gamma_specs      = gamma_hyper_list,
+                       phi_hyper        = phi_hyper,
+                       fw_len           = 5,
+                       n_burn           = 0,
+                       n_samp           = n_samp)
 
     # transpose data
     out_coefs <- matrix(out$coefs,
