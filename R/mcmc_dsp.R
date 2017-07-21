@@ -44,6 +44,7 @@ dsp <- function(dsp_data,
                         nrow = n_samp,
                         byrow = TRUE,
                         dimnames = list(NULL, colnames(dsp_data$U)))
+    # TODO: transpose xi
 
     list(coef = out_coefs,
          xi   = out$xi,
