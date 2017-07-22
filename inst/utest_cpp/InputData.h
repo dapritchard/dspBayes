@@ -20,5 +20,9 @@ public:
     int n_samp;
 
     InputData(std::string dir_nm);
-    void visual_check() const;
+    void print_visual_verif() const;
+
+    static Rcpp::IntegerVector file_to_rcpp_int(std::string path);
+    static Rcpp::NumericVector file_to_rcpp_numer(std::string path);
+    static Rcpp::NumericMatrix file_to_rcpp_numer_mat(std::string path, int n_row);
 };

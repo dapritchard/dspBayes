@@ -12,13 +12,13 @@ Rcpp::List collect_output(const CoefGen& regr_coefs,
 			  const XiGen& xi,
 			  const PhiGen& phi);
 
-// preg_cycle     used when sampling W
-// w_days_idx     categorical gamma: a_tilde
-// w_cyc_idx      used when sampling xi (first term)
-// fw_len         how much memory to set aside when sampling W in a cycle
-// subj_days      used when sampling xi (second term)
-// gamma_specs    gamma hyperparameters
-// phi_hyper      phi hyperparameters
+// preg_cycle            used when sampling W
+// w_to_days_idx         categorical gamma: a_tilde
+// w_cyc_to_cyc_idx      used when sampling xi (first term)
+// fw_len                how much memory to set aside when sampling W in a cycle
+// subj_day_block        used when sampling xi (second term)
+// gamma_specs           gamma hyperparameters
+// phi_specs             phi hyperparameters
 
 
 
@@ -38,13 +38,13 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
 		       int n_samp) {
 
     // create data objects
-    WGen W(preg_cyc, w_days_idx, w_cyc_idx, fw_len);
-    XiGen xi(subj_days, n_samp);
+    WGen W(w_day_blocks, w_to_days_idx, w_cyc_to_cyc_idx, fw_len);
+    XiGen xi(subj_day_blocks, n_samp);
     CoefGen regr_coefs(U, gamma_specs, n_samp);
-    PhiGen phi(phi_hyper, n_samp);
+    PhiGen phi(phi_specs, n_samp);
     UProdBeta u_prod_beta(U.size());
     int* X = X_rcpp.begin();
-    d2s = subj_idx.begin();
+    d2s = day_to_subj_idx.begin();
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {

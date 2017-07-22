@@ -18,3 +18,5 @@ all :
 
 
 InputData.o : InputData.h read_data.h
+
+test : InputData.o read_data.o
