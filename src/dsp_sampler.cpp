@@ -32,7 +32,7 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
 		       Rcpp::List subj_day_blocks,
 		       Rcpp::IntegerVector day_to_subj_idx,
 		       Rcpp::List gamma_specs,
-		       Rcpp::NumericVector phi_hyper,
+		       Rcpp::NumericVector phi_specs,
 		       int fw_len,
 		       int n_burn,
 		       int n_samp) {

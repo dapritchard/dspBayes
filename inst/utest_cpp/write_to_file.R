@@ -16,31 +16,39 @@ write_to_file <- function(dsp_data, dir_nm) {
     }
 
 
-    writeBin(as.vector(dsp_data$U), file.path(path_nm, "input_U.dat"))
+    fw_len <- 5
+    n_burn <- 0
+    n_samp <- 10
 
-    writeBin(dsp_data$X, file.path(path_nm, "input_X.dat"))
+    writeBin(as.vector(dsp_data$U), file.path(path_nm, "input_U"))
 
-    preg_cyc_beg_idx <- sapply(dsp_data$preg_cyc_list, function(x) x["beg_idx"])
-    preg_cyc_n_days <- sapply(dsp_data$preg_cyc_list, function(x) x["n_days"])
-    preg_cyc_subj_idx <- sapply(dsp_data$preg_cyc_list, function(x) x["subj_idx"])
-    writeBin(preg_cyc_beg_idx, file.path(path_nm, "input_preg_cyc_beg.dat"))
-    writeBin(preg_cyc_n_days, file.path(path_nm, "input_preg_cyc_n.dat"))
-    writeBin(preg_cyc_subj_idx, file.path(path_nm, "input_preg_cyc_subj.dat"))
+    writeBin(dsp_data$X, file.path(path_nm, "input_X_rcpp"))
 
-    writeBin(dsp_data$w_days_idx, file.path(path_nm, "input_w_days_idx.dat"))
+    # preg_cyc_beg_idx <- sapply(dsp_data$w_day_blocks, function(x) x["beg_idx"])
+    # preg_cyc_n_days <- sapply(dsp_data$w_day_blocks, function(x) x["n_days"])
+    # preg_cyc_subj_idx <- sapply(dsp_data$w_day_blocks, function(x) x["subj_idx"])
+    # writeBin(preg_cyc_beg_idx, file.path(path_nm, "input_w_day_blocks_beg"))
+    # writeBin(preg_cyc_n_days, file.path(path_nm, "input_w_day_blocks_n"))
+    # writeBin(preg_cyc_subj_idx, file.path(path_nm, "input_w_day_blocks_subj"))
+    writeBin(unlist(dsp_data$w_day_blocks), file.path(path_nm, "input_w_day_blocks"))
 
-    writeBin(dsp_data$w_cyc_idx, file.path(path_nm, "input_w_cyc_idx.dat"))
+    writeBin(dsp_data$w_to_days_idx, file.path(path_nm, "input_w_to_days_idx"))
 
-    subj_beg_idx <- sapply(dsp_data$subj_idx_list, function(x) x["beg_idx"])
-    subj_n_days <- sapply(dsp_data$subj_idx_list, function(x) x["n_days"])
-    writeBin(subj_beg_idx, file.path(path_nm, "input_subj_beg.dat"))
-    writeBin(subj_n_days, file.path(path_nm, "input_subj_n.dat"))
+    writeBin(dsp_data$w_cyc_to_cyc_idx, file.path(path_nm, "input_w_cyc_to_cyc_idx"))
+
+    # subj_beg_idx <- sapply(dsp_data$subj_day_blocks, function(x) x["beg_idx"])
+    # subj_n_days <- sapply(dsp_data$subj_day_blocks, function(x) x["n_days"])
+    # writeBin(subj_beg_idx, file.path(path_nm, "input_subj_day_blocks_beg"))
+    # writeBin(subj_n_days, file.path(path_nm, "input_subj_day_blocks_n"))
+    writeBin(unlist(dsp_data$subj_day_blocks), file.path(path_nm, "input_subj_day_blocks"))
+
+    writeBin(dsp_data$day_to_subj_idx, file.path(path_nm, "input_day_to_subj_idx"))
 
     gamma_specs <- get_gamma_specs(dsp_data) %>% unlist
-    writeBin(gamma_specs, file.path(path_nm, "input_gamma_specs.dat"))
+    writeBin(gamma_specs, file.path(path_nm, "input_gamma_specs"))
 
     phi_specs <- get_phi_specs(dsp_data)
-    writeBin(phi_specs, file.path(path_nm, "input_phi_specs.dat"))
+    writeBin(phi_specs, file.path(path_nm, "input_phi_specs"))
 
-    writeBin(c(fw_len, n_burn, n_samp), file.path(path_nm, "input_misc_specs.dat"))
+    writeBin(c(fw_len, n_burn, n_samp), file.path(path_nm, "input_misc_specs"))
 }

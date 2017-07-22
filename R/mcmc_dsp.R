@@ -11,7 +11,7 @@ dsp <- function(dsp_data,
 
     # stub functions for gamma and phi specs
     gamma_hyper_list <- get_gamma_specs(dsp_data)
-    phi_hyper <- get_phi_specs()
+    phi_specs <- get_phi_specs()
 
     n_samp <- 100
 
@@ -23,7 +23,7 @@ dsp <- function(dsp_data,
                        subj_day_blocks  = dsp_data$subj_day_blocks,
                        day_to_subj_idx  = dsp_data$day_to_subj_idx,
                        gamma_specs      = gamma_hyper_list,
-                       phi_hyper        = phi_hyper,
+                       phi_specs        = phi_specs,
                        fw_len           = 5,
                        n_burn           = 0,
                        n_samp           = n_samp)

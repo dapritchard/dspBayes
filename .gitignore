@@ -1,4 +1,6 @@
 src/*.o
 src/dspBayes.so
 
-inst/cppUnit/*.o
+inst/utest_cpp/*.o
+
+inst/testdir
