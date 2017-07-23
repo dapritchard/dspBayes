@@ -37,7 +37,7 @@ InputData::InputData(std::string dir_nm) {
     Rcpp::List w_day_blocks(n_elem);
     for (int k = 0; k < n_elem; ++k) {
 
-	int s = k * DSP_BAYES_N_DAY_BLOCK_ELEM;
+    	int s = k * DSP_BAYES_N_DAY_BLOCK_ELEM;
 
     	w_day_blocks[k] = Rcpp::IntegerVector::create(Rcpp::Named("beg_idx")  = ptr_int[s + 0],
     						      Rcpp::Named("n_days")   = ptr_int[s + 1],
@@ -56,7 +56,7 @@ InputData::InputData(std::string dir_nm) {
     Rcpp::List subj_day_blocks(n_elem);
     for (int k = 0; k < n_elem; ++k) {
 
-	int s = k * DSP_BAYES_N_SUBJ_BLOCK_ELEM;
+    	int s = k * DSP_BAYES_N_SUBJ_BLOCK_ELEM;
 
     	subj_day_blocks[k] = Rcpp::IntegerVector::create(Rcpp::Named("beg_idx")  = ptr_int[s + 0],
     							 Rcpp::Named("n_days")   = ptr_int[s + 1]);
@@ -76,10 +76,10 @@ InputData::InputData(std::string dir_nm) {
     	gamma_specs[k] = Rcpp::IntegerVector::create(Rcpp::Named("type")  = ptr_dbl[s + 0],
     						     Rcpp::Named("h")     = ptr_dbl[s + 1],
     						     Rcpp::Named("hyp_a") = ptr_dbl[s + 2],
-						     Rcpp::Named("hyp_b") = ptr_dbl[s + 3],
+    						     Rcpp::Named("hyp_b") = ptr_dbl[s + 3],
     						     Rcpp::Named("hyp_p") = ptr_dbl[s + 4],
     						     Rcpp::Named("bnd_l") = ptr_dbl[s + 5],
-						     Rcpp::Named("bnd_u") = ptr_dbl[s + 6]);
+    						     Rcpp::Named("bnd_u") = ptr_dbl[s + 6]);
     }
     delete[] ptr_dbl;
 
@@ -109,10 +109,10 @@ void InputData::print_visual_verif() const {
     cout << "U:  nrow = " << U.nrow() << "  " << U.ncol() <<  "\n";
     cout << "--------------------\n";
     for (int i = 0; i < max((int) U.nrow(), 5); ++i) {
-	for (int j = 0; j < max(U.ncol(), 5); ++j) {
-	    cout << U(i, j) << "  ";
-	}
-	cout << "\n";
+    	for (int j = 0; j < max(U.ncol(), 5); ++j) {
+    	    cout << U(i, j) << "  ";
+    	}
+    	cout << "\n";
     }
     cout << "\n\n";
 
@@ -120,7 +120,7 @@ void InputData::print_visual_verif() const {
     cout << "X:  length = " << X_rcpp.size() << "\n";
     cout << "--------------------\n";
     for (int i = 0; i < max((int) X_rcpp.size(), 5); ++i) {
-	cout << X_rcpp(i) << "  ";
+    	cout << X_rcpp(i) << "  ";
     }
     cout << "\n\n\n";
 

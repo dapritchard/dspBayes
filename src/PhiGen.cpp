@@ -10,11 +10,11 @@ using R::lgammafn;
 
 
 
-PhiGen::PhiGen(Rcpp::NumericVector phi_hyper, int n_samp) :
+PhiGen::PhiGen(Rcpp::NumericVector phi_specs, int n_samp) :
     // initialization list
-    m_hyp_c1(phi_hyper["c1"]),
-    m_hyp_c2(phi_hyper["c2"]),
-    m_delta(phi_hyper["delta"]),
+    m_hyp_c1(phi_specs["c1"]),
+    m_hyp_c2(phi_specs["c2"]),
+    m_delta(phi_specs["delta"]),
     m_vals(new double[n_samp]),
     m_output_start(m_vals),
     m_output_end(m_output_start + n_samp),
@@ -23,7 +23,7 @@ PhiGen::PhiGen(Rcpp::NumericVector phi_hyper, int n_samp) :
     m_is_same_as_prev(false),
     m_log_norm_const(0) {
 
-    *m_vals = phi_hyper["mean"];
+    *m_vals = phi_specs["mean"];
 }
 
 
