@@ -37,6 +37,9 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 	       int n_burn,
 	       int n_samp) {
 
+    g_phi_specs = phi_specs;
+    g_n_samp = n_samp;
+
     CppUnit::TextUi::TestRunner runner;
     runner.addTest(PhiGenTest::suite());
 

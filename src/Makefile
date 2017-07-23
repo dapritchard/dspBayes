@@ -224,6 +224,8 @@ PhiGen.o : PhiGen.h ProposalFcns.h XiGen.h
 
 ProposalFcns.o : ProposalFcns.h
 
+RcppExports.cpp : dsp_sampler.cpp UTestDriver.cpp
+	Rscript -e 'Rcpp::compileAttributes("..")'
 RcppExports.o :
 
 XiGen.o : XiGen.h PhiGen.h DayBlock.h UProdBeta.h
