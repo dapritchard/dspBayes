@@ -1,6 +1,9 @@
+#include <algorithm>
 #include "Rcpp.h"
 #include "PhiGen.h"
 #include "UTestPhiGen.h"
+
+#define DSP_BAYES_UTEST_PHI_GEN_SEED_VAL 99
 
 using Rcpp::as;
 
@@ -8,7 +11,17 @@ using Rcpp::as;
 
 
 void PhiGenTest::setUp() {
-    phi = new PhiGen(g_phi_specs, g_n_samp);
+
+    // construct phi
+    PhiGen phi = new PhiGen(g_phi_specs, g_n_samp);
+
+    // construct xi.  We pass it an empty list since we don't need the subject
+    // information.
+    XiGen xi = new XiGen(Rcpp::List, g_n_samp);
+    std::copy(g_xi_vals.begin(), g_xi_vals.end(), xi.output_start());
+
+    // set seed for reproducibility
+    set.seed(DSP_BAYES_SEED_VAL);
 }
 
 
@@ -16,6 +29,7 @@ void PhiGenTest::setUp() {
 
 void PhiGenTest::tearDown() {
     delete phi;
+    delete xi;
 }
 
 
@@ -37,4 +51,14 @@ void PhiGenTest::test_constructor() {
 
     // set current entry of phi samples as the mean of the prior distribution
     CPPUNIT_ASSERT_EQUAL(*(phi->m_vals), as<double>(g_phi_specs["mean"]));
+}
+
+
+
+
+
+void PhiGenTest::test_calculations() {
+
+
+
 }

@@ -10,19 +10,19 @@ using R::lgammafn;
 
 
 
-PhiGen::PhiGen(Rcpp::NumericVector phi_specs, int n_samp) :
+PhiGen::PhiGen(Rcpp::NumericVector phi_specs, int n_samp, bool record_status) :
     // initialization list
     m_hyp_c1(phi_specs["c1"]),
     m_hyp_c2(phi_specs["c2"]),
     m_delta(phi_specs["delta"]),
-    m_vals(new double[n_samp]),
-    m_output_start(m_vals),
-    m_output_end(m_output_start + n_samp),
+    m_vals_rcpp(Rcpp::NumericVector(Rcpp::no_init(record_status ? n_samp : 1))),
+    m_vals(m_vals_rcpp.begin()),
     m_accept_ctr(0),
-    m_record_status(false),
+    m_record_status(record_status),
     m_is_same_as_prev(false),
     m_log_norm_const(0) {
 
+    // initialize current value of phi to be the mean of the prior distribution
     *m_vals = phi_specs["mean"];
 }
 
@@ -42,10 +42,10 @@ void PhiGen::sample(const XiGen& xi) {
 
     // sample the updated value of phi by either accepting the proposal value or
     // by keeping the current value
-    *(m_vals + 1) = update_phi(log_r, proposal_val);
-    if (m_record_status) {
+    if (m_record_status && g_record_status) {
 	++m_vals;
     }
+    *m_vals = update_phi(log_r, proposal_val);
 }
 
 
@@ -72,7 +72,7 @@ double PhiGen::calc_log_r(const XiGen& xi, double proposal_val) {
     double log_proportion_dgamma_xi, log_proportion_dgamma_phi;
 
     log_proportion_dgamma_xi = calc_log_proportion_dgamma_xi(xi, proposal_val);
-    log_proportion_dgamma_phi = calc_log_proportion_dgamma_phi(xi, proposal_val);
+    log_proportion_dgamma_phi = calc_log_proportion_dgamma_phi(proposal_val);
 
     return log_proportion_dgamma_xi + log_proportion_dgamma_phi;
 }
@@ -161,13 +161,14 @@ double PhiGen::calc_log_proportion_dgamma_xi(const XiGen& xi, double proposal_va
 // and where c_1 and c_2 are the hyperparameters for the gamma distribution for
 // phi.
 
-double PhiGen::calc_log_proportion_dgamma_phi(const XiGen& xi, double proposal_val) {
+double PhiGen::calc_log_proportion_dgamma_phi(double proposal_val) const {
 
     double term1, term2;
 
-    // (c_1 - 1) * log(phi^{*} / phi^(s))
+    // this term is:  (c_1 - 1) * log(phi^{*} / phi^(s))
     term1 = (m_hyp_c1 - 1) * log(proposal_val / *m_vals);
-    // c2 * (phi^{*} - phi^(s))
+
+    // this term is:  c2 * (phi^{*} - phi^(s))
     term2 = m_hyp_c2 * (proposal_val - *m_vals);
 
     return term1 - term2;
@@ -181,6 +182,6 @@ double PhiGen::calc_log_proportion_dgamma_phi(const XiGen& xi, double proposal_v
 //
 //     log(a^a / gamma(a)) = a * log(a) - log( gamma(a) )
 
-double PhiGen::log_dgamma_norm_const(double a) {
+double PhiGen::log_dgamma_norm_const(double a) const {
     return a * log(a) + lgammafn(a);
 }
