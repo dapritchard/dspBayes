@@ -31,7 +31,7 @@ PhiGen::PhiGen(Rcpp::NumericVector phi_specs, int n_samp, bool record_status) :
 
 void PhiGen::sample(const XiGen& xi) {
 
-    double proposal_val, log_r;
+    double proposal_val, new_val, log_r;
 
     // sample the proposal value for Metropolis step
     proposal_val = ProposalFcns::abs_unif(*m_vals, m_delta);
@@ -42,10 +42,14 @@ void PhiGen::sample(const XiGen& xi) {
 
     // sample the updated value of phi by either accepting the proposal value or
     // by keeping the current value
+    new_val = update_phi(log_r, proposal_val);
+
+    // save the value of the new sample.  If we are recording samples then
+    // increment `m_vals` so that we don't overwrite the previous sample.
     if (m_record_status && g_record_status) {
 	++m_vals;
     }
-    *m_vals = update_phi(log_r, proposal_val);
+    *m_vals = new_val;
 }
 
 

@@ -3,6 +3,7 @@
 #include "PhiGen.h"
 #include "UTestPhiGen.h"
 
+using std::min;
 using Rcpp::as;
 
 
@@ -74,32 +75,32 @@ void PhiGenTest::test_calculations() {
 
     // log_dgamma_norm_const
     CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["log_dgamma_norm_const"]),
-				 phi->log_dgamma_norm_const(proposal_val),
-				 g_eps);
+    				 phi->log_dgamma_norm_const(proposal_val),
+    				 g_eps);
 
     // calc_log_proportion_dgamma_phi
     CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["log_proportion_dgamma_phi"]),
-				 phi->calc_log_proportion_dgamma_phi(proposal_val),
-				 g_eps);
+    				 phi->calc_log_proportion_dgamma_phi(proposal_val),
+    				 g_eps);
 
     // calc_log_proportion_dgamma_xi
     // run once when `m_is_same_as_prev` is false
     CPPUNIT_ASSERT(! phi->m_is_same_as_prev);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["log_proportion_dgamma_xi"]),
-				 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
-				 g_eps);
+    				 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
+    				 g_eps);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["m_log_norm_const"]),
-				 phi->m_log_norm_const,
-				 g_eps);
+    				 phi->m_log_norm_const,
+    				 g_eps);
     // now run when `m_is_same_as_prev` is true.  The function should reuse some
     // of the internal calculations from last time
     phi->m_is_same_as_prev = true;
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["calc_log_proportion_dgamma_xi"]),
-				 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
-				 g_eps);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["log_proportion_dgamma_xi"]),
+    				 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
+    				 g_eps);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["m_log_norm_const"]),
-				 phi->m_log_norm_const,
-				 g_eps);
+    				 phi->m_log_norm_const,
+    				 g_eps);
 }
 
 
@@ -133,14 +134,15 @@ void PhiGenTest::test_update() {
 
 
 
-void PhiGenTest::test_sample() {
+// record samples when storing the results
+void PhiGenTest::test_sample_yes_record() {
 
     Rcpp::Environment base("package:base");
     Rcpp::Function set_seed = base["set.seed"];
     set_seed(as<unsigned int>(g_test_data_phi["seed_val"]));
 
     // sample
-    for (int i = 0; i < g_test_data_phi_samples.size(); ++i) {
+    for (int i = 0; i < min((int) g_test_data_phi_samples.size(), g_n_samp); ++i) {
 	phi->sample(*xi);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(g_test_data_phi_samples[i], phi->val(), g_eps);
     }
@@ -148,4 +150,27 @@ void PhiGenTest::test_sample() {
     			 phi->m_vals - phi->m_vals_rcpp.begin());
     CPPUNIT_ASSERT_EQUAL(as<int>(g_test_data_phi["accept_ctr"]),
 			 phi->m_accept_ctr);
+}
+
+
+
+
+// record samples when not storing the results
+void PhiGenTest::test_sample_no_record() {
+
+    PhiGen phi_no_record(g_phi_specs, g_n_samp, false);
+
+    Rcpp::Environment base("package:base");
+    Rcpp::Function set_seed = base["set.seed"];
+    set_seed(as<unsigned int>(g_test_data_phi["seed_val"]));
+
+    // sample
+    for (int i = 0; i < min((int) g_test_data_phi_samples.size(), g_n_samp); ++i) {
+	phi_no_record.sample(*xi);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(g_test_data_phi_samples[i], phi_no_record.val(), g_eps);
+    }
+    CPPUNIT_ASSERT_EQUAL((long int) 0,
+			 phi_no_record.m_vals - phi_no_record.m_vals_rcpp.begin());
+    CPPUNIT_ASSERT_EQUAL(as<int>(g_test_data_phi["accept_ctr"]),
+			 phi_no_record.m_accept_ctr);
 }

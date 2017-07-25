@@ -30,13 +30,15 @@ public:
     void test_constructor();
     void test_calculations();
     void test_update();
-    void test_sample();
+    void test_sample_yes_record();
+    void test_sample_no_record();
 
     CPPUNIT_TEST_SUITE(PhiGenTest);
     CPPUNIT_TEST(test_constructor);
     CPPUNIT_TEST(test_calculations);
     CPPUNIT_TEST(test_update);
-    CPPUNIT_TEST(test_sample);
+    CPPUNIT_TEST(test_sample_yes_record);
+    CPPUNIT_TEST(test_sample_no_record);
     CPPUNIT_TEST_SUITE_END();
 
 

@@ -65,7 +65,8 @@ utest_phi <- function(xi_vals,
     hyp_phi_list <- list(c1 = hyp_c1, c2 = hyp_c2)
     out_calc_log_r <- getPhiLogR(xi_vals, phi_init, phi_proposal, hyp_phi_list)
 
-    # sample a series of phi updates
+    # sample a series of phi updates.  Note: this is a random sample, so we have
+    # to set a seed.
     set.seed(seed_val)
     test_data_phi_samples <- vector("numeric", n_phi_samp)
     curr_phi <- phi_init

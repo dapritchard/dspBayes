@@ -179,10 +179,10 @@ LDLIBS := $(addprefix -l, R)
 
 # primary makefile targets -----------------------------------------------------
 
-targets := $(addsuffix .o, $(basename $(wildcard *.cpp)))
-utests := $(addsuffix .o, $(basename $(wildcard Utest*.cpp)))
+utests := $(addsuffix .o, $(basename $(wildcard UTest*.cpp)))
+targets := $(filter-out $(utests), $(addsuffix .o, $(basename $(wildcard *.cpp))))
 
-.PHONY : all clean clobber
+.PHONY : all clean clobber print-%
 
 # default rule
 all : $(targets) $(utests) dspBayes.so
@@ -192,6 +192,11 @@ clean :
 
 clobber :
 	rm -f *.o dspBayes.so
+
+# for debugging the makefile.  Print out a variable name `varname' by running
+# `make print-varname'
+print-%:
+	@echo '$*=$($*)'
 
 
 
@@ -226,7 +231,7 @@ ProposalFcns.o : ProposalFcns.h
 
 RcppExports.cpp : dsp_sampler.cpp UTestDriver.cpp
 	Rscript -e 'Rcpp::compileAttributes("..")'
-RcppExports.o :
+RcppExports.o : RcppExports.cpp
 
 XiGen.o : XiGen.h PhiGen.h DayBlock.h UProdBeta.h
 
