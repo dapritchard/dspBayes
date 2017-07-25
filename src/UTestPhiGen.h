@@ -5,25 +5,51 @@
 #include "PhiGen.h"
 #include "cppunit/extensions/HelperMacros.h"
 
-extern Rcpp::NumericVector g_phi_specs;
 extern int g_n_samp;
+extern double g_eps;
+
+extern Rcpp::NumericVector g_phi_specs;
 extern Rcpp::NumericVector g_xi_vals;
+extern Rcpp::NumericVector g_test_data_phi;
+extern Rcpp::NumericVector g_test_data_phi_samples;
+extern Rcpp::List g_subj_day_blocks;
 
 
 class PhiGenTest : public CppUnit::TestFixture {
 
 public:
 
-    PhiGen* phi;
-
     void setUp();
     void tearDown();
 
+    // void init_members(int n_samp,
+    // 		      Rcpp::NumericVector phi_specs,
+    // 		      Rcpp::NumericVector xi_vals,
+    // 		      Rcpp::NumericVector test_data_phi,
+    // 		      Rcpp::NumericVector test_data_phi_samples);
     void test_constructor();
+    void test_calculations();
+    void test_update();
+    void test_sample();
 
     CPPUNIT_TEST_SUITE(PhiGenTest);
     CPPUNIT_TEST(test_constructor);
+    CPPUNIT_TEST(test_calculations);
+    CPPUNIT_TEST(test_update);
+    CPPUNIT_TEST(test_sample);
     CPPUNIT_TEST_SUITE_END();
+
+
+private:
+
+    PhiGen* phi;
+    XiGen* xi;
+
+    int m_n_samp;
+    Rcpp::NumericVector m_phi_specs;
+    Rcpp::NumericVector m_xi_vals;
+    Rcpp::NumericVector m_test_data_phi;
+    Rcpp::NumericVector m_test_data_phi_samples;
 };
 
 

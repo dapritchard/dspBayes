@@ -86,16 +86,17 @@ double PhiGen::calc_log_r(const XiGen& xi, double proposal_val) {
 
 double PhiGen::update_phi(double log_r, double proposal_val) {
 
+    // case: accept proposal value
     if (log(R::unif_rand()) < log_r) {
-	*m_vals = proposal_val;
 	m_is_same_as_prev = false;
 	++m_accept_ctr;
     }
+    // case: reject proposal value
     else {
 	m_is_same_as_prev = true;
     }
 
-    return *m_vals;
+    return m_is_same_as_prev ? *m_vals : proposal_val;
 }
 
 
@@ -183,5 +184,5 @@ double PhiGen::calc_log_proportion_dgamma_phi(double proposal_val) const {
 //     log(a^a / gamma(a)) = a * log(a) - log( gamma(a) )
 
 double PhiGen::log_dgamma_norm_const(double a) const {
-    return a * log(a) + lgammafn(a);
+    return a * log(a) - lgammafn(a);
 }

@@ -28,7 +28,7 @@ public:
     // tracks whether we are past the burn-in phase
     bool m_record_status;
 
-    XiGen(Rcpp::List subj_days, int n_samp);
+    XiGen(Rcpp::List subj_day_blocks, int n_samp);
     ~XiGen();
 
     void sample(const WGen& W, const PhiGen& phi, const UProdBeta& u_prod_beta);

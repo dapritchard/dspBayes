@@ -4,13 +4,13 @@
 
 
 
-XiGen::XiGen(Rcpp::List subj_days, int n_samp) :
+XiGen::XiGen(Rcpp::List subj_day_blocks, int n_samp) :
     // initialization list
-    m_xi_vals(new double[subj_days.size() * n_samp]),
+    m_xi_vals(new double[subj_day_blocks.size() * n_samp]),
     m_output_start(m_xi_vals),
-    m_output_end(m_output_start + (subj_days.size() * n_samp)),
-    m_subj(DayBlock::list_to_arr(subj_days)),
-    m_n_subj(subj_days.size()),
+    m_output_end(m_output_start + (subj_day_blocks.size() * n_samp)),
+    m_subj(DayBlock::list_to_arr(subj_day_blocks)),
+    m_n_subj(subj_day_blocks.size()),
     m_record_status(false) {
 
     // initialize values for all subjects to 1 (i.e. no fecundability effect)

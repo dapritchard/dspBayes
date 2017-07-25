@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // utest_cpp_
-int utest_cpp_(Rcpp::NumericMatrix U, Rcpp::IntegerVector X_rcpp, Rcpp::List w_day_blocks, Rcpp::IntegerVector w_to_days_idx, Rcpp::IntegerVector w_cyc_to_cyc_idx, Rcpp::List subj_day_blocks, Rcpp::IntegerVector day_to_subj_idx, Rcpp::List gamma_specs, Rcpp::NumericVector phi_specs, int fw_len, int n_burn, int n_samp);
-RcppExport SEXP _dspBayes_utest_cpp_(SEXP USEXP, SEXP X_rcppSEXP, SEXP w_day_blocksSEXP, SEXP w_to_days_idxSEXP, SEXP w_cyc_to_cyc_idxSEXP, SEXP subj_day_blocksSEXP, SEXP day_to_subj_idxSEXP, SEXP gamma_specsSEXP, SEXP phi_specsSEXP, SEXP fw_lenSEXP, SEXP n_burnSEXP, SEXP n_sampSEXP) {
+int utest_cpp_(Rcpp::NumericMatrix U, Rcpp::IntegerVector X_rcpp, Rcpp::List w_day_blocks, Rcpp::IntegerVector w_to_days_idx, Rcpp::IntegerVector w_cyc_to_cyc_idx, Rcpp::List subj_day_blocks, Rcpp::IntegerVector day_to_subj_idx, Rcpp::List gamma_specs, Rcpp::NumericVector phi_specs, int fw_len, int n_burn, int n_samp, Rcpp::NumericVector xi_vals, Rcpp::NumericVector test_data_phi, Rcpp::NumericVector test_data_phi_samples);
+RcppExport SEXP _dspBayes_utest_cpp_(SEXP USEXP, SEXP X_rcppSEXP, SEXP w_day_blocksSEXP, SEXP w_to_days_idxSEXP, SEXP w_cyc_to_cyc_idxSEXP, SEXP subj_day_blocksSEXP, SEXP day_to_subj_idxSEXP, SEXP gamma_specsSEXP, SEXP phi_specsSEXP, SEXP fw_lenSEXP, SEXP n_burnSEXP, SEXP n_sampSEXP, SEXP xi_valsSEXP, SEXP test_data_phiSEXP, SEXP test_data_phi_samplesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -23,7 +23,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type fw_len(fw_lenSEXP);
     Rcpp::traits::input_parameter< int >::type n_burn(n_burnSEXP);
     Rcpp::traits::input_parameter< int >::type n_samp(n_sampSEXP);
-    rcpp_result_gen = Rcpp::wrap(utest_cpp_(U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_cyc_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, fw_len, n_burn, n_samp));
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xi_vals(xi_valsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type test_data_phi(test_data_phiSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type test_data_phi_samples(test_data_phi_samplesSEXP);
+    rcpp_result_gen = Rcpp::wrap(utest_cpp_(U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_cyc_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, fw_len, n_burn, n_samp, xi_vals, test_data_phi, test_data_phi_samples));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -51,7 +54,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_dspBayes_utest_cpp_", (DL_FUNC) &_dspBayes_utest_cpp_, 12},
+    {"_dspBayes_utest_cpp_", (DL_FUNC) &_dspBayes_utest_cpp_, 15},
     {"_dspBayes_dsp_sampler", (DL_FUNC) &_dspBayes_dsp_sampler, 12},
     {NULL, NULL, 0}
 };

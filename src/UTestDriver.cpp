@@ -9,8 +9,15 @@
 
 extern int* d2s;
 
-Rcpp::NumericVector g_phi_specs;
+bool g_record_status;
+
 int g_n_samp;
+double g_eps;
+Rcpp::NumericVector g_phi_specs;
+Rcpp::NumericVector g_test_data_phi;
+Rcpp::NumericVector g_test_data_phi_samples;
+Rcpp::NumericVector g_xi_vals;
+Rcpp::List g_subj_day_blocks;
 
 // preg_cycle            used when sampling W
 // w_to_days_idx         categorical gamma: a_tilde
@@ -35,13 +42,25 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 	       Rcpp::NumericVector phi_specs,
 	       int fw_len,
 	       int n_burn,
-	       int n_samp) {
+	       int n_samp,
+	       Rcpp::NumericVector xi_vals,
+	       Rcpp::NumericVector test_data_phi,
+	       Rcpp::NumericVector test_data_phi_samples) {
 
-    g_phi_specs = phi_specs;
+    g_record_status = true;
+    g_eps = 0.00000001;
+
     g_n_samp = n_samp;
+    g_phi_specs = phi_specs;
+    g_xi_vals = xi_vals;
+    g_test_data_phi = test_data_phi;
+    g_test_data_phi_samples = test_data_phi_samples;
+    g_subj_day_blocks = subj_day_blocks;
 
     CppUnit::TextUi::TestRunner runner;
     runner.addTest(PhiGenTest::suite());
+
+
 
     bool out = runner.run();
 

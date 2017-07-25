@@ -41,7 +41,7 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
     WGen W(w_day_blocks, w_to_days_idx, w_cyc_to_cyc_idx, fw_len);
     XiGen xi(subj_day_blocks, n_samp);
     CoefGen regr_coefs(U, gamma_specs, n_samp);
-    PhiGen phi(phi_specs, n_samp);
+    PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples
     UProdBeta u_prod_beta(U.size());
     int* X = X_rcpp.begin();
     d2s = day_to_subj_idx.begin();
@@ -62,13 +62,13 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
     	// update phi, the variance parameter for xi
     	phi.sample(xi);
 
-	// call the `record` family of functions to inform the various functions
-	// to begin recording their MCMC samples
-	if (s == 0) {
-	    // xi.record();
-	    // regr_coefs.record();
-	    phi.record();
-	}
+	// // call the `record` family of functions to inform the various functions
+	// // to begin recording their MCMC samples
+	// if (s == 0) {
+	//     xi.record();
+	//     regr_coefs.record();
+	//     phi.record();
+	// }
 
 	// check for user interrupt every `DSP_BAYES_N_INTER_CHECK` iterations
 	if ((s % DSP_BAYES_N_INTER_CHECK) == 0) Rcpp::checkUserInterrupt();
