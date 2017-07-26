@@ -33,8 +33,8 @@ void PhiGenTest::setUp() {
     // construct xi.  We pass it an empty list since we don't need the subject
     // information.
     Rcpp::List empty;
-    xi = new XiGen(g_subj_day_blocks, g_n_samp);
-    std::copy(g_xi_vals.begin(), g_xi_vals.end(), xi->output_start());
+    xi = new XiGen(g_subj_day_blocks, g_n_samp, false);
+    std::copy(g_xi_vals.begin(), g_xi_vals.end(), xi->m_vals_rcpp.begin());
 }
 
 

@@ -4,18 +4,19 @@
 
 
 
-XiGen::XiGen(Rcpp::List subj_day_blocks, int n_samp) :
+XiGen::XiGen(Rcpp::List subj_day_blocks, int n_samp, bool record_status) :
     // initialization list
-    m_xi_vals(new double[subj_day_blocks.size() * n_samp]),
-    m_output_start(m_xi_vals),
-    m_output_end(m_output_start + (subj_day_blocks.size() * n_samp)),
     m_subj(DayBlock::list_to_arr(subj_day_blocks)),
     m_n_subj(subj_day_blocks.size()),
-    m_record_status(false) {
+    m_record_status(record_status) {
+
+    // can this be moved to the initialization list?
+    m_vals_rcpp = Rcpp::no_init_matrix(subj_day_blocks.size(), record_status ? n_samp : 1);
+    m_vals = m_vals_rcpp.begin();
 
     // initialize values for all subjects to 1 (i.e. no fecundability effect)
     for (int i = 0; i < m_n_subj; ++i) {
-    	m_xi_vals[i] = 1;
+    	m_vals[i] = 1;
     }
 }
 
@@ -23,7 +24,6 @@ XiGen::XiGen(Rcpp::List subj_day_blocks, int n_samp) :
 
 
 XiGen::~XiGen() {
-    delete[] m_output_start;
     delete[] m_subj;
 }
 
@@ -65,12 +65,12 @@ void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& u_prod_bet
     	}
 
     	// sample new value of `xi_i`
-    	m_xi_vals[i] = R::rgamma(phi_val + curr_w_sum, 1 / (phi_val + curr_sum_exp_ubeta));
+    	m_vals[i] = R::rgamma(phi_val + curr_w_sum, 1 / (phi_val + curr_sum_exp_ubeta));
     }
 
     // if we are past the burn phase then move the pointer past the samples so
     // that we don't overwrite them
-    if (m_record_status) {
-	m_xi_vals += m_n_subj;
+    if (m_record_status && g_record_status) {
+	m_vals += m_n_subj;
     }
 }
