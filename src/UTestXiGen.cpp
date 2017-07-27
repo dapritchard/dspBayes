@@ -8,22 +8,17 @@
 
 extern UTestFactory g_ut_factory;
 
-// extern Rcpp::List g_subj_day_blocks;
-// extern Rcpp::List g_preg_cyc;
-// extern Rcpp::NumericVector g_phi_hyper;
-// extern Rcpp::IntegerVector g_w_days_idx;
-// extern Rcpp::IntegerVector g_w_cyc_idx;
-// extern Rcpp::IntegerVector g_w_vals;
-// extern Rcpp::IntegerVector g_ubeta;
-// extern Rcpp::NumericVector g_phi_specs;
-// extern int g_n_days;
-// extern int g_n_samp;
-// extern int g_fw_len;
+
+
 
 XiGenTest::XiGenTest() :
-    subj_day_blocks(g_ut_factory.subj_day_blocks),
-    n_samp(g_ut_factory.n_samp) {
+    target_samples(g_ut_factory.target_samples_xi),
+    n_subj(g_ut_factory.subj_day_blocks.size()()),
+    n_samp(g_ut_factory.n_samp),
+    seed_val(g_ut_factory.seed_val_xi) {
 }
+
+
 
 
 void XiGenTest::setUp() {
@@ -59,17 +54,17 @@ void XiGenTest::tearDown() {
 void XiGenTest::test_constructor() {
 
     // test record samples variant
-    CPPUNIT_ASSERT_EQUAL(subj_day_blocks.size() * n_samp, xi->m_vals_rcpp.size());
+    CPPUNIT_ASSERT_EQUAL(n_subj * n_samp, xi->m_vals_rcpp.size());
     CPPUNIT_ASSERT_EQUAL(xi->m_vals_rcpp.begin(), xi->m_vals);
-    CPPUNIT_ASSERT(xi->m_subj != NULL);
-    CPPUNIT_ASSERT_EQUAL((int) subj_day_blocks.size(), xi->m_n_subj);
+    CPPUNIT_ASSERT(xi->m_n_subj != NULL);
+    CPPUNIT_ASSERT_EQUAL((int) n_subj, xi->m_n_subj);
     CPPUNIT_ASSERT(xi->m_record_status);
 
     // test non-record samples variant
-    CPPUNIT_ASSERT_EQUAL(subj_day_blocks.size(), xi->m_vals_rcpp.size());
+    CPPUNIT_ASSERT_EQUAL(n_subj, xi->m_vals_rcpp.size());
     CPPUNIT_ASSERT_EQUAL(xi->m_vals_rcpp.begin(), xi->m_vals);
     CPPUNIT_ASSERT(xi->m_subj != NULL);
-    CPPUNIT_ASSERT_EQUAL((int) subj_day_blocks.size(), xi->m_n_subj);
+    CPPUNIT_ASSERT_EQUAL((int) n_subj, xi->m_n_subj);
     CPPUNIT_ASSERT(! xi_no_rec->m_record_status);
 }
 
@@ -78,11 +73,28 @@ void XiGenTest::test_constructor() {
 
 void XiGenTest::test_sample_yes_record() {
 
+    // register seed function
+    Rcpp::Environment base("package:base");
+    Rcpp::Function set_seed = base["set.seed"];
+
+    // two samples using the same seed
+    set_seed(seed_val);
+    xi.sample(W, phi, ubeta);
+    set_seed(seed_val));
+    xi.sample(W, phi, ubeta);
+
+    // check that placement of iterator points to beginning of second sample
+    CPPUNIT_ASSERT_EQUAL(xi->m_vals_rcpp.begin() + n_subj, xi->m_vals());
+    // check values of samples
+    CPPUNIT_ASSERT(std::equal(target_samples.begin(), target_samples.end(), xi->m_vals_rcpp.begin()));
+    CPPUNIT_ASSERT(std::equal(target_samples.begin(), target_samples.end(), xi->m_vals()));
 }
 
 
 
 
 void XiGenTest::test_sample_no_record() {
-
+    // xi.sample(W, phi, ubeta);
+    // CPPUNIT_ASSERT_EQUAL((unsigned int) 0, xi->m_vals - xi->m_vals_rcpp.begin());
+    // CPPUNIT_ASSERT(std::equal(target_samples.begin(), target_samples_end(), xi->m_vals_rcpp.begin()));
 }

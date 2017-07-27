@@ -33,7 +33,7 @@ public:
     XiGen(Rcpp::List subj_day_blocks, int n_samp, bool record_status);
     ~XiGen();
 
-    void sample(const WGen& W, const PhiGen& phi, const UProdBeta& u_prod_beta);
+    void sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta);
 
     const double* vals() const { return m_vals; }
     const int n_subj() const { return m_n_subj; }

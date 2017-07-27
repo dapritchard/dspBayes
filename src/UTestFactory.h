@@ -28,9 +28,7 @@ public:
 		 int fw_len,
 		 int n_burn,
 		 int n_samp,
-		 Rcpp::NumericVector xi_vals,
-		 Rcpp::NumericVector test_data_phi,
-		 Rcpp::NumericVector test_data_phi_samples);
+		 Rcpp::List test_data);
 
     // factory methods
     XiGen* xi();
@@ -53,11 +51,16 @@ public:
     int fw_len;
     int n_burn;
     int n_samp;
-    Rcpp::NumericVector xi_vals;
-    Rcpp::NumericVector test_data_phi;
-    Rcpp::NumericVector test_data_phi_samples;
+    Rcpp::NumericVector input_xi;
+    Rcpp::NumericVector input_w;
+    Rcpp::NumericVector input_ubeta;
+    Rcpp::NumericVector target_samples_xi;
+    Rcpp::NumericVector target_data_phi;
+    Rcpp::NumericVector target_samples_phi;
 
     int n_days;
+    int n_subj;
+    double phi_init;
 };
 
 
