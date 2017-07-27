@@ -1,18 +1,21 @@
 #include "Rcpp.h"
 #include "XiGen.h"
+#include "WGen.h"
+#include "PhiGen.h"
+#include "DayBlock.h"
+#include "UProdBeta.h"
 
 
 
 
 XiGen::XiGen(Rcpp::List subj_day_blocks, int n_samp, bool record_status) :
     // initialization list
+    m_vals_rcpp(Rcpp::NumericVector(Rcpp::no_init(subj_day_blocks.size() *
+    						  (record_status ? n_samp : 1)))),
+    m_vals(m_vals_rcpp.begin()),
     m_subj(DayBlock::list_to_arr(subj_day_blocks)),
     m_n_subj(subj_day_blocks.size()),
     m_record_status(record_status) {
-
-    // can this be moved to the initialization list?
-    m_vals_rcpp = Rcpp::no_init_matrix(subj_day_blocks.size(), record_status ? n_samp : 1);
-    m_vals = m_vals_rcpp.begin();
 
     // initialize values for all subjects to 1 (i.e. no fecundability effect)
     for (int i = 0; i < m_n_subj; ++i) {

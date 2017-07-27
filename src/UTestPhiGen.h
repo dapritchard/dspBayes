@@ -3,6 +3,7 @@
 
 #include "Rcpp.h"
 #include "PhiGen.h"
+#include "XiGen.h"
 #include "cppunit/extensions/HelperMacros.h"
 
 extern int g_n_samp;
@@ -46,12 +47,6 @@ private:
 
     PhiGen* phi;
     XiGen* xi;
-
-    int m_n_samp;
-    Rcpp::NumericVector m_phi_specs;
-    Rcpp::NumericVector m_xi_vals;
-    Rcpp::NumericVector m_test_data_phi;
-    Rcpp::NumericVector m_test_data_phi_samples;
 };
 
 

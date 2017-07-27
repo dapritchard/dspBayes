@@ -5,9 +5,14 @@
 #include "XiGen.h"
 
 #include "cppunit/ui/text/TestRunner.h"
+#include "UTestFactory.h"
 #include "UTestPhiGen.h"
+#include "UTestXiGen.h"
 
 extern int* d2s;
+
+UTestFactory g_ut_factory;
+
 
 bool g_record_status;
 
@@ -47,6 +52,23 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 	       Rcpp::NumericVector test_data_phi,
 	       Rcpp::NumericVector test_data_phi_samples) {
 
+    g_ut_factory = UTestFactory(U,
+				X_rcpp,
+				w_day_blocks,
+				w_to_days_idx,
+				w_cyc_to_cyc_idx,
+				subj_day_blocks,
+				day_to_subj_idx,
+				gamma_specs,
+				phi_specs,
+				fw_len,
+				n_burn,
+				n_samp,
+				xi_vals,
+				test_data_phi,
+				test_data_phi_samples);
+
+
     g_record_status = true;
     g_eps = 0.00000001;
 
@@ -59,7 +81,7 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 
     CppUnit::TextUi::TestRunner runner;
     runner.addTest(PhiGenTest::suite());
-
+    runner.addTest(XiGenTest::suite());
 
 
     bool out = runner.run();

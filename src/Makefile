@@ -247,4 +247,8 @@ utests : override CPPFLAGS += $(cpp_incl_loc)
 
 UTestDriver.o : UTestPhiGen.h
 
-UTestPhiGen.o : PhiGen.h UTestPhiGen.h
+UTestFactory.o : UTestFactory.h XiGen.h WGen.h PhiGen.h UProdBeta.h
+
+UTestPhiGen.o : PhiGen.h UTestPhiGen.h XiGen.h
+
+UTestXiGen.o : UTestXiGen.h XiGen.h WGen.h PhiGen.h UProdBeta.h

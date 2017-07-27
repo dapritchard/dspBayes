@@ -10,7 +10,7 @@ public:
     double* m_exp_vals;
     const int m_n_days;
 
-    UProdBeta(int n);
+    UProdBeta(int n_days);
     ~UProdBeta();
 
     double* vals() { return m_vals; }

@@ -39,7 +39,7 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
 
     // create data objects
     WGen W(w_day_blocks, w_to_days_idx, w_cyc_to_cyc_idx, fw_len);
-    XiGen xi(subj_day_blocks, n_samp);
+    XiGen xi(subj_day_blocks, n_samp, true);
     CoefGen regr_coefs(U, gamma_specs, n_samp);
     PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples
     UProdBeta u_prod_beta(U.size());

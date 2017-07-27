@@ -2,11 +2,11 @@
 #include "UProdBeta.h"
 
 
-UProdBeta::UProdBeta(int n) :
+UProdBeta::UProdBeta(int n_days) :
     // initialization list
-    m_vals(new double[n]),
-    m_exp_vals(new double[n]),
-    m_n_days(n)
+    m_vals(new double[n_days]),
+    m_exp_vals(new double[n_days]),
+    m_n_days(n_days)
 {
     // initialize `U * beta` values to 0 (i.e. `beta` values are all 0,
     // corresponding to no effect in the model)

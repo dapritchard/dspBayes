@@ -15,8 +15,8 @@ class XiGen {
 public:
 
     // storage for the `xi_i` values
-    Rcpp::NumericMatrix m_vals_rcpp;
-    Rcpp::NumericMatrix::iterator m_vals;
+    Rcpp::NumericVector m_vals_rcpp;
+    Rcpp::NumericVector::iterator m_vals;
 
     // the elements of `m_subj` each map an individual to a block of days from
     // the day-specific data

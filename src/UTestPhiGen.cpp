@@ -1,6 +1,7 @@
 #include <algorithm>
 #include "Rcpp.h"
 #include "PhiGen.h"
+#include "XiGen.h"
 #include "UTestPhiGen.h"
 
 using std::min;
@@ -30,9 +31,7 @@ void PhiGenTest::setUp() {
     // construct phi
     phi = new PhiGen(g_phi_specs, g_n_samp, true);
 
-    // construct xi.  We pass it an empty list since we don't need the subject
-    // information.
-    Rcpp::List empty;
+    // construct xi
     xi = new XiGen(g_subj_day_blocks, g_n_samp, false);
     std::copy(g_xi_vals.begin(), g_xi_vals.end(), xi->m_vals_rcpp.begin());
 }
@@ -50,7 +49,7 @@ void PhiGenTest::tearDown() {
 
 void PhiGenTest::test_constructor() {
 
-    // initialize members
+    // member initialization
     CPPUNIT_ASSERT_EQUAL(as<double>(g_phi_specs["c1"]), phi->m_hyp_c1);
     CPPUNIT_ASSERT_EQUAL(as<double>(g_phi_specs["c2"]), phi->m_hyp_c2);
     CPPUNIT_ASSERT_EQUAL(as<double>(g_phi_specs["delta"]), phi->m_delta);
@@ -61,7 +60,7 @@ void PhiGenTest::test_constructor() {
     CPPUNIT_ASSERT(! phi->m_is_same_as_prev);
     CPPUNIT_ASSERT_EQUAL(0.0, phi->m_log_norm_const);
 
-    // set current entry of phi samples as the mean of the prior distribution
+    // initial value for phi
     CPPUNIT_ASSERT_EQUAL(as<double>(g_phi_specs["mean"]), *(phi->m_vals));
 }
 

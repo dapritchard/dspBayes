@@ -6,16 +6,16 @@
 
 
 WGen::WGen(Rcpp::List& preg_cyc,
-	   Rcpp::IntegerVector& w_days_idx,
-	   Rcpp::IntegerVector& w_cyc_idx,
+	   Rcpp::IntegerVector& w_to_days_idx,
+	   Rcpp::IntegerVector& w_cyc_to_cyc_idx,
 	   int fw_len) :
     // initialization list
-    m_w_vals(new int[w_days_idx.size()]),
-    m_w_sums(new int[preg_cyc.size()]),
-    m_w_days_idx(w_days_idx.begin()),
-    m_w_cyc_idx(w_cyc_idx.begin()),
+    m_vals(new int[w_to_days_idx.size()]),
+    m_sums(new int[preg_cyc.size()]),
+    m_days_idx(w_to_days_idx.begin()),
+    m_cyc_idx(w_cyc_to_cyc_idx.begin()),
     m_preg_cyc(PregCyc::list_to_arr(preg_cyc)),
-    m_n_days(w_days_idx.size()),
+    m_n_days(w_to_days_idx.size()),
     m_n_preg_cyc(preg_cyc.size()),
     m_mult_probs(new double[fw_len]) {
 }
@@ -24,8 +24,8 @@ WGen::WGen(Rcpp::List& preg_cyc,
 
 
 WGen::~WGen() {
-    delete[] m_w_vals;
-    delete[] m_w_sums;
+    delete[] m_vals;
+    delete[] m_sums;
     delete[] m_mult_probs;
     delete[] m_preg_cyc;
 }
@@ -37,8 +37,8 @@ void WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 
     // point to the beginning of the arrays storing the `W_ijk` and `sum_k
     // W_ijk`
-    int* curr_w = m_w_vals;
-    int* curr_w_sum = m_w_sums;
+    int* curr_w = m_vals;
+    int* curr_w_sum = m_sums;
     // point to the beginning of the array storing the current values of `xi`
     const double* xi_vals = xi.vals();
     // point to the beginning of the array storing the current values of `X_ijk
