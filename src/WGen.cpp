@@ -69,8 +69,8 @@ void WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 	    // day-specific index of the v-th day in the current cycle
 	    int r = curr_beg_idx + v;
 
-	    // copy and add in the `X_ijk * exp( u_{ijk}^T beta )` term to the running
-	    // total for `sum_k W_ijk`
+	    // copy and add in the `X_ijk * exp( u_{ijk}^T beta )` term to the
+	    // running total for `sum_k W_ijk`
 	    curr_sum_val += m_mult_probs[v] = exp_uprod_beta[r];
 	}
 

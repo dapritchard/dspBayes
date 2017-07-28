@@ -16,24 +16,48 @@ utest_cpp <- function(dsp_data,
     # sample women-specific fecundability multiplier
     xi <- rgamma(length(dsp_data$subj_day_blocks), 1, 1)
 
+    # sample latent pregnancy variable W
+    W <- rpois(length(dsp_data$w_to_days_idx), 1.5)
+
+    # sample U * beta
+    ubeta <- rnorm(length(dsp_data$X))
+
     # phi testing data
-    out_utest_phi <- utest_phi(xi)
+    phi_seed <- 99L
+    out_utest_phi <- utest_phi(xi, seed_val = phi_seed)
+
+    # xi testing data
+    xi_seed <- 21L
+    target_samples_xi <- utest_xi(dsp_data, W, ubeta, phi_specs["mean"], xi_seed)
+
+    # collect seeds
+    seed_vals <- c(phi = phi_seed,
+                   xi  = xi_seed)
+
+    # collect testing objects
+    test_data <- list(input_xi           = xi,
+                      input_w            = W,
+                      input_ubeta        = ubeta,
+                      target_samples_xi  = target_samples_xi,
+                      target_data_phi    = out_utest_phi$target_data,
+                      target_samples_phi = out_utest_phi$target_samples,
+                      seed_vals          = seed_vals,
+                      epsilon            = 1e-12)
 
     n_samp <- 100
 
-    out <- utest_cpp_(U                = dsp_data$U,
-                      X_rcpp           = dsp_data$X,
-                      w_day_blocks     = dsp_data$w_day_blocks,
-                      w_to_days_idx    = dsp_data$w_to_days_idx,
-                      w_cyc_to_cyc_idx = dsp_data$w_cyc_to_cyc_idx,
-                      subj_day_blocks  = dsp_data$subj_day_blocks,
-                      day_to_subj_idx  = dsp_data$day_to_subj_idx,
-                      gamma_specs      = gamma_hyper_list,
-                      phi_specs        = phi_specs,
-                      fw_len           = 5,
-                      n_burn           = 0,
-                      n_samp           = n_samp,
-                      xi_vals          = xi,
-                      test_data_phi    = out_utest_phi$test_data_phi,
-                      test_data_phi_samples = out_utest_phi$test_data_phi_samples)
+    # pass testing data to C++ testing driver
+    utest_cpp_(U                = dsp_data$U,
+               X_rcpp           = dsp_data$X,
+               w_day_blocks     = dsp_data$w_day_blocks,
+               w_to_days_idx    = dsp_data$w_to_days_idx,
+               w_cyc_to_cyc_idx = dsp_data$w_cyc_to_cyc_idx,
+               subj_day_blocks  = dsp_data$subj_day_blocks,
+               day_to_subj_idx  = dsp_data$day_to_subj_idx,
+               gamma_specs      = gamma_hyper_list,
+               phi_specs        = phi_specs,
+               fw_len           = 5,
+               n_burn           = 0,
+               n_samp           = n_samp,
+               test_data        = test_data)
 }

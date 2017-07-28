@@ -68,31 +68,31 @@ utest_phi <- function(xi_vals,
     # sample a series of phi updates.  Note: this is a random sample, so we have
     # to set a seed.
     set.seed(seed_val)
-    test_data_phi_samples <- vector("numeric", n_phi_samp)
+    target_samples <- vector("numeric", n_phi_samp)
     curr_phi <- phi_init
     accept_ctr <- 0L
     for (i in seq_len(n_phi_samp)) {
 
-        test_data_phi_samples[i] <- samp_phi(curr_phi, xi_vals, hyp_c1, hyp_c2, delta)
+        target_samples[i] <- samp_phi(curr_phi, xi_vals, hyp_c1, hyp_c2, delta)
 
-        if (test_data_phi_samples[i] != curr_phi) {
+        if (target_samples[i] != curr_phi) {
             accept_ctr <- accept_ctr + 1L
         }
-        curr_phi <- test_data_phi_samples[i]
+        curr_phi <- target_samples[i]
     }
 
     # collect data
-    test_data_phi <- c(phi_val                   = phi_init,
-                       proposal_val              = phi_proposal,
-                       log_dgamma_norm_const     = out_log_dgamma_norm_const,
-                       log_proportion_dgamma_phi = out_log_proportion_dgamma_phi,
-                       log_proportion_dgamma_xi  = out_log_proportion_dgamma_xi,
-                       m_log_norm_const          = out_m_log_norm_const,
-                       calc_log_r                = out_calc_log_r,
-                       accept_ctr                = accept_ctr,
-                       seed_val                  = seed_val)
+    target_data <- c(phi_val                   = phi_init,
+                     proposal_val              = phi_proposal,
+                     log_dgamma_norm_const     = out_log_dgamma_norm_const,
+                     log_proportion_dgamma_phi = out_log_proportion_dgamma_phi,
+                     log_proportion_dgamma_xi  = out_log_proportion_dgamma_xi,
+                     m_log_norm_const          = out_m_log_norm_const,
+                     calc_log_r                = out_calc_log_r,
+                     accept_ctr                = accept_ctr,
+                     seed_val                  = seed_val)
 
     # return testing inputs and results
-    list(test_data_phi         = test_data_phi,
-         test_data_phi_samples = test_data_phi_samples)
+    list(target_data    = target_data,
+         target_samples = target_samples)
 }

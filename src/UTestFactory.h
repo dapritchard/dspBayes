@@ -38,7 +38,7 @@ public:
     PhiGen* phi();
     PhiGen* phi_no_rec();
 
-    // class members
+    // usual input
     Rcpp::NumericMatrix U;
     Rcpp::IntegerVector X_rcpp;
     Rcpp::List preg_cyc;
@@ -51,6 +51,8 @@ public:
     int fw_len;
     int n_burn;
     int n_samp;
+
+    // testing data
     Rcpp::NumericVector input_xi;
     Rcpp::NumericVector input_w;
     Rcpp::NumericVector input_ubeta;
@@ -58,9 +60,13 @@ public:
     Rcpp::NumericVector target_data_phi;
     Rcpp::NumericVector target_samples_phi;
 
+    // global testing objects
+    Rcpp::IntegerVector seed_vals;
+    double epsilon;
+
+    // derived data
     int n_days;
     int n_subj;
-    double phi_init;
 };
 
 

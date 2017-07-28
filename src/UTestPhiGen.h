@@ -4,30 +4,21 @@
 #include "Rcpp.h"
 #include "PhiGen.h"
 #include "XiGen.h"
+#include "UTestFactory.h"
 #include "cppunit/extensions/HelperMacros.h"
 
-extern int g_n_samp;
-extern double g_eps;
-
-extern Rcpp::NumericVector g_phi_specs;
-extern Rcpp::NumericVector g_xi_vals;
-extern Rcpp::NumericVector g_test_data_phi;
-extern Rcpp::NumericVector g_test_data_phi_samples;
-extern Rcpp::List g_subj_day_blocks;
+extern UTestFactory g_ut_factory;
 
 
 class PhiGenTest : public CppUnit::TestFixture {
 
 public:
 
+    PhiGenTest();
+
     void setUp();
     void tearDown();
 
-    // void init_members(int n_samp,
-    // 		      Rcpp::NumericVector phi_specs,
-    // 		      Rcpp::NumericVector xi_vals,
-    // 		      Rcpp::NumericVector test_data_phi,
-    // 		      Rcpp::NumericVector test_data_phi_samples);
     void test_constructor();
     void test_calculations();
     void test_update();
@@ -46,7 +37,27 @@ public:
 private:
 
     PhiGen* phi;
+    PhiGen* phi_no_rec;
     XiGen* xi;
+
+    int seed_val;
+    double epsilon;
+    int n_samp;
+
+    double c1;
+    double c2;
+    double mean;
+    double delta;
+    double phi_init;
+    double proposal_val;
+    double log_dgamma_norm_const;
+    double log_proportion_dgamma_phi;
+    double log_proportion_dgamma_xi;
+    double m_log_norm_const;
+    double calc_log_r;
+    int accept_ctr;
+
+    Rcpp::NumericVector target_samples;
 };
 
 

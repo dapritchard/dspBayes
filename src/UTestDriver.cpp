@@ -13,17 +13,6 @@ extern int* d2s;
 
 UTestFactory g_ut_factory;
 
-
-bool g_record_status;
-
-int g_n_samp;
-double g_eps;
-Rcpp::NumericVector g_phi_specs;
-Rcpp::NumericVector g_test_data_phi;
-Rcpp::NumericVector g_test_data_phi_samples;
-Rcpp::NumericVector g_xi_vals;
-Rcpp::List g_subj_day_blocks;
-
 // preg_cycle            used when sampling W
 // w_to_days_idx         categorical gamma: a_tilde
 // w_cyc_to_cyc_idx      used when sampling xi (first term)
@@ -48,9 +37,7 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 	       int fw_len,
 	       int n_burn,
 	       int n_samp,
-	       Rcpp::NumericVector xi_vals,
-	       Rcpp::NumericVector test_data_phi,
-	       Rcpp::NumericVector test_data_phi_samples) {
+	       Rcpp::List test_data) {
 
     g_ut_factory = UTestFactory(U,
 				X_rcpp,
@@ -64,27 +51,12 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 				fw_len,
 				n_burn,
 				n_samp,
-				xi_vals,
-				test_data_phi,
-				test_data_phi_samples);
-
-
-    g_record_status = true;
-    g_eps = 0.00000001;
-
-    g_n_samp = n_samp;
-    g_phi_specs = phi_specs;
-    g_xi_vals = xi_vals;
-    g_test_data_phi = test_data_phi;
-    g_test_data_phi_samples = test_data_phi_samples;
-    g_subj_day_blocks = subj_day_blocks;
+				test_data);
 
     CppUnit::TextUi::TestRunner runner;
     runner.addTest(PhiGenTest::suite());
-    runner.addTest(XiGenTest::suite());
+    // runner.addTest(XiGenTest::suite());
 
-
-    bool out = runner.run();
-
-    return out ? 0 : 1;
+    // run() returns true if successful, false otherwise
+    return runner.run() ? 0 : 1;
 }

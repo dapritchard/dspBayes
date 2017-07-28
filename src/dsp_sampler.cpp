@@ -4,15 +4,16 @@
 #include "WGen.h"
 #include "XiGen.h"
 
-int* d2s;
+#define DSP_BAYES_N_INTERRUPT_CHECK 1000
 
-#define DSP_BAYES_N_INTER_CHECK 1000
+int* d2s;
+bool g_record_status = true;
 
 Rcpp::List collect_output(const CoefGen& regr_coefs,
 			  const XiGen& xi,
 			  const PhiGen& phi);
 
-// preg_cycle            used when sampling W
+// w_day_blocks          used when sampling W
 // w_to_days_idx         categorical gamma: a_tilde
 // w_cyc_to_cyc_idx      used when sampling xi (first term)
 // fw_len                how much memory to set aside when sampling W in a cycle
@@ -71,7 +72,7 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
 	// }
 
 	// check for user interrupt every `DSP_BAYES_N_INTER_CHECK` iterations
-	if ((s % DSP_BAYES_N_INTER_CHECK) == 0) Rcpp::checkUserInterrupt();
+	if ((s % DSP_BAYES_N_INTERRUPT_CHECK) == 0) Rcpp::checkUserInterrupt();
     }
 
     return collect_output(regr_coefs, xi, phi);

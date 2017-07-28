@@ -24,6 +24,7 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
 			   int n_burn,
 			   int n_samp,
 			   Rcpp::List test_data) :
+    // usual input
     U(U),
     X_rcpp(X_rcpp),
     preg_cyc(w_day_blocks),
@@ -43,7 +44,10 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
     target_samples_xi(as<NumericVector>(test_data["target_samples_xi"])),
     target_data_phi(as<NumericVector>(test_data["target_data_phi"])),
     target_samples_phi(as<NumericVector>(test_data["target_samples_phi"])),
-    // derived variables
+    // global testing objects
+    seed_vals(as<IntegerVector>(test_data["seed_vals"])),
+    epsilon(as<double>(test_data["epsilon"])),
+    // derived data
     n_days(X_rcpp.size()),
     n_subj(subj_day_blocks.size()) {
 }
@@ -71,16 +75,12 @@ WGen* UTestFactory::W() {
 
 
 PhiGen* UTestFactory::phi() {
-    PhiGen* phi = new PhiGen(phi_specs, n_samp, true);
-    *(phi->m_vals) = phi_init;
-    return phi;
+    return new PhiGen(phi_specs, n_samp, true);
 }
 
 
 PhiGen* UTestFactory::phi_no_rec() {
-    PhiGen* phi_no_rec = new PhiGen(phi_specs, n_samp, false);
-    *(phi_no_rec->m_vals) = phi_init;
-    return phi_no_rec;
+    return new PhiGen(phi_specs, n_samp, false);
 }
 
 

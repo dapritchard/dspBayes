@@ -3,6 +3,9 @@
 #include "PhiGen.h"
 #include "XiGen.h"
 #include "UTestPhiGen.h"
+#include "UTestFactory.h"
+
+extern UTestFactory g_ut_factory;
 
 using std::min;
 using Rcpp::as;
@@ -10,18 +13,24 @@ using Rcpp::as;
 
 
 
-// void init_members(int n_samp,
-// 		  Rcpp::NumericVector phi_specs,
-// 		  Rcpp::NumericVector xi_vals,
-// 		  Rcpp::NumericVector test_data_phi,
-// 		  Rcpp::NumericVector test_data_phi_samples) {
-
-//     m_n_samp = n_samp;
-//     m_phi_specs = phi_specs;
-//     m_xi_vals = xi_vals;
-//     m_test_data_phi = test_data_phi;
-//     m_test_data_phi_samples = test_data_phi_samples;
-// }
+PhiGenTest::PhiGenTest() :
+    seed_val(as<int>(g_ut_factory.seed_vals["phi"])),
+    epsilon(g_ut_factory.epsilon),
+    n_samp(g_ut_factory.n_samp),
+    c1(as<double>(g_ut_factory.phi_specs["c1"])),
+    c2(as<double>(g_ut_factory.phi_specs["c2"])),
+    mean(as<double>(g_ut_factory.phi_specs["mean"])),
+    delta(as<double>(g_ut_factory.phi_specs["delta"])),
+    phi_init(as<double>(g_ut_factory.target_data_phi["phi_val"])),
+    proposal_val(as<double>(g_ut_factory.target_data_phi["proposal_val"])),
+    log_dgamma_norm_const(as<double>(g_ut_factory.target_data_phi["log_dgamma_norm_const"])),
+    log_proportion_dgamma_phi(as<double>(g_ut_factory.target_data_phi["log_proportion_dgamma_phi"])),
+    log_proportion_dgamma_xi(as<double>(g_ut_factory.target_data_phi["log_proportion_dgamma_xi"])),
+    m_log_norm_const(as<double>(g_ut_factory.target_data_phi["m_log_norm_const"])),
+    calc_log_r(as<double>(g_ut_factory.target_data_phi["calc_log_r"])),
+    accept_ctr(as<int>(g_ut_factory.target_data_phi["accept_ctr"])),
+    target_samples(g_ut_factory.target_samples_phi) {
+}
 
 
 
@@ -29,11 +38,11 @@ using Rcpp::as;
 void PhiGenTest::setUp() {
 
     // construct phi
-    phi = new PhiGen(g_phi_specs, g_n_samp, true);
+    phi = g_ut_factory.phi();
+    phi_no_rec = g_ut_factory.phi_no_rec();
 
     // construct xi
-    xi = new XiGen(g_subj_day_blocks, g_n_samp, false);
-    std::copy(g_xi_vals.begin(), g_xi_vals.end(), xi->m_vals_rcpp.begin());
+    xi = g_ut_factory.xi();
 }
 
 
@@ -41,6 +50,7 @@ void PhiGenTest::setUp() {
 
 void PhiGenTest::tearDown() {
     delete phi;
+    delete phi_no_rec;
     delete xi;
 }
 
@@ -50,10 +60,11 @@ void PhiGenTest::tearDown() {
 void PhiGenTest::test_constructor() {
 
     // member initialization
-    CPPUNIT_ASSERT_EQUAL(as<double>(g_phi_specs["c1"]), phi->m_hyp_c1);
-    CPPUNIT_ASSERT_EQUAL(as<double>(g_phi_specs["c2"]), phi->m_hyp_c2);
-    CPPUNIT_ASSERT_EQUAL(as<double>(g_phi_specs["delta"]), phi->m_delta);
-    CPPUNIT_ASSERT_EQUAL(g_n_samp, (int) phi->m_vals_rcpp.size());
+    CPPUNIT_ASSERT_EQUAL(c1, phi->m_hyp_c1);
+    CPPUNIT_ASSERT_EQUAL(c2, phi->m_hyp_c2);
+    CPPUNIT_ASSERT_EQUAL(delta, phi->m_delta);
+    CPPUNIT_ASSERT_EQUAL(n_samp, (int) phi->m_vals_rcpp.size());
+    CPPUNIT_ASSERT_EQUAL(1, (int) phi_no_rec->m_vals_rcpp.size());
     CPPUNIT_ASSERT(phi->m_vals_rcpp.begin() == phi->m_vals);
     CPPUNIT_ASSERT_EQUAL(0, phi->m_accept_ctr);
     CPPUNIT_ASSERT(phi->m_record_status);
@@ -61,7 +72,7 @@ void PhiGenTest::test_constructor() {
     CPPUNIT_ASSERT_EQUAL(0.0, phi->m_log_norm_const);
 
     // initial value for phi
-    CPPUNIT_ASSERT_EQUAL(as<double>(g_phi_specs["mean"]), *(phi->m_vals));
+    CPPUNIT_ASSERT_EQUAL(mean, *(phi->m_vals));
 }
 
 
@@ -69,37 +80,34 @@ void PhiGenTest::test_constructor() {
 
 void PhiGenTest::test_calculations() {
 
-    *(phi->m_vals) = as<double>(g_test_data_phi["phi_val"]);
-    double proposal_val = as<double>(g_test_data_phi["proposal_val"]);
-
-    // log_dgamma_norm_const
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["log_dgamma_norm_const"]),
+    // log_dgamma_norm_const()
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(log_dgamma_norm_const,
     				 phi->log_dgamma_norm_const(proposal_val),
-    				 g_eps);
+    				 epsilon);
 
-    // calc_log_proportion_dgamma_phi
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["log_proportion_dgamma_phi"]),
+    // calc_log_proportion_dgamma_phi()
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(log_proportion_dgamma_phi,
     				 phi->calc_log_proportion_dgamma_phi(proposal_val),
-    				 g_eps);
+    				 epsilon);
 
-    // calc_log_proportion_dgamma_xi
+    // calc_log_proportion_dgamma_xi()
     // run once when `m_is_same_as_prev` is false
     CPPUNIT_ASSERT(! phi->m_is_same_as_prev);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["log_proportion_dgamma_xi"]),
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(log_proportion_dgamma_xi,
     				 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
-    				 g_eps);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["m_log_norm_const"]),
+    				 epsilon);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(m_log_norm_const,
     				 phi->m_log_norm_const,
-    				 g_eps);
+    				 epsilon);
     // now run when `m_is_same_as_prev` is true.  The function should reuse some
     // of the internal calculations from last time
     phi->m_is_same_as_prev = true;
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["log_proportion_dgamma_xi"]),
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(log_proportion_dgamma_xi,
     				 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
-    				 g_eps);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["m_log_norm_const"]),
+    				 epsilon);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(m_log_norm_const,
     				 phi->m_log_norm_const,
-    				 g_eps);
+    				 epsilon);
 }
 
 
@@ -107,27 +115,23 @@ void PhiGenTest::test_calculations() {
 
 void PhiGenTest::test_update() {
 
-    *(phi->m_vals) = as<double>(g_test_data_phi["phi_val"]);
-    double proposal_val = as<double>(g_test_data_phi["proposal_val"]);
-
     // calc_log_r
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(as<double>(g_test_data_phi["calc_log_r"]),
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(calc_log_r,
 				 phi->calc_log_r(*xi, proposal_val),
-				 g_eps);
+				 epsilon);
 
     // update_phi
     // reject proposal value
     CPPUNIT_ASSERT_DOUBLES_EQUAL(*(phi->m_vals),
 				 phi->update_phi(R_NegInf, proposal_val),
-				 g_eps);
+				 epsilon);
     CPPUNIT_ASSERT(phi->m_is_same_as_prev);
     // accept proposal value
     CPPUNIT_ASSERT_DOUBLES_EQUAL(proposal_val,
 				 phi->update_phi(0.0, proposal_val),
-				 g_eps);
+				 epsilon);
     CPPUNIT_ASSERT(! phi->m_is_same_as_prev);
     CPPUNIT_ASSERT_EQUAL(1, phi->m_accept_ctr);
-
 }
 
 
@@ -138,17 +142,16 @@ void PhiGenTest::test_sample_yes_record() {
 
     Rcpp::Environment base("package:base");
     Rcpp::Function set_seed = base["set.seed"];
-    set_seed(as<unsigned int>(g_test_data_phi["seed_val"]));
+    set_seed(seed_val);
 
     // sample
-    for (int i = 0; i < min((int) g_test_data_phi_samples.size(), g_n_samp); ++i) {
+    for (int i = 0; i < target_samples.size(); ++i) {
 	phi->sample(*xi);
-	CPPUNIT_ASSERT_DOUBLES_EQUAL(g_test_data_phi_samples[i], phi->val(), g_eps);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(target_samples[i], phi->val(), epsilon);
     }
-    CPPUNIT_ASSERT_EQUAL(g_test_data_phi_samples.size(),
+    CPPUNIT_ASSERT_EQUAL(target_samples.size(),
     			 phi->m_vals - phi->m_vals_rcpp.begin());
-    CPPUNIT_ASSERT_EQUAL(as<int>(g_test_data_phi["accept_ctr"]),
-			 phi->m_accept_ctr);
+    CPPUNIT_ASSERT_EQUAL(accept_ctr, phi->m_accept_ctr);
 }
 
 
@@ -157,19 +160,15 @@ void PhiGenTest::test_sample_yes_record() {
 // record samples when not storing the results
 void PhiGenTest::test_sample_no_record() {
 
-    PhiGen phi_no_record(g_phi_specs, g_n_samp, false);
-
     Rcpp::Environment base("package:base");
     Rcpp::Function set_seed = base["set.seed"];
-    set_seed(as<unsigned int>(g_test_data_phi["seed_val"]));
+    set_seed(seed_val);
 
     // sample
-    for (int i = 0; i < min((int) g_test_data_phi_samples.size(), g_n_samp); ++i) {
-	phi_no_record.sample(*xi);
-	CPPUNIT_ASSERT_DOUBLES_EQUAL(g_test_data_phi_samples[i], phi_no_record.val(), g_eps);
+    for (int i = 0; i < target_samples.size(); ++i) {
+	phi_no_rec->sample(*xi);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(target_samples[i], phi_no_rec->val(), epsilon);
     }
-    CPPUNIT_ASSERT_EQUAL((long int) 0,
-			 phi_no_record.m_vals - phi_no_record.m_vals_rcpp.begin());
-    CPPUNIT_ASSERT_EQUAL(as<int>(g_test_data_phi["accept_ctr"]),
-			 phi_no_record.m_accept_ctr);
+    CPPUNIT_ASSERT_EQUAL((long int) 0, phi_no_rec->m_vals - phi_no_rec->m_vals_rcpp.begin());
+    CPPUNIT_ASSERT_EQUAL(accept_ctr, phi_no_rec->m_accept_ctr);
 }
