@@ -15,7 +15,7 @@ Rcpp::List collect_output(const CoefGen& regr_coefs,
 
 // w_day_blocks          used when sampling W
 // w_to_days_idx         categorical gamma: a_tilde
-// w_cyc_to_cyc_idx      used when sampling xi (first term)
+// w_cyc_to_subj_idx     used when sampling xi (first term)
 // fw_len                how much memory to set aside when sampling W in a cycle
 // subj_day_block        used when sampling xi (second term)
 // gamma_specs           gamma hyperparameters
@@ -29,7 +29,7 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
 		       Rcpp::IntegerVector X_rcpp,
 		       Rcpp::List w_day_blocks,
 		       Rcpp::IntegerVector w_to_days_idx,
-		       Rcpp::IntegerVector w_cyc_to_cyc_idx,
+		       Rcpp::IntegerVector w_cyc_to_subj_idx,
 		       Rcpp::List subj_day_blocks,
 		       Rcpp::IntegerVector day_to_subj_idx,
 		       Rcpp::List gamma_specs,
@@ -39,7 +39,7 @@ Rcpp::List dsp_sampler(Rcpp::NumericMatrix U,
 		       int n_samp) {
 
     // create data objects
-    WGen W(w_day_blocks, w_to_days_idx, w_cyc_to_cyc_idx, fw_len);
+    WGen W(w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, fw_len);
     XiGen xi(subj_day_blocks, n_samp, true);
     CoefGen regr_coefs(U, gamma_specs, n_samp);
     PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples

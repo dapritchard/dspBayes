@@ -7,13 +7,13 @@
 
 WGen::WGen(Rcpp::List& preg_cyc,
 	   Rcpp::IntegerVector& w_to_days_idx,
-	   Rcpp::IntegerVector& w_cyc_to_cyc_idx,
+	   Rcpp::IntegerVector& w_cyc_to_subj_idx,
 	   int fw_len) :
     // initialization list
     m_vals(new int[w_to_days_idx.size()]),
     m_sums(new int[preg_cyc.size()]),
     m_days_idx(w_to_days_idx.begin()),
-    m_cyc_idx(w_cyc_to_cyc_idx.begin()),
+    m_subj_idx(w_cyc_to_subj_idx.begin()),
     m_preg_cyc(PregCyc::list_to_arr(preg_cyc)),
     m_n_days(w_to_days_idx.size()),
     m_n_preg_cyc(preg_cyc.size()),
@@ -80,9 +80,9 @@ void WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 	}
 
 	// calculate `xi_i * sum_k { X_ijk * exp( u_{ijk}^T beta ) }`
-	double pois_mean = xi_vals[ curr_subj_idx ] * exp(curr_sum_val);
+	double pois_mean = xi_vals[ curr_subj_idx ] * curr_sum_val;
 
-	// sample new `sum_k W_ijk`
+	// sample new `sum_k W_ijk`   **********  TODO: must be truncated  *********************
 	*curr_w_sum = R::rpois(pois_mean);
 
 	// sample new `W_ij | { sum_k W_ijk }`

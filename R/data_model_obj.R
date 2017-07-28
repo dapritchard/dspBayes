@@ -1,11 +1,11 @@
 derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
 
 
-    preg_cyc_list <- get_cyc_list(comb_dat, var_nm)
+    preg_cyc_list <- get_preg_cyc_list(comb_dat, var_nm)
     preg_days_idx <- get_w_days_idx(preg_cyc_list)
-    preg_cyc_idx <- get_cyc_idx(preg_cyc_list)
+    preg_subj_idx <- get_subj_idx(preg_cyc_list)
 
-    subj_idx_list <- get_subj_idx(comb_dat, var_nm)
+    subj_idx_list <- get_subj_idx_list(comb_dat, var_nm)
     days_to_subj_idx <- get_days_to_subj(subj_idx_list)
 
     # extract intercourse data and index the missing values, and then initialize
@@ -23,43 +23,22 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
 
     var_categ_status <- get_var_categ_status(cov_miss_info)
 
-    list(w_day_blocks     = preg_cyc_list,    # TODO change rhs names?
-         w_to_days_idx    = preg_days_idx,
-         w_cyc_to_cyc_idx = preg_cyc_idx,
-         subj_day_blocks  = subj_idx_list,
-         day_to_subj_idx  = days_to_subj_idx,
-         miss_x_idx       = miss_x_idx,
-         cov_miss_info    = cov_miss_info,
-         var_categ_status = var_categ_status,
-         X                = X,
-         U                = U)
+    list(w_day_blocks      = preg_cyc_list,    # ****  TODO change rhs names?  ***************
+         w_to_days_idx     = preg_days_idx,
+         w_cyc_to_subj_idx = preg_subj_idx,
+         subj_day_blocks   = subj_idx_list,
+         day_to_subj_idx   = days_to_subj_idx,
+         miss_x_idx        = miss_x_idx,
+         cov_miss_info     = cov_miss_info,
+         var_categ_status  = var_categ_status,
+         X                 = X,
+         U                 = U)
 }
 
 
 
 
-get_subj_idx <- function(comb_dat, var_nm) {
-    id_vec <- comb_dat[[var_nm$id]]
-    unique_id_vec <- unique(id_vec)
-    lapply(unique_id_vec, function(x) {
-        curr_idx <- which(id_vec == x)
-        # subtract 1 to convert to 0-based indexing
-        c(beg_idx = head(curr_idx, 1L) - 1L, n_days = length(curr_idx))
-    })
-}
-
-
-
-
-get_days_to_subj <- function(subj_idx_list) {
-    n_days <- sapply(subj_idx_list, function(x) x["n_days"])
-    rep(seq_along(subj_idx_list), n_days)
-}
-
-
-
-
-get_cyc_list <- function(comb_dat, var_nm) {
+get_preg_cyc_list <- function(comb_dat, var_nm) {
 
     keypairs <- get_keypairs(comb_dat, NULL, var_nm)
     cyc_idx_list <- vector("list", NROW(keypairs))
@@ -116,14 +95,22 @@ get_w_days_idx <- function(preg_cyc_list) {
 
 
 
-get_cyc_idx <- function(preg_cyc_list) {
+# get_cyc_idx <- function(preg_cyc_list) {
 
-    cyc_idx <- vector("integer", length(preg_cyc_list))
-    for (i in seq_along(preg_cyc_list)) {
-        cyc_idx[i] <- preg_cyc_list[[i]]["cyc_idx"]
-    }
+#     cyc_idx <- vector("integer", length(preg_cyc_list))
+#     for (i in seq_along(preg_cyc_list)) {
+#         cyc_idx[i] <- preg_cyc_list[[i]]["cyc_idx"]
+#     }
 
-    cyc_idx
+#     cyc_idx
+# }
+
+
+
+
+get_subj_idx <- function(preg_cyc_list) {
+    # subtract 1 to convert to 0-based indexing
+    sapply(preg_cyc_list, function(x) x["subj_idx"])
 }
 
 
@@ -157,6 +144,27 @@ get_cyc_idx <- function(preg_cyc_list) {
 
 #     cyc_preg_vec
 # }
+
+
+
+
+get_subj_idx_list <- function(comb_dat, var_nm) {
+    id_vec <- comb_dat[[var_nm$id]]
+    unique_id_vec <- unique(id_vec)
+    lapply(unique_id_vec, function(x) {
+        curr_idx <- which(id_vec == x)
+        # subtract 1 to convert to 0-based indexing
+        c(beg_idx = head(curr_idx, 1L) - 1L, n_days = length(curr_idx))
+    })
+}
+
+
+
+
+get_days_to_subj <- function(subj_idx_list) {
+    n_days <- sapply(subj_idx_list, function(x) x["n_days"])
+    rep(seq_along(subj_idx_list), n_days)
+}
 
 
 

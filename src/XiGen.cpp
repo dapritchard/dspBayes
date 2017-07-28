@@ -38,7 +38,7 @@ void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta) {
     int curr_idx, curr_end;
     double curr_w_sum, curr_sum_exp_ubeta;
 
-    const int* w_cyc_idx = W.cyc_idx();
+    const int* w_subj_idx = W.subj_idx();
     const int* w_sum_vals = W.sum_vals();
     const double* ubeta_exp_vals = ubeta.exp_vals();
     double phi_val = phi.val();
@@ -53,9 +53,9 @@ void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta) {
     for (int i = 0; i < m_n_subj; ++i) {
 
     	// obtain `sum_jk W_ijk`
-    	if (i == *w_cyc_idx) {
+    	if (i == *w_subj_idx) {
     	    curr_w_sum = *w_sum_vals++;
-    	    ++w_cyc_idx;
+    	    ++w_subj_idx;
     	}
     	else {
     	    curr_w_sum = 0;

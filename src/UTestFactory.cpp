@@ -5,17 +5,20 @@
 #include "WGen.h"
 #include "PhiGen.h"
 #include "UProdBeta.h"
+#include "DayBlock.h"
 
 using Rcpp::as;
 using Rcpp::NumericVector;
 using Rcpp::IntegerVector;
+
+double UTestFactory::epsilon = 3.0;
 
 
 UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
 			   Rcpp::IntegerVector X_rcpp,
 			   Rcpp::List w_day_blocks,
 			   Rcpp::IntegerVector w_to_days_idx,
-			   Rcpp::IntegerVector w_cyc_to_cyc_idx,
+			   Rcpp::IntegerVector w_cyc_to_subj_idx,
 			   Rcpp::List subj_day_blocks,
 			   Rcpp::IntegerVector day_to_subj_idx,
 			   Rcpp::List gamma_specs,
@@ -29,7 +32,7 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
     X_rcpp(X_rcpp),
     preg_cyc(w_day_blocks),
     w_to_days_idx(w_to_days_idx),
-    w_cyc_to_cyc_idx(w_cyc_to_cyc_idx),
+    w_cyc_to_subj_idx(w_cyc_to_subj_idx),
     subj_day_blocks(subj_day_blocks),
     day_to_subj_idx(day_to_subj_idx),
     gamma_specs(gamma_specs),
@@ -46,7 +49,6 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
     target_samples_phi(as<NumericVector>(test_data["target_samples_phi"])),
     // global testing objects
     seed_vals(as<IntegerVector>(test_data["seed_vals"])),
-    epsilon(as<double>(test_data["epsilon"])),
     // derived data
     n_days(X_rcpp.size()),
     n_subj(subj_day_blocks.size()) {
@@ -68,8 +70,17 @@ XiGen* UTestFactory::xi_no_rec() {
 
 
 WGen* UTestFactory::W() {
-    WGen* W = new WGen(preg_cyc, w_to_days_idx, w_cyc_to_cyc_idx, fw_len);
+    WGen* W = new WGen(preg_cyc, w_to_days_idx, w_cyc_to_subj_idx, fw_len);
     std::copy(input_w.begin(), input_w.end(), W->m_vals);
+    // calculate sums for pregnancy cycles
+    int w_ctr = 0;
+    int* w_vals = W->m_vals;
+    int* w_sums = W->m_sums;
+    for (const PregCyc* curr = W->m_preg_cyc; curr < W->m_preg_cyc + W->m_n_preg_cyc; ++curr) {
+    	*w_sums = std::accumulate(w_vals + w_ctr, w_vals + w_ctr + curr->n_days, 0.0);
+    	++w_sums;
+    	w_ctr += curr->n_days;
+    }
     return W;
 }
 
@@ -89,4 +100,9 @@ UProdBeta* UTestFactory::ubeta() {
     std::copy(input_ubeta.begin(), input_ubeta.end(), ubeta->m_vals);
     ubeta->update_exp(X_rcpp.begin());
     return ubeta;
+}
+
+
+bool UTestFactory::eq_dbl(double a, double b) {
+    return (-epsilon < a - b) && (a - b < epsilon);
 }

@@ -1,7 +1,6 @@
 #ifndef DSP_BAYES_UTEST_FACTORY_H
 #define DSP_BAYES_UTEST_FACTORY_H
 
-
 #include "Rcpp.h"
 #include "XiGen.h"
 #include "WGen.h"
@@ -20,7 +19,7 @@ public:
 		 Rcpp::IntegerVector X_rcpp,
 		 Rcpp::List w_day_blocks,
 		 Rcpp::IntegerVector w_to_days_idx,
-		 Rcpp::IntegerVector w_cyc_to_cyc_idx,
+		 Rcpp::IntegerVector w_cyc_to_subj_idx,
 		 Rcpp::List subj_day_blocks,
 		 Rcpp::IntegerVector day_to_subj_idx,
 		 Rcpp::List gamma_specs,
@@ -37,13 +36,14 @@ public:
     UProdBeta* ubeta();
     PhiGen* phi();
     PhiGen* phi_no_rec();
+    static bool eq_dbl(double a, double b);
 
     // usual input
     Rcpp::NumericMatrix U;
     Rcpp::IntegerVector X_rcpp;
     Rcpp::List preg_cyc;
     Rcpp::IntegerVector w_to_days_idx;
-    Rcpp::IntegerVector w_cyc_to_cyc_idx;
+    Rcpp::IntegerVector w_cyc_to_subj_idx;
     Rcpp::List subj_day_blocks;
     Rcpp::IntegerVector day_to_subj_idx;
     Rcpp::List gamma_specs;
@@ -62,7 +62,7 @@ public:
 
     // global testing objects
     Rcpp::IntegerVector seed_vals;
-    double epsilon;
+    static double epsilon;
 
     // derived data
     int n_days;

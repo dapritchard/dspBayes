@@ -58,13 +58,13 @@ void XiGenTest::test_constructor() {
     // test record samples variant
     CPPUNIT_ASSERT_EQUAL(n_subj * n_samp, (int) xi->m_vals_rcpp.size());
     CPPUNIT_ASSERT_EQUAL(xi->m_vals_rcpp.begin(), xi->m_vals);
-    CPPUNIT_ASSERT_EQUAL((int) n_subj, xi->m_n_subj);
+    CPPUNIT_ASSERT_EQUAL(n_subj, xi->m_n_subj);
     CPPUNIT_ASSERT(xi->m_record_status);
 
     // test non-record samples variant
-    CPPUNIT_ASSERT_EQUAL(n_subj, (int) xi->m_vals_rcpp.size());
-    CPPUNIT_ASSERT_EQUAL(xi->m_vals_rcpp.begin(), xi->m_vals);
-    CPPUNIT_ASSERT_EQUAL((int) n_subj, xi->m_n_subj);
+    CPPUNIT_ASSERT_EQUAL(n_subj, (int) xi_no_rec->m_vals_rcpp.size());
+    CPPUNIT_ASSERT_EQUAL(xi_no_rec->m_vals_rcpp.begin(), xi_no_rec->m_vals);
+    CPPUNIT_ASSERT_EQUAL(n_subj, xi_no_rec->m_n_subj);
     CPPUNIT_ASSERT(! xi_no_rec->m_record_status);
 }
 
@@ -84,10 +84,16 @@ void XiGenTest::test_sample_yes_record() {
     xi->sample(*W, *phi, *ubeta);
 
     // check that placement of iterator points to beginning of second sample
-    CPPUNIT_ASSERT_EQUAL(xi->m_vals_rcpp.begin() + n_subj, xi->m_vals);
+    CPPUNIT_ASSERT_EQUAL(xi->m_vals_rcpp.begin() + 2 * n_subj, xi->m_vals);
     // check values of samples
-    CPPUNIT_ASSERT(std::equal(target_samples.begin(), target_samples.end(), xi->m_vals_rcpp.begin()));
-    CPPUNIT_ASSERT(std::equal(target_samples.begin(), target_samples.end(), xi->m_vals));
+    CPPUNIT_ASSERT(std::equal(target_samples.begin(),
+			      target_samples.end(),
+			      xi->m_vals - n_subj,
+			      UTestFactory::eq_dbl));
+    CPPUNIT_ASSERT(std::equal(target_samples.begin(),
+			      target_samples.end(),
+			      xi->m_vals,
+			      UTestFactory::eq_dbl));
 }
 
 
@@ -108,5 +114,8 @@ void XiGenTest::test_sample_no_record() {
     // check that placement of iterator points to beginning of data
     CPPUNIT_ASSERT_EQUAL(xi_no_rec->m_vals_rcpp.begin(), xi_no_rec->m_vals);
     // check values of samples
-    CPPUNIT_ASSERT(std::equal(target_samples.begin(), target_samples.end(), xi_no_rec->m_vals));
+    CPPUNIT_ASSERT(std::equal(target_samples.begin(),
+			      target_samples.end(),
+			      xi_no_rec->m_vals,
+			      UTestFactory::eq_dbl));
 }

@@ -25,13 +25,13 @@ public:
     // `m_vals[r]` is the value of `m_vals` for the `t`-th day.
     const int* m_days_idx;
 
-    // maps the r-th element of `m_sums` to the t-th index in the cycle-specific
-    // data.  In other words, if `m_cyc_idx[r]` has a value of `t`, then
-    // `m_sums[r]` is the value of `m_sums` for the `t`-th cycle.
-    const int* m_cyc_idx;
+    // maps the r-th element of `m_sums` to the t-th index in the
+    // subject-specific data.  In other words, if `m_subj_idx[r]` has a value of
+    // `t`, then `m_sums[r]` is the value of `m_sums` for the `t`-th subject.
+    const int* m_subj_idx;
 
-    // the elements of `m_preg_cyc` each map a cycle to a block of days in the
-    // day-specific data
+    // the elements of `m_preg_cyc` each map a pregnancy cycle to a block of
+    // days in the day-specific data
     const PregCyc* m_preg_cyc;
 
     // the number of days for which intercourse occured during a cycle that
@@ -41,7 +41,7 @@ public:
 
     // the number of cycles in the data in which a pregnancy occurred.  This
     // value provides the amount of storage that is associated with `m_sums`,
-    // `m_cyc_idx`, and `m_preg_cyc`.
+    // `m_subj_idx`, and `m_preg_cyc`.
     const int m_n_preg_cyc;
 
     // some scratch storage that we use to place multinomial probabilities into
@@ -50,7 +50,7 @@ public:
 
     WGen(Rcpp::List& preg_cyc,
 	 Rcpp::IntegerVector& w_to_days_idx,
-	 Rcpp::IntegerVector& w_cyc_to_cyc_idx,
+	 Rcpp::IntegerVector& w_cyc_to_subj_idx,
 	 int fw_len);
     ~WGen();
 
@@ -58,7 +58,7 @@ public:
     const int* vals() const { return m_vals; }
     const int* sum_vals() const { return m_sums; }
     const int* days_idx() const { return m_days_idx; }
-    const int* cyc_idx() const { return m_cyc_idx; }
+    const int* subj_idx() const { return m_subj_idx; }
     int n_days() const { return m_n_days; }
     int n_preg_cyc() const { return m_n_preg_cyc; }
 

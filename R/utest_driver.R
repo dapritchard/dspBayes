@@ -14,12 +14,15 @@ utest_cpp <- function(dsp_data,
     phi_specs <- get_phi_specs()
 
     # sample women-specific fecundability multiplier
+    set.seed(100L)
     xi <- rgamma(length(dsp_data$subj_day_blocks), 1, 1)
 
     # sample latent pregnancy variable W
+    set.seed(101L)
     W <- rpois(length(dsp_data$w_to_days_idx), 1.5)
 
     # sample U * beta
+    set.seed(102L)
     ubeta <- rnorm(length(dsp_data$X))
 
     # phi testing data
@@ -47,17 +50,17 @@ utest_cpp <- function(dsp_data,
     n_samp <- 100
 
     # pass testing data to C++ testing driver
-    utest_cpp_(U                = dsp_data$U,
-               X_rcpp           = dsp_data$X,
-               w_day_blocks     = dsp_data$w_day_blocks,
-               w_to_days_idx    = dsp_data$w_to_days_idx,
-               w_cyc_to_cyc_idx = dsp_data$w_cyc_to_cyc_idx,
-               subj_day_blocks  = dsp_data$subj_day_blocks,
-               day_to_subj_idx  = dsp_data$day_to_subj_idx,
-               gamma_specs      = gamma_hyper_list,
-               phi_specs        = phi_specs,
-               fw_len           = 5,
-               n_burn           = 0,
-               n_samp           = n_samp,
-               test_data        = test_data)
+    utest_cpp_(U                 = dsp_data$U,
+               X_rcpp            = dsp_data$X,
+               w_day_blocks      = dsp_data$w_day_blocks,
+               w_to_days_idx     = dsp_data$w_to_days_idx,
+               w_cyc_to_subj_idx = dsp_data$w_cyc_to_subj_idx,
+               subj_day_blocks   = dsp_data$subj_day_blocks,
+               day_to_subj_idx   = dsp_data$day_to_subj_idx,
+               gamma_specs       = gamma_hyper_list,
+               phi_specs         = phi_specs,
+               fw_len            = 5,
+               n_burn            = 0,
+               n_samp            = n_samp,
+               test_data         = test_data)
 }

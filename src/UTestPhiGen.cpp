@@ -15,7 +15,7 @@ using Rcpp::as;
 
 PhiGenTest::PhiGenTest() :
     seed_val(as<int>(g_ut_factory.seed_vals["phi"])),
-    epsilon(g_ut_factory.epsilon),
+    epsilon(UTestFactory::epsilon),
     n_samp(g_ut_factory.n_samp),
     c1(as<double>(g_ut_factory.phi_specs["c1"])),
     c2(as<double>(g_ut_factory.phi_specs["c2"])),
