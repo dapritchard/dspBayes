@@ -66,6 +66,7 @@ public:
     int n_preg_days() const { return m_n_preg_days; }
     int n_preg_cyc() const { return m_n_preg_cyc; }
 
+    double rpois_zero_tr(double lambda);
 };
 
 

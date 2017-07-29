@@ -39,7 +39,7 @@ utest_cpp <- function(dsp_data,
 
     # collect seeds
     seed_vals <- c(phi = phi_seed,
-                   w   = w_seed,
+                   W   = w_seed,
                    xi  = xi_seed)
 
     # collect testing objects

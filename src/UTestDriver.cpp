@@ -7,6 +7,7 @@
 #include "cppunit/ui/text/TestRunner.h"
 #include "UTestFactory.h"
 #include "UTestPhiGen.h"
+#include "UTestWGen.h"
 #include "UTestXiGen.h"
 
 extern int* d2s;
@@ -56,6 +57,7 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 
     CppUnit::TextUi::TestRunner runner;
     runner.addTest(PhiGenTest::suite());
+    runner.addTest(WGenTest::suite());
     runner.addTest(XiGenTest::suite());
 
     // run() returns true if successful, false otherwise

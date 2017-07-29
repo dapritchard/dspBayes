@@ -85,7 +85,7 @@ void WGen::sample(XiGen& xi, UProdBeta& ubeta) {
 	double pois_mean = xi_vals[ curr_subj_idx ] * curr_sum_val;
 
 	// sample new `sum_k W_ijk`   **********  TODO: must be truncated  *********************
-	*curr_w_sum = R::rpois(pois_mean);
+	*curr_w_sum = rpois_zero_tr(pois_mean);
 
 	// sample new `W_ij | { sum_k W_ijk }`
 	rmultinom(*curr_w_sum, mult_probs, curr_n_days, curr_w);
@@ -95,4 +95,12 @@ void WGen::sample(XiGen& xi, UProdBeta& ubeta) {
 	curr_w += curr_n_days;
 	++curr_w_sum;
     }
+}
+
+
+
+
+double WGen::rpois_zero_tr(double lambda) {
+    double u = R::runif(exp(-lambda), 1);
+    return R::qpois(u, lambda, 1, 0);
 }

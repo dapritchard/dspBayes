@@ -58,9 +58,13 @@ void WGenTest::test_constructor() {
 
 void WGenTest::test_sample() {
 
-    W->sample(*xi, *ubeta);
+    // register seed function
+    Rcpp::Environment base("package:base");
+    Rcpp::Function set_seed = base["set.seed"];
+    set_seed(seed_val);
 
     // check values of samples
+    W->sample(*xi, *ubeta);
     CPPUNIT_ASSERT(std::equal(target_samples.begin(),
 			      target_samples.end(),
 			      W->m_vals,
