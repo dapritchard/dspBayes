@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Rcpp.h"
 #include "XiGen.h"
 #include "WGen.h"

@@ -7,7 +7,6 @@
 
 extern UTestFactory g_ut_factory;
 
-using std::min;
 using Rcpp::as;
 
 

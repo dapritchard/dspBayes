@@ -31,7 +31,8 @@ public:
 
 private:
 
-    XiGen* xi, * xi_no_rec;
+    XiGen* xi;
+    XiGen* xi_no_rec;
     WGen* W;
     PhiGen* phi;
     UProdBeta* ubeta;

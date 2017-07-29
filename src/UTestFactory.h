@@ -53,12 +53,13 @@ public:
     int n_samp;
 
     // testing data
-    Rcpp::NumericVector input_xi;
-    Rcpp::NumericVector input_w;
     Rcpp::NumericVector input_ubeta;
-    Rcpp::NumericVector target_samples_xi;
+    Rcpp::NumericVector input_w;
+    Rcpp::NumericVector input_xi;
     Rcpp::NumericVector target_data_phi;
     Rcpp::NumericVector target_samples_phi;
+    Rcpp::NumericVector target_samples_w;
+    Rcpp::NumericVector target_samples_xi;
 
     // global testing objects
     Rcpp::IntegerVector seed_vals;

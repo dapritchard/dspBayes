@@ -12,12 +12,12 @@ WGen::WGen(Rcpp::List& preg_cyc,
     // initialization list
     m_vals(new int[w_to_days_idx.size()]),
     m_sums(new int[preg_cyc.size()]),
-    m_days_idx(w_to_days_idx.begin()),
-    m_subj_idx(w_cyc_to_subj_idx.begin()),
+    m_days_idx(w_to_days_idx),
+    m_subj_idx(w_cyc_to_subj_idx),
     m_preg_cyc(PregCyc::list_to_arr(preg_cyc)),
-    m_n_days(w_to_days_idx.size()),
+    m_n_preg_days(w_to_days_idx.size()),
     m_n_preg_cyc(preg_cyc.size()),
-    m_mult_probs(new double[fw_len]) {
+    m_fw_len(fw_len) {
 }
 
 
@@ -26,14 +26,13 @@ WGen::WGen(Rcpp::List& preg_cyc,
 WGen::~WGen() {
     delete[] m_vals;
     delete[] m_sums;
-    delete[] m_mult_probs;
     delete[] m_preg_cyc;
 }
 
 
 
 
-void WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
+void WGen::sample(XiGen& xi, UProdBeta& ubeta) {
 
     // point to the beginning of the arrays storing the `W_ijk` and `sum_k
     // W_ijk`
@@ -43,7 +42,10 @@ void WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
     const double* xi_vals = xi.vals();
     // point to the beginning of the array storing the current values of `X_ijk
     // * exp( u_{ijk}^T beta )`
-    const double* exp_uprod_beta = u_prod_beta.exp_vals();
+    const double* ubeta_exp_vals = ubeta.exp_vals();
+
+    // scratch storage for multinomial probabilities
+    double mult_probs[m_fw_len];
 
     // each iteration samples new values for the `W_ijk` that were both (i) in
     // cycles that resulted in a pregnancy and were also (ii) days in which
@@ -71,12 +73,12 @@ void WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 
 	    // copy and add in the `X_ijk * exp( u_{ijk}^T beta )` term to the
 	    // running total for `sum_k W_ijk`
-	    curr_sum_val += m_mult_probs[v] = exp_uprod_beta[r];
+	    curr_sum_val += mult_probs[v] = ubeta_exp_vals[r];
 	}
 
 	// normalize the multinomial probabilities
 	for (int v = 0; v < curr_n_days; ++v) {
-	    m_mult_probs[v] /= curr_sum_val;
+	    mult_probs[v] /= curr_sum_val;
 	}
 
 	// calculate `xi_i * sum_k { X_ijk * exp( u_{ijk}^T beta ) }`
@@ -86,12 +88,11 @@ void WGen::sample(XiGen& xi, UProdBeta& u_prod_beta) {
 	*curr_w_sum = R::rpois(pois_mean);
 
 	// sample new `W_ij | { sum_k W_ijk }`
-	rmultinom(*curr_w_sum, m_mult_probs, curr_n_days, curr_w);
+	rmultinom(*curr_w_sum, mult_probs, curr_n_days, curr_w);
 
 	// update pointers to point to the next elements of `W_ijk` and `sum_k
 	// W_ijk`
 	curr_w += curr_n_days;
 	++curr_w_sum;
     }
-
 }

@@ -41,12 +41,13 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
     n_burn(n_burn),
     n_samp(n_samp),
     // testing data
-    input_xi(as<NumericVector>(test_data["input_xi"])),
-    input_w(as<IntegerVector>(test_data["input_w"])),
     input_ubeta(as<NumericVector>(test_data["input_ubeta"])),
-    target_samples_xi(as<NumericVector>(test_data["target_samples_xi"])),
+    input_w(as<IntegerVector>(test_data["input_w"])),
+    input_xi(as<NumericVector>(test_data["input_xi"])),
     target_data_phi(as<NumericVector>(test_data["target_data_phi"])),
     target_samples_phi(as<NumericVector>(test_data["target_samples_phi"])),
+    target_samples_w(as<NumericVector>(test_data["target_samples_w"])),
+    target_samples_xi(as<NumericVector>(test_data["target_samples_xi"])),
     // global testing objects
     seed_vals(as<IntegerVector>(test_data["seed_vals"])),
     // derived data

@@ -29,25 +29,31 @@ utest_cpp <- function(dsp_data,
     phi_seed <- 99L
     out_utest_phi <- utest_phi(xi, seed_val = phi_seed)
 
+    # W testing data
+    w_seed <- 207L
+    target_samples_w <- utest_w(dsp_data, xi, ubeta, w_seed)
+
     # xi testing data
     xi_seed <- 21L
     target_samples_xi <- utest_xi(dsp_data, W, ubeta, phi_specs["mean"], xi_seed)
 
     # collect seeds
     seed_vals <- c(phi = phi_seed,
+                   w   = w_seed,
                    xi  = xi_seed)
 
     # collect testing objects
-    test_data <- list(input_xi           = xi,
+    test_data <- list(input_ubeta        = ubeta,
                       input_w            = W,
-                      input_ubeta        = ubeta,
-                      target_samples_xi  = target_samples_xi,
+                      input_xi           = xi,
                       target_data_phi    = out_utest_phi$target_data,
                       target_samples_phi = out_utest_phi$target_samples,
+                      target_samples_w   = target_samples_w,
+                      target_samples_xi  = target_samples_xi,
                       seed_vals          = seed_vals,
                       epsilon            = 1e-12)
 
-    n_samp <- 100
+    n_samp <- 100    #  ************  TODO remove this line  ***********************
 
     # pass testing data to C++ testing driver
     utest_cpp_(U                 = dsp_data$U,

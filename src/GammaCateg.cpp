@@ -68,7 +68,7 @@ double GammaCateg::calc_a_tilde(const WGen& W) {
     // and one past the end of the values of W
     const int* w_vals = W.vals();
     const int* w_days_idx = W.days_idx();
-    const int* w_end = w_days_idx + W.n_days();
+    const int* w_end = w_days_idx + W.n_preg_days();
 
     // initialize `sum_val` to the first term in the sum
     double sum_val = m_hyp_a;
