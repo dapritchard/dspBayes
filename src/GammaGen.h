@@ -13,7 +13,7 @@ class GammaGen {
 
 public:
 
-    // current value of beta_h and exp(beta_h), i.e. gamma_h
+    // current value of beta_h and gamma_h
     double m_beta_val;
     double m_gam_val;
 
@@ -51,6 +51,7 @@ public:
     const bool m_bnd_l_is_zero;
     const bool m_bnd_u_is_inf;
     const bool m_is_trunc;
+    const bool m_incl_one;
 
     // the log of the constant terms in the expression for d2 as defined in
     // `GammaCateg::calc_p_tilde`.
@@ -64,7 +65,6 @@ public:
     double calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const int* X);
     double calc_p_tilde(double a_tilde, double b_tilde);
     double sample_gamma(double a_tilde, double b_tilde, double p_tilde);
-    void add_uh_prod_beta_h(UProdBeta& u_prod_beta_no_h);
     double log_dgamma_norm_const(double a, double b);
     double log_dgamma_trunc_const(double a, double b);
     double init_log_d2_const_terms();

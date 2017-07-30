@@ -16,40 +16,81 @@ GammaCateg::GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& 
     m_bnd_l_is_zero(m_bnd_l == 0),
     m_bnd_u_is_inf(m_bnd_u == R_PosInf),
     m_is_trunc(!m_bnd_l_is_zero || !m_bnd_u_is_inf),
+    m_incl_one(m_hyp_p != 0.0),
     m_log_d2_const_terms(calc_log_d2_const_terms()) {
 }
 
 
 
 
-// sample a new value for gamma_h.  As a side-effect, updates `u_prod_beta`,
-// `m_beta_val`, and `m_gam_val` to reflect the newly sampled value of
-// gamma_h.
+// sample a new value for gamma_h.  As a side-effect, updates `ubeta`,
+// `m_beta_val`, and `m_gam_val` to reflect the newly sampled value of gamma_h.
 
-double GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) {
+double GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X) {
 
     double a_tilde, b_tilde, p_tilde;
 
     // calculate a_tilde
     a_tilde = calc_a_tilde(W);
 
-    // calculate b_tilde and p_tilde.  Note that `calc_b_tilde(u_prod_beta)` has
-    // the side-effect of changing the values of the data pointed to by
-    // `u_prod_beta` to instead have the values given by `U * beta - U_h *
-    // beta_h`.
-    b_tilde = calc_b_tilde(u_prod_beta, xi, X);
-    p_tilde = calc_p_tilde(a_tilde, b_tilde);
+    // calculate b_tilde and p_tilde.  Note that `calc_b_tilde(ubeta)` has the
+    // side-effect of changing the values of the data pointed to by `ubeta` to
+    // instead have the values given by `U * beta - U_h * beta_h`.
+    b_tilde = calc_b_tilde(ubeta, xi, X);
+    p_tilde = m_incl_one ? calc_p_tilde(a_tilde, b_tilde) : 0;
 
     // sample a new value for gamma_h and update beta_h
     m_gam_val = sample_gamma(a_tilde, b_tilde, p_tilde);
     m_beta_val = log(m_gam_val);
 
-    // change the values of the data pointed to by `u_prod_beta` to take the
-    // values of `U * beta` using the newly sampled value of `gamma_h`
-    add_uh_prod_beta_h(u_prod_beta);
+    // change the values of the data pointed to by `ubeta` to take the values of
+    // `U * beta` using the newly sampled value of `gamma_h`
+    ubeta.add_uh_prod_beta_h(m_Uh, m_beta_val);
 
     return m_gam_val;
 }
+
+
+
+
+double GammaCateg::sample_gamma(double a_tilde, double b_tilde, double p_tilde) {
+
+    double unif_bnd_l, unif_bnd_u, unif_rv;
+
+    // case: with probability `p_tilde`, sample a value of 1
+    if (R::unif_rand() < p_tilde) {
+	return 1;
+    }
+
+    // case: with probability `1 - p_tilde`, sample from a possibly truncated
+    // gamma distribution
+    else {
+
+	// if the distribution is not truncated then use the usual routine to
+	// sample a gamma variate
+	if (! m_is_trunc) {
+	    return R::rgamma(a_tilde, 1 / b_tilde);
+	}
+	// case: sample from a truncated gamma distribution
+	else {
+
+	    // calculate `F(m_bnd_l; a_tilde, b_tilde)` and `F(m_bnd_u; a_tilde,
+	    // b_tilde)`
+	    unif_bnd_l = m_bnd_l_is_zero ?
+		0 :
+		R::pgamma(m_bnd_l, a_tilde, 1 / b_tilde, 0, 0);
+	    unif_bnd_u = m_bnd_u_is_inf ?
+		1 :
+		R::pgamma(m_bnd_u, a_tilde, 1 / b_tilde, 0, 0);
+
+	    // sample a uniform r.v. and return the `unif_rv`-th quantile from
+	    // the gamma distribution
+	    unif_rv = R::runif(unif_bnd_l, unif_bnd_u);
+	    return R::qgamma(unif_rv, a_tilde, 1 / b_tilde, 0, 0);
+	}
+    }
+}
+
 
 
 
@@ -78,8 +119,8 @@ double GammaCateg::calc_a_tilde(const WGen& W) {
     // is guaranteed to be 0)
     for ( ; w_days_idx < w_end; ++w_days_idx) {
 
-	// case: `U_ijkh` has value of 1, so add `W_ijk` to the running
-	// total.  Otherwise `U_ijkh` has value of 0, so we can just ignore.
+	// case: `U_ijkh` has value of 1, so add `W_ijk` to the running total.
+	// Otherwise `U_ijkh` has value of 0, so we can just ignore.
 	if (m_Uh[*w_days_idx]) {
 	    sum_val += *w_vals;
 	}
@@ -99,38 +140,39 @@ double GammaCateg::calc_a_tilde(const WGen& W) {
 //         log(xi_i) + sum_{l != h} U_{ijkl} * beta_l
 //     )
 //
-// Furthermore, note that the s-th element of `sum_{l != h} U_{ijkl} * beta_l` is equal to
-// `U*beta - U_h*beta_h`, a fact that is used in the calculations below.
+// Furthermore, note that the s-th element of `sum_{l != h} U_{ijkl} * beta_l`
+// is equal to `U * beta - U_h * beta_h`, a fact that is used in the
+// calculations below.
 //
-// ** important **: this function has the side effect of changing the values of
-// the data pointed to by `u_prod_beta` to instead have the values given by `U *
-// beta - U_h * beta_h`.
+// Nota bene: this function has the side effect of changing the values of the
+// data pointed to by `U * beta` to instead have the values given by `U * beta -
+// U_h * beta_h`.
 
-double GammaCateg::calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const int* X) {
+double GammaCateg::calc_b_tilde(UProdBeta& ubeta, const XiGen& xi, const int* X) {
 
-    double* ubeta = u_prod_beta.vals();
+    double* ubeta_vals = ubeta.vals();
     const double* xi_vals = xi.vals();
 
     // initialize `sum_val` to take the first term in the expression
     double sum_val = m_hyp_b;
 
     // each iteration checks whether `r` corresponding to index ijk satisfies
-    // the consitions of the outer sum, and if so, adds the value of the expression
-    // inside of the outer sum to the running total
+    // the consitions of the outer sum, and if so, adds the value of the
+    // expression inside of the outer sum to the running total
     for (int r = 0; r < m_n_days; ++r) {
 
 	// case: U_{ijkh} has a value of 1, so update the ijk-th element of
-	// `ubeta` to have the value of the ijk-th element of `U*beta -
+	// `ubeta_vals` to have the value of the ijk-th element of `U*beta -
 	// U_h*beta_h`.  If U_{ijkh} has a value of 0 then no update is needed.
 	if (m_Uh[r]) {
 
-	    ubeta[r] -= m_beta_val;
+	    ubeta_vals[r] -= m_beta_val;
 
 	    // case: the index ijk that `r` corresponds to is one of the terms
 	    // included in the outer sum, so add the value of the expression to
 	    // the running total
 	    if (X[r]) {
-		sum_val += exp(log(xi_vals[ d2s[r] ]) + ubeta[r]);
+		sum_val += exp(log(xi_vals[ d2s[r] ]) + ubeta_vals[r]);
 	    }
 	}
     }
@@ -172,73 +214,6 @@ double GammaCateg::calc_p_tilde(double a_tilde, double b_tilde) {
 		     - log_norm_const_tilde);
 
     return m_hyp_p / (m_hyp_p + exp(log_d2));
-}
-
-
-
-
-double GammaCateg::sample_gamma(double a_tilde, double b_tilde, double p_tilde) {
-
-    double unif_bnd_l, unif_bnd_u, unif_rv;
-
-    // case: with probability `p_tilde`, sample a value of 1
-    if (R::unif_rand() < p_tilde) {
-	return 1;
-    }
-
-    // case: with probability `1 - p_tilde`, sample from a possibly truncated
-    // gamma distribution
-    else {
-
-	// if the distribution is not truncated then use the usual routine to sample
-	// a gamma variate
-	if (! m_is_trunc) {
-	    return R::rgamma(a_tilde, 1 / b_tilde);
-	}
-
-	// case: sample from a truncated gamma distribution
-	else {
-
-	    // calculate `F(m_bnd_l; a_tilde, b_tilde)` and `F(m_bnd_u; a_tilde,
-	    // b_tilde)`
-	    unif_bnd_l = m_bnd_l_is_zero ?
-		0 :
-		R::pgamma(m_bnd_l, a_tilde, 1 / b_tilde, 0, 0);
-	    unif_bnd_u = m_bnd_u_is_inf ?
-		1 :
-		R::pgamma(m_bnd_u, a_tilde, 1 / b_tilde, 0, 0);
-
-	    // sample a uniform r.v. and return the `unif_rv`-th quantile from
-	    // the gamma distribution
-	    unif_rv = R::runif(unif_bnd_l, unif_bnd_u);
-	    return R::qgamma(unif_rv, a_tilde, 1 / b_tilde, 0, 0);
-	}
-    }
-}
-
-
-
-
-// change the values of the data pointed to by `u_prod_beta_no_h` so that each
-// element has the value of the corresponding element of `U_h * beta_h* added to
-// it
-
-void GammaCateg::add_uh_prod_beta_h(UProdBeta& u_prod_beta_no_h) {
-
-    double* ubeta_no_h = u_prod_beta_no_h.vals();
-
-    // each iteration updates the ijk-th element of `U * beta - U_h * beta_h` to
-    // instead have the values given by `u_prod_beta`.
-    for (int r = 0; r < m_n_days; ++r) {
-
-	// case: U_{ijkh} has a value of 1, so update the ijk-th element of
-	// `U*beta - U_h*beta_h` to have the value of the ijk-th element of
-	// `u_prod_beta`.  If U_{ijkh} has a value of 0 then no update is
-	// needed.
-	if (m_Uh[r]) {
-	    ubeta_no_h[r] += m_beta_val;
-	}
-    }
 }
 
 
@@ -288,12 +263,13 @@ double GammaCateg::log_dgamma_trunc_const(double a, double b) {
 
 
 // calculates the log of the constant terms in the expression for d2 as defined
-// in `GammaCateg::calc_p_tilde`, as given by the expression:
+// in `calc_p_tilde`, as given by the expression:
 //
 //         (1 - p) * C(a, b)  * exp(-b)
 //     log ----------------------------
 //              int{ G(x; a, b) }dx
 //
+// and where C(a, b) is as defined by the `log_dgamma_norm_const` function.
 
 double GammaCateg::calc_log_d2_const_terms() {
 

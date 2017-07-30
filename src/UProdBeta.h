@@ -13,6 +13,8 @@ public:
     UProdBeta(int n_days);
     ~UProdBeta();
 
+    void add_uh_prod_beta_h(const double* U_h, double beta_h);
+
     double* vals() { return m_vals; }
     const double* vals() const { return m_vals; }
     double* exp_vals() { return m_exp_vals; }

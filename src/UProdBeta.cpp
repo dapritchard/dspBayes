@@ -26,6 +26,28 @@ UProdBeta::~UProdBeta() {
 
 
 
+
+// change the values of the data pointed to by `ubeta_no_h` so that each element
+// has the value of the corresponding element of `U_h * beta_h* added to it
+
+void UProdBeta::add_uh_prod_beta_h(const double* U_h, double beta_h) {
+
+    // each iteration updates the ijk-th element of `U * beta - U_h * beta_h` to
+    // instead have the values given by `ubeta`.
+    for (int r = 0; r < m_n_days; ++r) {
+
+	// case: U_{ijkh} has a value of 1, so update the ijk-th element of
+	// `U*beta - U_h*beta_h` to have the value of the ijk-th element of
+	// `ubeta`.  If U_{ijkh} has a value of 0 then no update is needed.
+	if (U_h[r]) {
+	    m_vals[r] += beta_h;
+	}
+    }
+}
+
+
+
+
 void UProdBeta::update_exp(int* X) {
     for (int i = 0; i < m_n_days; i++) {
 	m_exp_vals[i] = X[i] ?

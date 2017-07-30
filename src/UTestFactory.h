@@ -2,6 +2,7 @@
 #define DSP_BAYES_UTEST_FACTORY_H
 
 #include "Rcpp.h"
+#include "GammaGen.h"
 #include "XiGen.h"
 #include "WGen.h"
 #include "PhiGen.h"
@@ -30,12 +31,17 @@ public:
 		 Rcpp::List test_data);
 
     // factory methods
+    GammaCateg* gamma_categ_all();
+    GammaCateg* gamma_categ_zero_one();
+    GammaCateg* gamma_categ_one_inf();
+    GammaCateg* gamma_categ_zero_half();
     XiGen* xi();
     XiGen* xi_no_rec();
     WGen* W();
     UProdBeta* ubeta();
     PhiGen* phi();
     PhiGen* phi_no_rec();
+    int* X();
     static bool eq_dbl(double a, double b);
 
     // usual input
@@ -56,7 +62,9 @@ public:
     Rcpp::NumericVector input_ubeta;
     Rcpp::NumericVector input_w;
     Rcpp::NumericVector input_xi;
+    Rcpp::NumericVector target_data_gam_cat;
     Rcpp::NumericVector target_data_phi;
+    Rcpp::List target_samples_gam_cat;
     Rcpp::NumericVector target_samples_phi;
     Rcpp::NumericVector target_samples_w;
     Rcpp::NumericVector target_samples_xi;
