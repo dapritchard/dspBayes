@@ -254,7 +254,7 @@ double GammaCateg::log_dgamma_trunc_const(double a, double b) {
     // if the lower bound  is 0 then F(0) = 0
     F_low = (m_bnd_l_is_zero) ?
 	0 :
-	R::pgamma(m_bnd_u, a, 1/b, 0, 0);
+	R::pgamma(m_bnd_l, a, 1/b, 0, 0);
 
     return log(F_upp - F_low);
 }

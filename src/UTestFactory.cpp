@@ -11,8 +11,7 @@ using Rcpp::as;
 using Rcpp::NumericVector;
 using Rcpp::IntegerVector;
 
-double UTestFactory::epsilon = 3.0;
-
+double UTestFactory::epsilon = 0.0;
 
 UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
 			   Rcpp::IntegerVector X_rcpp,
@@ -41,12 +40,13 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
     n_burn(n_burn),
     n_samp(n_samp),
     // testing data
+    input_gamma_specs(as<Rcpp::List>(test_data["input_gamma_specs"])),
     input_ubeta(as<NumericVector>(test_data["input_ubeta"])),
     input_w(as<IntegerVector>(test_data["input_w"])),
     input_xi(as<NumericVector>(test_data["input_xi"])),
-    target_data_gam_cat(as<NumericVector>(test_data["target_data_gam_cat"])),
+    target_data_gamma_categ(as<NumericVector>(test_data["target_data_gamma_categ"])),
     target_data_phi(as<NumericVector>(test_data["target_data_phi"])),
-    target_samples_gam_cat(as<Rcpp::List>(test_data["target_samples_gam_cat"])),
+    target_samples_gamma_categ(as<Rcpp::List>(test_data["target_samples_gamma_categ"])),
     target_samples_phi(as<NumericVector>(test_data["target_samples_phi"])),
     target_samples_w(as<NumericVector>(test_data["target_samples_w"])),
     target_samples_xi(as<NumericVector>(test_data["target_samples_xi"])),
@@ -103,6 +103,39 @@ UProdBeta* UTestFactory::ubeta() {
     std::copy(input_ubeta.begin(), input_ubeta.end(), ubeta->m_vals);
     ubeta->update_exp(X_rcpp.begin());
     return ubeta;
+}
+
+
+GammaCateg* UTestFactory::gamma_categ_all() {
+    GammaCateg* all = new GammaCateg(U, as<NumericVector>(input_gamma_specs["gamma_specs_all"]));
+    all->m_beta_val = target_data_gamma_categ["beta_prev"];
+    return all;
+}
+
+
+GammaCateg* UTestFactory::gamma_categ_zero_one() {
+    GammaCateg* zero_one = new GammaCateg(U, as<NumericVector>(input_gamma_specs["gamma_specs_zero_one"]));
+    zero_one->m_beta_val = target_data_gamma_categ["beta_prev"];
+    return zero_one;
+}
+
+
+GammaCateg* UTestFactory::gamma_categ_one_inf() {
+    GammaCateg* one_inf = new GammaCateg(U, as<NumericVector>(input_gamma_specs["gamma_specs_one_inf"]));
+    one_inf->m_beta_val = target_data_gamma_categ["beta_prev"];
+    return one_inf;
+}
+
+
+GammaCateg* UTestFactory::gamma_categ_zero_half() {
+    GammaCateg* zero_half = new GammaCateg(U, as<NumericVector>(input_gamma_specs["gamma_specs_zero_half"]));
+    zero_half->m_beta_val = target_data_gamma_categ["beta_prev"];
+    return zero_half;
+}
+
+
+int* UTestFactory::X() {
+    return X_rcpp.begin();
 }
 
 

@@ -37,21 +37,29 @@ utest_cpp <- function(dsp_data,
     xi_seed <- 21L
     target_samples_xi <- utest_xi(dsp_data, W, ubeta, phi_specs["mean"], xi_seed)
 
+    # gamma categorical testing data
+    gam_cat_seed <- 902L
+    out_utest_gamma_categ <- utest_gamma_categ(dsp_data, W, xi, ubeta, gam_cat_seed)
+
     # collect seeds
-    seed_vals <- c(phi = phi_seed,
-                   W   = w_seed,
-                   xi  = xi_seed)
+    seed_vals <- c(gamma_categ = gam_cat_seed,
+                   phi         = phi_seed,
+                   W           = w_seed,
+                   xi          = xi_seed)
 
     # collect testing objects
-    test_data <- list(input_ubeta        = ubeta,
-                      input_w            = W,
-                      input_xi           = xi,
-                      target_data_phi    = out_utest_phi$target_data,
-                      target_samples_phi = out_utest_phi$target_samples,
-                      target_samples_w   = target_samples_w,
-                      target_samples_xi  = target_samples_xi,
-                      seed_vals          = seed_vals,
-                      epsilon            = 1e-12)
+    test_data <- list(input_gamma_specs          = out_utest_gamma_categ$specs,
+                      input_ubeta                = ubeta,
+                      input_w                    = W,
+                      input_xi                   = xi,
+                      target_data_gamma_categ    = out_utest_gamma_categ$target_data,
+                      target_data_phi            = out_utest_phi$target_data,
+                      target_samples_gamma_categ = out_utest_gamma_categ$target_samples,
+                      target_samples_phi         = out_utest_phi$target_samples,
+                      target_samples_w           = target_samples_w,
+                      target_samples_xi          = target_samples_xi,
+                      seed_vals                  = seed_vals,
+                      epsilon                    = 1e-12)
 
     n_samp <- 100    #  ************  TODO remove this line  ***********************
 

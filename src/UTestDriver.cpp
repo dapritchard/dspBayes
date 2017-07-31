@@ -6,6 +6,7 @@
 
 #include "cppunit/ui/text/TestRunner.h"
 #include "UTestFactory.h"
+#include "UTestGammaCateg.h"
 #include "UTestPhiGen.h"
 #include "UTestWGen.h"
 #include "UTestXiGen.h"
@@ -42,20 +43,21 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 
     UTestFactory::epsilon = Rcpp::as<double>(test_data["epsilon"]);
     g_ut_factory = UTestFactory(U,
-				X_rcpp,
-				w_day_blocks,
-				w_to_days_idx,
-				w_cyc_to_subj_idx,
-				subj_day_blocks,
-				day_to_subj_idx,
-				gamma_specs,
-				phi_specs,
-				fw_len,
-				n_burn,
-				n_samp,
-				test_data);
+    				X_rcpp,
+    				w_day_blocks,
+    				w_to_days_idx,
+    				w_cyc_to_subj_idx,
+    				subj_day_blocks,
+    				day_to_subj_idx,
+    				gamma_specs,
+    				phi_specs,
+    				fw_len,
+    				n_burn,
+    				n_samp,
+    				test_data);
 
     CppUnit::TextUi::TestRunner runner;
+    runner.addTest(GammaCategTest::suite());
     runner.addTest(PhiGenTest::suite());
     runner.addTest(WGenTest::suite());
     runner.addTest(XiGenTest::suite());
