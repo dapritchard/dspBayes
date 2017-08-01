@@ -1,5 +1,5 @@
 utest_cpp <- function(dsp_data,
-                      nSamp      = 1e4,
+                      n_samp     = 1e4,
                       nBurn      = 5e3,
                       nThin      = 1L,
                       hypGam     = NULL,
@@ -60,8 +60,6 @@ utest_cpp <- function(dsp_data,
                       target_samples_xi          = target_samples_xi,
                       seed_vals                  = seed_vals,
                       epsilon                    = 1e-12)
-
-    n_samp <- 100    #  ************  TODO remove this line  ***********************
 
     # pass testing data to C++ testing driver
     utest_cpp_(U                 = dsp_data$U,

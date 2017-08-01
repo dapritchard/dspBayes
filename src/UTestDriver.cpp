@@ -41,6 +41,10 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 	       int n_samp,
 	       Rcpp::List test_data) {
 
+    // so that data generation classes record their samples.  By default this
+    // value is false.
+    g_record_status = true;
+
     UTestFactory::epsilon = Rcpp::as<double>(test_data["epsilon"]);
     g_ut_factory = UTestFactory(U,
     				X_rcpp,

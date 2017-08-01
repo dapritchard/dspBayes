@@ -221,6 +221,8 @@ CoefGen.o : CoefGen.h
 
 DayBlock.o : DayBlock.h
 
+Dsp.o : CoefGen.h PhiGen.h WGen.h XiGen.h
+
 GammaCateg.o : GammaGen.h global_vars.h
 
 GammaGen.o : GammaGen.h
@@ -229,7 +231,7 @@ PhiGen.o : PhiGen.h ProposalFcns.h XiGen.h
 
 ProposalFcns.o : ProposalFcns.h
 
-RcppExports.cpp : dsp_sampler.cpp UTestDriver.cpp
+RcppExports.cpp : Dsp.cpp UTestDriver.cpp
 	Rscript -e 'Rcpp::compileAttributes("..")'
 RcppExports.o : RcppExports.cpp
 

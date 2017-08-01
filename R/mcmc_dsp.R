@@ -1,6 +1,6 @@
 dsp <- function(dsp_data,
-                nSamp      = 1e4,
-                nBurn      = 5e3,
+                n_samp     = 10000L,
+                nBurn      = 5000L,
                 nThin      = 1L,
                 hypGam     = NULL,
                 tuningGam  = NULL,
@@ -13,29 +13,37 @@ dsp <- function(dsp_data,
     gamma_hyper_list <- get_gamma_specs(dsp_data)
     phi_specs <- get_phi_specs()
 
-    n_samp <- 100
+    # start timer
+    start_time <- proc.time()
 
-    out <- dsp_sampler(U                = dsp_data$U,
-                       X_rcpp           = dsp_data$X,
-                       w_day_blocks     = dsp_data$w_day_blocks,
-                       w_to_days_idx    = dsp_data$w_to_days_idx,
-                       w_cyc_to_cyc_idx = dsp_data$w_cyc_to_cyc_idx,
-                       subj_day_blocks  = dsp_data$subj_day_blocks,
-                       day_to_subj_idx  = dsp_data$day_to_subj_idx,
-                       gamma_specs      = gamma_hyper_list,
-                       phi_specs        = phi_specs,
-                       fw_len           = 5,
-                       n_burn           = 0,
-                       n_samp           = n_samp)
+    out <- dsp_(U                 = dsp_data$U,
+                X_rcpp            = dsp_data$X,
+                w_day_blocks      = dsp_data$w_day_blocks,
+                w_to_days_idx     = dsp_data$w_to_days_idx,
+                w_cyc_to_subj_idx = dsp_data$w_cyc_to_subj_idx,
+                subj_day_blocks   = dsp_data$subj_day_blocks,
+                day_to_subj_idx   = dsp_data$day_to_subj_idx,
+                gamma_specs       = gamma_hyper_list,
+                phi_specs         = phi_specs,
+                fw_len            = 5L,
+                n_burn            = 0L,
+                n_samp            = n_samp)
+
+    # end timer
+    run_time <- proc.time() - start_time
 
     # transpose data
     out_coefs <- matrix(out$coefs,
                         nrow = n_samp,
+                        ncol = ncol(dsp_data$U),
                         byrow = TRUE,
                         dimnames = list(NULL, colnames(dsp_data$U)))
-    # TODO: transpose xi
+    xi <- matrix(out$xi,
+                 nrow = n_samp,
+                 byrow = TRUE)
 
-    list(coef = out_coefs,
-         xi   = out$xi,
-         phi  = out$phi)
+    list(coefs    = out_coefs,
+         xi       = out$xi,
+         phi      = out$phi,
+         run_time = run_time)
 }
