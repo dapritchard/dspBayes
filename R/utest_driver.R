@@ -48,7 +48,7 @@ utest_cpp <- function(dsp_data,
                    xi          = xi_seed)
 
     # collect testing objects
-    test_data <- list(input_gamma_specs          = out_utest_gamma_categ$specs,
+    test_data <- list(input_gamma_specs          = out_utest_gamma_categ$input_specs,
                       input_ubeta                = ubeta,
                       input_w                    = W,
                       input_xi                   = xi,

@@ -41,7 +41,7 @@ public:
     UProdBeta* ubeta();
     PhiGen* phi();
     PhiGen* phi_no_rec();
-    int* X();
+    int** X();
     static bool eq_dbl(double a, double b);
 
     // usual input

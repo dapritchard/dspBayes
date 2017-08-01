@@ -134,8 +134,10 @@ GammaCateg* UTestFactory::gamma_categ_zero_half() {
 }
 
 
-int* UTestFactory::X() {
-    return X_rcpp.begin();
+int** UTestFactory::X() {
+    int** X = new int*;
+    *X = X_rcpp.begin();;
+    return X;
 }
 
 

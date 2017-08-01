@@ -27,6 +27,7 @@ public:
     CPPUNIT_TEST_SUITE(GammaCategTest);
     CPPUNIT_TEST(test_constructor);
     CPPUNIT_TEST(test_calculations);
+    CPPUNIT_TEST(test_sample_gamma);
     CPPUNIT_TEST(test_sample);
     CPPUNIT_TEST_SUITE_END();
 
@@ -40,12 +41,10 @@ private:
     WGen* W;
     XiGen* xi;
     UProdBeta* ubeta;
-    int* X;
+    int** X;
 
     double seed_val;
     double epsilon;
-    // double a;
-    // double b;
     double hyp_a;
     double hyp_b;
     double m_log_d2_const_terms_all;
@@ -68,10 +67,6 @@ private:
     Rcpp::NumericVector target_samples_zero_one;
     Rcpp::NumericVector target_samples_one_inf;
     Rcpp::NumericVector target_samples_zero_half;
-    // double update_all;
-    // double update_zero_one;
-    // double update_one_inf;
-    // double update_zero_half;
     Rcpp::NumericVector target_ubeta_all;
     Rcpp::NumericVector target_ubeta_zero_one;
     Rcpp::NumericVector target_ubeta_one_inf;

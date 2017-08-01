@@ -56,6 +56,8 @@ int utest_cpp_(Rcpp::NumericMatrix U,
     				n_samp,
     				test_data);
 
+    d2s = day_to_subj_idx.begin();
+
     CppUnit::TextUi::TestRunner runner;
     runner.addTest(GammaCategTest::suite());
     runner.addTest(PhiGenTest::suite());

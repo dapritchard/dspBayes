@@ -78,15 +78,15 @@ double GammaCateg::sample_gamma(double a_tilde, double b_tilde, double p_tilde) 
 	    // b_tilde)`
 	    unif_bnd_l = m_bnd_l_is_zero ?
 		0 :
-		R::pgamma(m_bnd_l, a_tilde, 1 / b_tilde, 0, 0);
+		R::pgamma(m_bnd_l, a_tilde, 1 / b_tilde, 1, 0);
 	    unif_bnd_u = m_bnd_u_is_inf ?
 		1 :
-		R::pgamma(m_bnd_u, a_tilde, 1 / b_tilde, 0, 0);
+		R::pgamma(m_bnd_u, a_tilde, 1 / b_tilde, 1, 0);
 
 	    // sample a uniform r.v. and return the `unif_rv`-th quantile from
 	    // the gamma distribution
 	    unif_rv = R::runif(unif_bnd_l, unif_bnd_u);
-	    return R::qgamma(unif_rv, a_tilde, 1 / b_tilde, 0, 0);
+	    return R::qgamma(unif_rv, a_tilde, 1 / b_tilde, 1, 0);
 	}
     }
 }
@@ -199,7 +199,9 @@ double GammaCateg::calc_b_tilde(UProdBeta& ubeta, const XiGen& xi, const int* X)
 
 double GammaCateg::calc_p_tilde(double a_tilde, double b_tilde) {
 
-    // log( int{ G(x; a_tilde, b_tilde) }dx )
+    // log( int{ G(x; a_tilde, b_tilde) }dx ).  Note that this can become -inf,
+    // but the behavior of this case propagates through the function as desired,
+    // so no special considerations need to be taken.
     double log_trunc_const_tilde = m_is_trunc ?
 	log_dgamma_trunc_const(a_tilde, b_tilde) :
 	0;
@@ -225,7 +227,7 @@ double GammaCateg::calc_p_tilde(double a_tilde, double b_tilde) {
 //     log(b^a / gamma(a)) = a * log(b) - log( gamma(b) )
 
 double GammaCateg::log_dgamma_norm_const(double a, double b) {
-    return a * log(b) + lgammafn_sign(b, NULL);
+    return a * log(b) - lgammafn_sign(a, NULL);
 }
 
 
@@ -249,12 +251,12 @@ double GammaCateg::log_dgamma_trunc_const(double a, double b) {
     // if the upper bound is infinity then F(infinity) = 1
     F_upp = (m_bnd_u_is_inf) ?
 	1 :
-	R::pgamma(m_bnd_u, a, 1 / b, 0, 0);
+	R::pgamma(m_bnd_u, a, 1 / b, 1, 0);
 
     // if the lower bound  is 0 then F(0) = 0
     F_low = (m_bnd_l_is_zero) ?
 	0 :
-	R::pgamma(m_bnd_l, a, 1/b, 0, 0);
+	R::pgamma(m_bnd_l, a, 1 / b, 1, 0);
 
     return log(F_upp - F_low);
 }

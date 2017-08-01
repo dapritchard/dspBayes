@@ -87,9 +87,11 @@ get_preg_cyc_list <- function(comb_dat, var_nm) {
 
 get_w_days_idx <- function(preg_cyc_list) {
     idx_list <- lapply(preg_cyc_list, function(x) {
+        # using 1-based indexing
         x["beg_idx"] : (x["beg_idx"] + x["n_days"] - 1L)
     })
-    unlist(idx_list)
+    # now back to 0-based indexing
+    unlist(idx_list) - 1L
 }
 
 
@@ -163,7 +165,8 @@ get_subj_idx_list <- function(comb_dat, var_nm) {
 
 get_days_to_subj <- function(subj_idx_list) {
     n_days <- sapply(subj_idx_list, function(x) x["n_days"])
-    rep(seq_along(subj_idx_list), n_days)
+    # subtract 1 to convert to 0-based indexing
+    rep(seq_along(subj_idx_list), n_days) - 1L
 }
 
 
