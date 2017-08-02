@@ -33,17 +33,17 @@ dsp <- function(dsp_data,
     run_time <- proc.time() - start_time
 
     # transpose data
-    out_coefs <- matrix(out$coefs,
+    coefs_trans <- matrix(out$coefs,
                         nrow = n_samp,
                         ncol = ncol(dsp_data$U),
                         byrow = TRUE,
                         dimnames = list(NULL, colnames(dsp_data$U)))
-    xi <- matrix(out$xi,
-                 nrow = n_samp,
-                 byrow = TRUE)
+    xi_trans <- matrix(out$xi,
+                     nrow = n_samp,
+                     byrow = TRUE)
 
-    list(coefs    = out_coefs,
-         xi       = out$xi,
+    list(coefs    = coefs_trans,
+         xi       = xi_trans,
          phi      = out$phi,
          run_time = run_time)
 }

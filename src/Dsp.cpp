@@ -61,14 +61,15 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
 
     	// update the regression coefficients gamma and psi
     	coefs.sample(W, xi, u_prod_beta, X);
-    	// u_prod_beta.update_exp(X);
+    	u_prod_beta.update_exp(X);
 
     	// update phi, the variance parameter for xi
     	phi.sample(xi);
 
 	// case: burn-in phase is over so record samples.  Note that this occurs
-	// after the samples in this scan have been taken: this is because this
-	// actually informs the classes to not overwrite previous data.
+	// after the samples in this scan have been taken; this is because
+	// `g_record_status` actually informs the classes to not overwrite
+	// previous data.
 	if (s == 0) g_record_status = true;
 
 	// check for user interrupt every `DSP_BAYES_N_INTER_CHECK` iterations

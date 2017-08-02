@@ -34,19 +34,15 @@ CoefGen::~CoefGen() {
 
 void CoefGen::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X) {
 
+    // if we're past the burn-in phase then update the `m_vals` so that we don't
+    // overwrite the previoussamples in the current scan
+    if (g_record_status) {
+	m_vals += m_n_gamma;
+    }
+
     // each iteration updates one gamma_h term and correspondingly udjusts
     // the value of `ubeta`.
-    GammaGen** end = m_gamma + m_n_gamma;
-    for (GammaGen** curr = m_gamma; curr != end; ++curr) {
-
-	// update the regression coefficient gamma_h.  If we are past the
-	// burn-in phase then store the samples in `m_vals`.
-	if (g_record_status) {
-	    *m_vals++ = (*curr)->sample(W, xi, ubeta, X);
-	} else {
-	    // same function call as the first case, but now we don't keep the
-	    // result
-	    (*curr)->sample(W, xi, ubeta, X);
-	}
+    for (int j = 0; j < m_n_gamma; ++j) {
+	m_vals[j] = m_gamma[j]->sample(W, xi, ubeta, X);
     }
 }
