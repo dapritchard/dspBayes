@@ -1,4 +1,3 @@
-
 #' Specify model variables for day-specific probabilities MCMC sampler
 #'
 #' \code{dspDat} is used to create an object of \code{class} \code{"dspDat"};
@@ -90,15 +89,17 @@
 #'     day 2, etc.  Warning: this assumes that the observations within a cycle
 #'     are in chronological order.
 #'
-#' @param fw_len A value specifying the number of days belonging to a cycle's
-#'     fertile window.  The length of the fertile window is assumed to be same
-#'     across all cycles.
+#' @param fw_incl ****  TODO: update
 #'
 #' @param use_na One of either \code{"none"} or \code{"sex"}.  If \code{"none"}
 #'     then observations with missing data are removed from the model.  If
 #'     \code{"sex"} then observations with missing intercourse data are included
 #'     in the model conditional on no other data missing in the observation.
-#'     See \emph{Data Processing Steps} for more details.
+#'     See \emph{Data Processing Steps} for more details.  TODO: update
+#'
+#' @param req_min_days  TODO
+#'
+#' @param keep_data
 #'
 #' @details It is natural to record fertility study data in up to three datasets
 #'     of varying time-specificities.  First, a dataset of variables that do not
@@ -192,7 +193,12 @@ dspDat <- function(dsp_model,
                    req_min_days = 0L,
                    keep_data    = TRUE) {
 
-    # TODO: check valid input
+    # TODO: check valid input:
+    #
+    # make sure that same names don't occur across datasets
+
+
+
     # TODO: clean up summary fcn
     # TODO: setNames and getNames for class?
     # TODO: partial matching for 'use_na'
@@ -230,13 +236,13 @@ dspDat <- function(dsp_model,
                                  sex_name,
                                  fw_name)
 
-    comb_dat <- merge_dsp_data(daily, cycle, baseline, var_nm, fw_incl, req_min_days)
+    comb_dat <- merge_dsp_data(baseline, cycle, daily, var_nm, fw_incl, req_min_days)
 
     clean_dat <- remove_cyc_with_miss(comb_dat, var_nm, fw_incl, use_na)
 
     sex_days_dat <- remove_days_no_sex(comb_dat, var_nm)
 
-    dspDat_obj <- derive_model_obj(sex_days_dat, var_nm, dsp_model)
+    dsp_data <- derive_model_obj(sex_days_dat, var_nm, dsp_model)
 
     #### TODO check if data is collinear or constant within outcome ####
 
@@ -244,15 +250,13 @@ dspDat <- function(dsp_model,
     # datInfo <- getDatInfo(dsp_model, baseline, cycle, daily, cleanDat,
     #                       redDat, modelObj, varNames, fw_len, idVec, cycList)
 
-    #### TODO: conditionally add objects in to return object
-
     if (keep_data) {
-        dspDat_obj$comb_dat <- comb_dat
-        dspDat_obj$clean_dat <- clean_dat
-        dspDat_obj$sex_dat <- sex_days_dat
+        dsp_data$comb_dat <- comb_dat
+        dsp_data$clean_dat <- clean_dat
+        dsp_data$sex_only_dat <- sex_days_dat
     }
 
-    structure(dspDat_obj, class="dspDat")
+    structure(dsp_data, class="dspDat")
 }
 
 

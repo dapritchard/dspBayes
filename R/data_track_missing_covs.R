@@ -77,20 +77,20 @@ get_missing_var_info <- function(expanded_df, dsp_model) {
 
 
 
-is_daily <- function(nm, var_nm) {
-    nm %in% var_nm$all_day
-}
+# is_daily <- function(nm, var_nm) {
+#     nm %in% var_nm$all_day
+# }
 
 
 
 
-is_cycle <- function(nm, var_nm) {
-    nm %in% var_nm$all_cyc
-}
+# is_cycle <- function(nm, var_nm) {
+#     nm %in% var_nm$all_cyc
+# }
 
 
 
 
-is_baseline <- function(nm, var_nm) {
-    nm %in% var_nm$all_base
-}
+# is_baseline <- function(nm, var_nm) {
+#     nm %in% var_nm$all_base
+# }

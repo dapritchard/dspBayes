@@ -18,6 +18,8 @@ target_all <- data.frame(id  = c(1, 1, 8, 8, 9, 9, 3),
 
 # begin testing ----------------------------------------------------------------
 
+# TODO: check against permuted data
+
 test_valid_inp <- function() {
 
     # both daily and cycle

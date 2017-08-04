@@ -1,13 +1,10 @@
-merge_dsp_data <- function(daily, cycle, baseline, var_nm, fw_incl, min_days_req) {
-
-    # # the union of all of the variables that we need across the various datasets
-    # var_nm <- c(id_name, cyc_name, sex_name, fw_name, all.vars(formula))
+merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, min_days_req) {
 
     # reduce each dataset to only contain the variables that we need.  Returns
     # NULL if the input is NULL.
-    base_red <- get_red_dat(baseline, var_nm$all)
-    cyc_red <- get_red_dat(cycle, var_nm$all)
-    day_red <- get_red_dat(daily, var_nm$all)
+    base_red <- get_red_dat(baseline, var_nm)
+    cyc_red <- get_red_dat(cycle, var_nm)
+    day_red <- get_red_dat(daily, var_nm)
 
     # obtain every unique subject id and cycle pair for any cycle that has
     # pregnancy outcome data
@@ -22,81 +19,88 @@ merge_dsp_data <- function(daily, cycle, baseline, var_nm, fw_incl, min_days_req
 
     # a data frame with observations given by the cross product of every day in
     # the fertile window and every (id, cycle) keypair
-    day_formatted <- construct_day_obs(day_red, keypairs, fw_incl, var_nm, min_days_req)
+    comb_dat <- construct_day_obs(day_red, keypairs, fw_incl, var_nm, min_days_req)
 
     # join operation on id and cycle.  `all.x = TRUE` specifies that we keep
-    # every observation in `day_formatted`.  `merge` defaults throw away
-    # observations in `cyc_red` that don't have matches, which is what we want
-    # since `day_formatted` already has all of the id and cycle pairs with
-    # pregnancy information.
+    # every observation in `day_formatted`.  Under these specifications `merge`
+    # throws away observations in `cyc_red` that don't have matches, which is
+    # what we want since `day_formatted` already has all of the id and cycle
+    # pairs with pregnancy information.  We defer sorting the joined data until
+    # later.
     if (! is.null(cyc_red)) {
-        merged_day_cyc <- merge(x = day_formatted,
-                                y = cyc_red,
-                                by = c(var_nm$id, var_nm$cyc),
-                                all.x = TRUE)
-    } else {
-        merged_day_cyc <- day_formatted
+        # TODO: check that there are not matches among model variable names
+        # other than the ones being joined against
+        comb_dat <- merge(x     = comb_dat,
+                          y     = cyc_red,
+                          by    = c(var_nm$id, var_nm$cyc),
+                          all.x = TRUE,
+                          sort  = FALSE)
     }
 
-    # return dataset after merging baseline in with cycle and daily
+    # conditionally merge baseline in with cycle and daily.  See above merge for
+    # discussion of the parameter settings.
     if (! is.null(base_red)) {
-        merge(x = merged_day_cyc,
-              y = base_red,
-              by = var_nm$id,
-              all.x = TRUE)
-    } else {
-        merged_day_cyc
+        # TODO: check that there are not matches among model variable names
+        # other than the ones being joined against
+        comb_dat <- merge(x     = comb_dat,
+                          y     = base_red,
+                          by    = var_nm$id,
+                          all.x = TRUE,
+                          sort  = FALSE)
     }
+
+    # drop unused factor levels after subsetting
+    for (i in seq_along(comb_dat)) {
+        if (is.factor(comb_dat[[i]])) {
+            comb_dat[[i]] <- droplevels(comb_dat[[i]])
+        }
+    }
+
+    # return data after sorting it
+    sort_dsp(comb_dat, keypairs, fw_incl, var_nm)
 }
 
 
 
 
-consolidate_var_nm <- function(dsp_model,
-                               baseline,
-                               cycle,
-                               daily,
-                               id_name,
-                               cyc_name,
-                               sex_name,
-                               fw_name) {
-
-    # `all_nm` is the union of all of the variables that we need across the
-    # various datasets.  `all_base`, `all_cyc`, and `all_day` are the names of
-    # all of the variables in the model that are in the various datasets.
-    all_nm <- c(id_name, cyc_name, sex_name, fw_name, all.vars(dsp_model))
-    all_base <- colnames(baseline)[colnames(baseline) %in% all_nm]
-    all_cyc <- colnames(cycle)[colnames(cycle) %in% all_nm]
-    all_day <- colnames(daily)[colnames(daily) %in% all_nm]
-
-    # collect into a single list
-    list(id       = id_name,
-         cyc      = cyc_name,
-         sex      = sex_name,
-         fw       = fw_name,
-         preg     = all.vars(dsp_model)[1L],
-         all      = all_nm,
-         all_base = all_base,
-         all_cyc  = all_cyc,
-         all_day  = all_day)
+# sort over id / cycle / fertile window
+sort_dsp <- function(comb_dat, keypairs, fw_incl, var_nm) {
+    # turn fertile window vector into a factor if it's not already so that
+    # `order` will give us the desired sorting
+    out <- comb_dat[order(comb_dat[, var_nm$id],
+                          comb_dat[, var_nm$cyc],
+                          comb_dat[, var_nm$fw] %>% factor(., levels = fw_incl)), ]
+    row.names(out) = NROW(comb_dat) %>% seq_len
+    out
 }
 
 
 
 
+# takes a data frame `dataset` and returns the data after removing any columns
+# with names do not appear in `var_nm$all`
 #
+# PRE: `dataset` is a data.frame and `var_nm` is a list with an element `all`
+# which is a character vector
 
-get_red_dat <- function(dataset, all_var_nm) {
+get_red_dat <- function(dataset, var_nm) {
 
     # if data is NULL then function is a noop
     if (is.null(dataset)) {
         return(NULL)
     }
 
-    # subset the data variables according to whether they are listed in
-    # `all_var_nm`
-    var_incl_bool <- colnames(dataset) %in% all_var_nm
-    dataset[, var_incl_bool, drop = FALSE] %>% as.data.frame(., stringsAsFactors = FALSE)
+    # subset the data variables according to whether they are among the set of
+    # all variables listed in the model or used to combine the data
+    var_incl_bool <- colnames(dataset) %in% var_nm$all
+
+    # we can't allow missing data for these fundamental columns, so create an
+    # index of rows to remove
+    critical_cols_bool <- colnames(dataset) %in% c(var_nm$id, var_nm$cyc, var_nm$fw, var_nm$preg)
+    obs_incl_bool <- complete.cases(dataset[, critical_cols_bool])
+
+    dataset[obs_incl_bool, var_incl_bool, drop = FALSE] %>%
+        as.data.frame(., stringsAsFactors = FALSE)
 }
 
 
@@ -107,9 +111,9 @@ get_red_dat <- function(dataset, all_var_nm) {
 # `cycle` is allowed to be NULL.
 #
 # PRE: assumes `daily` and `cycle` are data frames (or cycle may be NULL), each
-#      having columns for id and cycle.  Either one or both of `daily` or
-#      `cycle` must also have a column for pregnancy status.  The names of each
-#      of these columns is given by `var_nm`.
+# having columns for id and cycle.  Either one or both of `daily` or `cycle`
+# must also have a column for pregnancy status.  The names of each of these
+# columns is given by `var_nm`.
 
 get_keypairs <- function(daily, cycle, var_nm) {
 
@@ -137,7 +141,10 @@ get_keypairs <- function(daily, cycle, var_nm) {
 
     # obtain unique keypairs
     dup_keys_bool <- duplicated(keypairs_df)
-    keypairs_df[! dup_keys_bool, ]
+    keypairs_df <- keypairs_df[! dup_keys_bool, ]
+
+    # return keypairs sorted by id and cycle
+    keypairs_df[order(keypairs_df[, var_nm$id], keypairs_df[, var_nm$cyc]), ]
 }
 
 
@@ -148,10 +155,10 @@ get_keypairs <- function(daily, cycle, var_nm) {
 # every (id, cycle) keypair.
 #
 # PRE: assumes `daily` is a data frame with id, cycle and fertile window columns
-#      with names as given in `var_nm`.  `keypairs` is a nonempty data frame
-#      with exactly two columns for id and cycle.  `fw_incl` is a nonempty
-#      atomic vector. `var_nm` is a list providing the names of the id, cycle,
-#      and fertile window columns.  `min_days_req` is a length-1 numeric vector.
+# with names as given in `var_nm`.  `keypairs` is a nonempty data frame with
+# exactly two columns for id and cycle.  `fw_incl` is a nonempty atomic
+# vector. `var_nm` is a list providing the names of the id, cycle, and fertile
+# window columns.  `min_days_req` is a length-1 numeric vector.
 
 construct_day_obs <- function(daily, keypairs, fw_incl, var_nm, min_days_req) {
 
@@ -266,10 +273,10 @@ construct_template_df <- function(daily, fw_incl) {
 # combine a list of data frames that have a specific form.  It is assumed that
 # each element of `list_of_dfs` is a data frame of exactly the same dimensions
 # and attributes.  The function then performs an operation that is logically
-# equivalent to rbinding each of these data frames
+# equivalent to `rbind()`ing each of these data frames
 #
 # PRE: `list_of_dfs` is a list with length > 0 such that each element is a data
-#      frame of exactly the same dimensions and attributes
+# frame of exactly the same dimensions and attributes
 
 rbind_similar_dfs <- function(list_of_dfs) {
 
@@ -313,6 +320,5 @@ rbind_similar_dfs <- function(list_of_dfs) {
         }
     }
 
-    names(combined_list) <- list_of_dfs[[1L]] %>% names
-    as.data.frame(combined_list, stringsAsFactors = FALSE)
+    data.frame(combined_list, stringsAsFactors = FALSE)
 }

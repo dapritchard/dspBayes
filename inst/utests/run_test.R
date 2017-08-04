@@ -14,7 +14,5 @@ suite_construct_template_df <- defineTestSuite(
 test_result <- runTestSuite(list(suite_rbind_similar_dfs,
                                  suite_construct_template_df))
 
-runTestSuite(list(suite_rbind_similar_dfs))
-
 
 printTextProtocol(test_result)
