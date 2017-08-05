@@ -18,7 +18,7 @@ fw_days <- c(2, 3, 4)
 # `daily_preg` has one added.
 daily <- data.frame(id       = rep(id, each = 10),
                     cyc      = rep(cyc, each = 5),
-                    day      = rep(1:5, 2),
+                    day      = rep(1:5, 4),
                     sex      = rep(c("no", "yes"), 5) %>% factor,
                     exercise = rep(c("none", "cardio", "weights"), length.out = 10))
 daily_preg <- data.frame(daily, preg = rep(preg_status, each = 5))
@@ -48,15 +48,6 @@ extract_wrapper <- function(input_model) {
 var_nm_minimal <- extract_wrapper(preg ~ 0 + day)
 var_nm_age <- extract_wrapper(preg ~ 0 + day + age)
 var_nm_all <- extract_wrapper(preg ~ 0 + day + exercise + opk_use + age + bmi)
-# model_minimal <- formula(preg ~ 0 + day)
-# model_age <- formula(preg ~ 0 + day + age)
-# model_all <- formula(preg ~ 0 + day + exercise + opk_use + age + bmi)
-# var_nm_minimal <- extract_var_nm(model_minimal, baseline, cycle, daily,
-#                                      id_name, cyc_name, sex_name, fw_name)
-# var_nm_age <- extract_var_nm(model_age, baseline, cycle, daily, id_name,
-#                                  cyc_name, sex_name, fw_name)
-# var_nm_all <- extract_var_nm(model_all, baseline, cycle, daily, id_name,
-#                                  cyc_name, sex_name, fw_name)
 
 # arbitrary permutations of the data
 baseline_perm <- baseline[c(2, 1), ]
@@ -256,6 +247,7 @@ test_missing_id_cyc_fw <- function() {
 }
 
 
+# baseline and cycle datasets are allowed to be NULL
 test_null_dataset <- function() {
 
     out <- merge_defaults(baseline = NULL, cycle = NULL, daily = daily_preg)

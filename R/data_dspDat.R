@@ -174,6 +174,8 @@
 #' @references Dunson, David B., and Joseph
 #'     B. Stanford. "Bayesian inferences on predictors of conception probabilities."
 #'     \emph{Biometrics} 61.1 (2005): 126-133.
+#'
+#' @export
 
 
 
@@ -236,6 +238,8 @@ dspDat <- function(dsp_model,
                                  sex_name,
                                  fw_name)
 
+    # merge the data provided by `baseline`, `cycle`, and `daily` into a data
+    # frame
     comb_dat <- merge_dsp_data(baseline, cycle, daily, var_nm, fw_incl, req_min_days)
 
     clean_dat <- remove_cyc_with_miss(comb_dat, var_nm, fw_incl, use_na)

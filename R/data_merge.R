@@ -1,3 +1,20 @@
+# merge the data provided by `baseline`, `cycle`, and `daily` and return as a
+# data frame.  In more detail, `baseline` is merged over the subject ID
+# variable, and `subject` is merged over both the subject ID and also the cycle
+# number.  Unused variables are not included in the merged data, nor are days
+# outside of the fertile window.  Days inside the fertile window that are not
+# included in the original data are added to the merged data with missing values
+# inserted for the remaining variables when they are not known.  If the number
+# of days in the fertile window for a cycle is smaller than `min_days_req`, then
+# the cycle is removed from the data. The returned data is sorted over subject
+# ID, cycle number, and fertile window day.
+#
+# PRE: `baseline`, `cycle`, and `daily` are data frames or objects that can be
+# coerced to a data frame.  `var_nm` is an object created by `extract_var_nm`.
+# `fw_incl` is a vector giving the fertile window days, and `min_days_req` is
+# the minimum number of days needed in the data to include a cycle.
+
+
 merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, min_days_req) {
 
     # reduce each dataset to only contain the variables that we need.  Returns
@@ -28,8 +45,6 @@ merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, min_days_req
     # pairs with pregnancy information.  We defer sorting the joined data until
     # later.
     if (! is.null(cyc_red)) {
-        # TODO: check that there are not matches among model variable names
-        # other than the ones being joined against
         comb_dat <- merge(x     = comb_dat,
                           y     = cyc_red,
                           by    = c(var_nm$id, var_nm$cyc),
@@ -40,8 +55,6 @@ merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, min_days_req
     # conditionally merge baseline in with cycle and daily.  See above merge for
     # discussion of the parameter settings.
     if (! is.null(base_red)) {
-        # TODO: check that there are not matches among model variable names
-        # other than the ones being joined against
         comb_dat <- merge(x     = comb_dat,
                           y     = base_red,
                           by    = var_nm$id,
@@ -57,14 +70,18 @@ merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, min_days_req
     }
 
     # return data after sorting it
-    sort_dsp(comb_dat, keypairs, fw_incl, var_nm)
+    sort_dsp(comb_dat, fw_incl, var_nm)
 }
 
 
 
 
 # sort over id / cycle / fertile window
-sort_dsp <- function(comb_dat, keypairs, fw_incl, var_nm) {
+#
+# PRE: `comb_dat` is a data frame with id, cycle, and fertile window variables
+# with names given by `var_nm`.  `fw_incl` provides the fertile window days.
+
+sort_dsp <- function(comb_dat, fw_incl, var_nm) {
     # turn fertile window vector into a factor if it's not already so that
     # `order` will give us the desired sorting
     out <- comb_dat[order(comb_dat[, var_nm$id],
@@ -97,7 +114,7 @@ get_red_dat <- function(dataset, var_nm) {
     # we can't allow missing data for these fundamental columns, so create an
     # index of rows to remove
     critical_cols_bool <- colnames(dataset) %in% c(var_nm$id, var_nm$cyc, var_nm$fw, var_nm$preg)
-    obs_incl_bool <- complete.cases(dataset[, critical_cols_bool])
+    obs_incl_bool <- complete.cases(dataset[, critical_cols_bool, drop = FALSE])
 
     dataset[obs_incl_bool, var_incl_bool, drop = FALSE] %>%
         as.data.frame(., stringsAsFactors = FALSE)

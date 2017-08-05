@@ -82,7 +82,7 @@ remove_days_no_sex <- function(comb_dat, var_nm) {
 
 map_vec_to_bool <- function(sex_vec) {
 
-    allowed_yes <- c("y", "Y", "yes", "Yes")
+    allowed_yes <- c("y", "Y", "yes", "Yes", "YES")
 
     if (is.logical(sex_vec)) {
         return(sex_vec)
