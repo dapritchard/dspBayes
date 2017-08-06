@@ -62,8 +62,8 @@ utest_phi <- function(xi_vals,
     out_m_log_norm_const <- log(phi_init^phi_init / gamma(phi_init))
 
     # calc_log_r
-    hyp_phi_list <- list(c1 = hyp_c1, c2 = hyp_c2)
-    out_calc_log_r <- getPhiLogR(xi_vals, phi_init, phi_proposal, hyp_phi_list)
+    # hyp_phi_list <- list(c1 = hyp_c1, c2 = hyp_c2)
+    out_calc_log_r <- calc_log_r(xi_vals, phi_init, phi_proposal, hyp_c1, hyp_c2)
 
     # sample a series of phi updates.  Note: this is a random sample, so we have
     # to set a seed.

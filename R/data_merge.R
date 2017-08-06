@@ -213,6 +213,10 @@ construct_day_obs <- function(daily, keypairs, fw_incl, var_nm, min_days_req) {
         curr_df[[var_nm$cyc]] <- curr_cyc
         curr_df[[var_nm$fw]] <- fw_incl
 
+        # TODO: this process can introduce missing into the pregnancy variable
+        # if pregnancy is part of the daily data.  Have to think about how to
+        # handle this.
+
         # reduce to daily to the current subject and cycle
         curr_day_idx <- (daily[[var_nm$id]] == curr_id &
                          daily[[var_nm$cyc]] == curr_cyc) %>% which
@@ -233,9 +237,9 @@ construct_day_obs <- function(daily, keypairs, fw_incl, var_nm, min_days_req) {
             }
             # case: multiple matches, throw an error
             else if (length(row_idx) > 1L) {
-                paste0("multiple matches in daily data for subject ", curr_id,
-                       " cycle ", curr_cyc, " fw day ", fw_incl[i],
-                       ": dropping observation") %>% stop(call. = FALSE)
+                stop("multiple matches in daily data for subject ", curr_id,
+                     " cycle ", curr_cyc, " fw day ", fw_incl[i],
+                     ": dropping observation", call. = FALSE)
             }
             # else: 0 matches found.  Do nothing (i.e. leave an observation with
             # missing values in it)

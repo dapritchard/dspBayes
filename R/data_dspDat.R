@@ -196,64 +196,38 @@ dspDat <- function(dsp_model,
                    keep_data    = TRUE) {
 
     # TODO: check valid input:
-    #
-    # make sure that same names don't occur across datasets
 
-
-
-    # TODO: clean up summary fcn
-    # TODO: setNames and getNames for class?
-    # TODO: partial matching for 'use_na'
-
-    # # Partition the model variable names by dataset
-    # varNames <- getVarNames(dsp_model, baseline, cycle, daily, id_name, cyc_name, sex_name, fw_name)
-
-    # # Sort data by id/cyc and coerce to data.frame
-    # if (!is.null(baseline)) baseline <- data.frame( baseline[order(baseline[[id_name]]), ] )
-    # if (!is.null(cycle)) cycle <- data.frame( cycle[order(cycle[[id_name]], cycle[[cyc_name]]), ] )
-    # daily <- data.frame( daily[order(daily[[id_name]], daily[[cyc_name]]), ] )
-
-    # # For daily data: remove non-FW days, cycles that have wrong number of FW days or include
-    # # missing in the cycle (in the model variables).  For baseline / cycle: remove observations
-    # # that have missing data (in the model variables).
-    # cleanDat <- getCleanDat(baseline, cycle, daily, varNames, fw_len, use_na)
-
-    # # Reduce data to subjects and cycles that are common to all datasets
-    # idVec <- getCommonId(cleanDat, id_name)
-    # cycList <- getCommonCyc(cleanDat, varNames, idVec)
-    # redDat <- getRedDat(cleanDat, varNames, idVec, cycList)
-
-    # # Create combined dataset (i.e. expand baseline and cycle and combine w/ daily)
-    # combDat <- getCombDat(dsp_model, redDat, varNames, fw_len, cycList)
-
-    # # Create X, Y, and U (from the Dunson and Stanford paper)
-    # modelObj <- getModelObj(combDat, dsp_model, varNames, fw_len)
-
-    var_nm <- consolidate_var_nm(dsp_model,
-                                 baseline,
-                                 cycle,
-                                 daily,
-                                 id_name,
-                                 cyc_name,
-                                 sex_name,
-                                 fw_name)
+    var_nm <- extract_var_nm(dsp_model,
+                             baseline,
+                             cycle,
+                             daily,
+                             id_name,
+                             cyc_name,
+                             sex_name,
+                             fw_name)
 
     # merge the data provided by `baseline`, `cycle`, and `daily` into a data
     # frame
     comb_dat <- merge_dsp_data(baseline, cycle, daily, var_nm, fw_incl, req_min_days)
 
-    clean_dat <- remove_cyc_with_miss(comb_dat, var_nm, fw_incl, use_na)
+    # conditionally remove any cycles from `comb_dat` that have either missing data
+    # in the intercourse variable, other covariates, or both, depending on the value
+    # of `use_na`
+    clean_dat <- remove_cycs_with_miss(comb_dat, var_nm, fw_incl, use_na)
 
+    # removes all observations from `comb_dat` for which intercourse did not occur.
+    # Observations with a missing value for intercourse remain in the data.
     sex_days_dat <- remove_days_no_sex(comb_dat, var_nm)
-
-    dsp_data <- derive_model_obj(sex_days_dat, var_nm, dsp_model)
 
     #### TODO check if data is collinear or constant within outcome ####
 
-    # # Stats related to munging process for use by summary fcn
+    dsp_data <- derive_model_obj(sex_days_dat, var_nm, dsp_model)
+
+    # TODO: Stats related to munging process for use by summary fcn
     # datInfo <- getDatInfo(dsp_model, baseline, cycle, daily, cleanDat,
     #                       redDat, modelObj, varNames, fw_len, idVec, cycList)
 
+    # conditionally add the data munging steps to the return object
     if (keep_data) {
         dsp_data$comb_dat <- comb_dat
         dsp_data$clean_dat <- clean_dat

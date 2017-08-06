@@ -1,12 +1,12 @@
 derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
 
 
-    preg_cyc_list <- get_preg_cyc_list(comb_dat, var_nm)
-    preg_days_idx <- get_w_days_idx(preg_cyc_list)
-    preg_subj_idx <- get_subj_idx(preg_cyc_list)
+    w_day_blocks <- get_w_day_blocks(comb_dat, var_nm)
+    w_to_days_idx <- get_w_to_days_idx(comb_dat, var_nm)
+    w_cyc_to_subj_idx <- get_w_cyc_to_subj_idx(w_day_blocks)
 
-    subj_idx_list <- get_subj_idx_list(comb_dat, var_nm)
-    days_to_subj_idx <- get_days_to_subj(subj_idx_list)
+    subj_day_blocks <- get_subj_day_blocks(comb_dat, var_nm)
+    day_to_subj_idx <- get_day_to_subj_idx(subj_day_blocks)
 
     # extract intercourse data and index the missing values, and then initialize
     # the missing to "no intercourse" status (using 0/1 coding for no/yes).
@@ -23,11 +23,11 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
 
     var_categ_status <- get_var_categ_status(cov_miss_info)
 
-    list(w_day_blocks      = preg_cyc_list,    # ****  TODO change rhs names?  ***************
-         w_to_days_idx     = preg_days_idx,
-         w_cyc_to_subj_idx = preg_subj_idx,
-         subj_day_blocks   = subj_idx_list,
-         day_to_subj_idx   = days_to_subj_idx,
+    list(w_day_blocks      = w_day_blocks,
+         w_to_days_idx     = w_to_days_idx,
+         w_cyc_to_subj_idx = w_cyc_to_subj_idx,
+         subj_day_blocks   = subj_day_blocks,
+         day_to_subj_idx   = day_to_subj_idx,
          miss_x_idx        = miss_x_idx,
          cov_miss_info     = cov_miss_info,
          var_categ_status  = var_categ_status,
@@ -38,14 +38,19 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
 
 
 
-get_preg_cyc_list <- function(comb_dat, var_nm) {
+get_w_day_blocks <- function(comb_dat, var_nm) {
 
     keypairs <- get_keypairs(comb_dat, NULL, var_nm)
     cyc_idx_list <- vector("list", NROW(keypairs))
-    ctr <- 1L
 
+    # each iteration checks a block of days in `comb_dat` corresponding to the
+    # current cycles to see if a pregnancy occured during the cycle.  If one did
+    # occur, then the info for the block is recorded in the `ctr`-th element of
+    # `cyc_idx_list`.
+    ctr <- 1L
     for (i in seq_along(cyc_idx_list)) {
 
+        # get the indices in `comb_dat` corresponding to the current cycle
         curr_id <- keypairs[i, var_nm$id]
         curr_cyc <- keypairs[i, var_nm$cyc]
         curr_idx <- which(comb_dat[[var_nm$id]] == curr_id &
@@ -55,16 +60,15 @@ get_preg_cyc_list <- function(comb_dat, var_nm) {
         # `curr_preg_bool`
         curr_preg_vec <- map_vec_to_bool(comb_dat[curr_idx, var_nm$preg])
         if (length(table(curr_preg_vec)) > 1L) {
-            msg <- paste0("inconsistent pregnancy data for subject ", curr_id,
-                          "and cycle ", curr_cyc)
-            stop(msg, call. = FALSE)
+            stop("inconsistent pregnancy data for subject ", curr_id,
+                 "and cycle ", curr_cyc, call. = FALSE)
         }
 
         # case: a pregnancy occurred so record the cycle information into
         # `cyc_idx_list`
         if (curr_preg_vec[1L]) {
 
-            # obtain the
+            # obtain the needed values for the current block
             beg_idx <- head(curr_idx, 1L)
             n_days <- length(curr_idx)
             subj_idx <- which(unique(comb_dat[[var_nm$id]]) == curr_id)
@@ -85,15 +89,27 @@ get_preg_cyc_list <- function(comb_dat, var_nm) {
 
 
 
-get_w_days_idx <- function(preg_cyc_list) {
-    idx_list <- lapply(preg_cyc_list, function(x) {
-        # using 1-based indexing
-        x["beg_idx"] : (x["beg_idx"] + x["n_days"] - 1L)
-    })
-    # now back to 0-based indexing
-    unlist(idx_list) - 1L
-}
+# get_w_to_days_idx <- function(preg_cyc_list) {
+#     idx_list <- lapply(preg_cyc_list, function(x) {
+#         x["beg_idx"] : (x["beg_idx"] + x["n_days"])
+#     })
+#     # now back to 0-based indexing
+#     unlist(idx_list)
+# }
 
+
+
+
+# calculates the (0-based) day-specific indices for the days in which a
+# pregnancy occured during the corresponding cycle
+#
+# PRE: `comb_dat` is a data frame with one of the columns having the name given
+# by `var_nm$preg`.  Missing in `comb_dat[[var_nm$preg]]` are treated as not a
+# pregnancy.
+
+get_w_to_days_idx <- function(comb_dat, var_nm) {
+    comb_dat[[var_nm$preg]] %>% map_vec_to_bool %>% which %>% `-`(., 1L)
+}
 
 
 
@@ -110,9 +126,8 @@ get_w_days_idx <- function(preg_cyc_list) {
 
 
 
-get_subj_idx <- function(preg_cyc_list) {
-    # subtract 1 to convert to 0-based indexing
-    sapply(preg_cyc_list, function(x) x["subj_idx"])
+get_w_cyc_to_subj_idx <- function(preg_cyc_list) {
+    sapply(preg_cyc_list, function(x) x["subj_idx"]) %>% structure(., names = NULL)
 }
 
 
@@ -150,23 +165,25 @@ get_subj_idx <- function(preg_cyc_list) {
 
 
 
-get_subj_idx_list <- function(comb_dat, var_nm) {
-    id_vec <- comb_dat[[var_nm$id]]
-    unique_id_vec <- unique(id_vec)
-    lapply(unique_id_vec, function(x) {
-        curr_idx <- which(id_vec == x)
+get_subj_day_blocks <- function(comb_dat, var_nm) {
+
+    lapply(unique( comb_dat[[var_nm$id]] ), function(x) {
+
+        curr_idx <- which(comb_dat[[var_nm$id]] == x)
+
         # subtract 1 to convert to 0-based indexing
-        c(beg_idx = head(curr_idx, 1L) - 1L, n_days = length(curr_idx))
+        c(beg_idx = head(curr_idx, 1L) - 1L,
+          n_days  = length(curr_idx))
     })
 }
 
 
 
 
-get_days_to_subj <- function(subj_idx_list) {
-    n_days <- sapply(subj_idx_list, function(x) x["n_days"])
+get_day_to_subj_idx <- function(subj_day_blocks) {
+    n_days <- sapply(subj_day_blocks, function(x) x["n_days"])
     # subtract 1 to convert to 0-based indexing
-    rep(seq_along(subj_idx_list), n_days) - 1L
+    rep(seq_along(subj_day_blocks), n_days) - 1L
 }
 
 
@@ -191,7 +208,7 @@ get_var_categ_status <- function(cov_miss_info, n_vars) {
 
     # each iteration looks up the information for one of the unexpanded
     # variables in the data, and if it is categorical changes the status of the
-    # elements in `var_categ_status` corresponding to the expanded desing
+    # elements in `var_categ_status` corresponding to the expanded design
     # matrix.
     for (curr_var in cov_miss_info) {
 

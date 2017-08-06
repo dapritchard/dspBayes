@@ -68,7 +68,8 @@ check_var_nm <- function(baseline, cycle, daily, var_nm) {
     }
 
     # pregnancy variable must either be in cycle or daily
-    if ((! is.null(cycle) || !(var_nm$preg %in% cycle)) && !(var_nm$preg %in% daily)) {
+    if ((is.null(cycle) || !(var_nm$preg %in% colnames(cycle))) &&
+        !(var_nm$preg %in% colnames(daily))) {
         stop("pregnancy variable ", var_nm$preg,
              " not found in either in cycle data daily data or in daily data", call. = FALSE)
     }
@@ -96,8 +97,8 @@ check_var_nm <- function(baseline, cycle, daily, var_nm) {
 
     # if there are variables in the model that are not in the datasets then this
     # will cause a crash later
-    union_vars <- c(var_nm$base, var_nm$cyc, var_nm$day) %>% unique
-    if (! isTRUE(all.equal(union_vars, var_nm$all, check.attributes = FALSE))) {
+    union_vars <- c(var_nm$all_base, var_nm$all_cyc, var_nm$all_day) %>% unique
+    if (! (all(union_vars %in% var_nm$all) && (length(union_vars) == length(var_nm$all)))) {
         stop("There are variables in the model that are not in any of the datasets:  ",
              paste(setdiff(var_nm$all, union_vars), collapse = ", "))
     }
