@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_dspDat.R
 \name{dspDat}
 \alias{dspDat}
-\title{Specify model variables for day-specific probabilities MCMC sampler}
+\title{Specify model variables for the day-specific probabilities MCMC sampler}
 \usage{
 dspDat(dsp_model, baseline = NULL, cycle = NULL, daily, id_name, cyc_name,
   sex_name, fw_name, fw_incl, use_na = "none", req_min_days = 0L,
@@ -85,9 +85,15 @@ of whether unprotected vaginal intercourse occurred during that day.}
     factor variable is to be included in the model corresponding to the day
     number in the fertile window, i.e. fertile window day 1, fertile window
     day 2, etc.  Warning: this assumes that the observations within a cycle
-    are in chronological order.}
+    are in chronological order.  TODO: needs updated}
 
-\item{fw_incl}{****  TODO: update}
+\item{fw_incl}{An atomic vector specifying the days in the cycle that are in
+the fertile window.  In more detail, the elements of \code{fw_incl}
+should specify which elements of the cycle day variable (as specified by
+\code{fw_name}) are a part of the fertile window.  So for example, if the
+cycle day data is represented by numeric values \eqn{ 1, 2, \dots }, and
+we want to specify days 13 through 17 as belonging to the fertile window,
+then this can be done using e.g. the argument \code{13:17}.}
 
 \item{use_na}{One of either \code{"none"} or \code{"sex"}.  If \code{"none"}
 then observations with missing data are removed from the model.  If
@@ -95,9 +101,35 @@ then observations with missing data are removed from the model.  If
 in the model conditional on no other data missing in the observation.
 See \emph{Data Processing Steps} for more details.  TODO: update}
 
-\item{req_min_days}{TODO}
+\item{req_min_days}{A single nonnegative numeric value specifying a minimum
+    number of day-specific observations in the data for a given cycle which
+    we require to include a cycle in the model.  So for example, specifying
+    the value 0 means that we do not require any day-specific data in order
+    to include a cycle in the model as long as we have the pregnancy outcome
+    status for the cycle.  Specifying a value of 1 would require at least 1
+    day-specific observation in the data for a given cycle for the cycle to
+    be included, and so on.
 
-\item{keep_data}{}
+    Note that this parameter only has an effect when \code{use_na} has a
+    value of either \code{"intercourse"} or \code{"all"}.  For if not, then
+    cycles without a day-specific observation for every day in the fertile
+    window will have missing values for the intercourse data, which will
+    cause the cycle to be removed.}
+
+\item{keep_data}{Either \code{TRUE} or \code{FALSE}, specifying whether the
+    merged data should be included in the return object.  In broad terms,
+    there are three main data processing steps performed by the \code{dspDat}
+    function: merging the datasets and remove unneeded variables,
+    conditionally removing cycles with missing data, and removing days from
+    the data in which intercourse did not occur.  If \code{TRUE} is
+    specified, then the return object will include elements named
+    \code{comb_dat}, \code{clean_dat}, and \code{sex_days_dat} which are the
+    datasets for the various steps in the process, provided as
+    \code{data.frame}s.
+
+    It is strongly recommended that the first time a model is specified using
+    \code{dspDat}, that the user visually inspect these datasets to ensure
+    that the data processing steps are being performed as expected.}
 }
 \value{
 \code{dspDat} returns an object of \code{\link[base]{class}}
@@ -106,33 +138,37 @@ See \emph{Data Processing Steps} for more details.  TODO: update}
 
     \describe{
 
-    \item{\code{cleanDat}}{A list containing objects \code{bas}, \code{cyc},
-    and \code{day}, which are the datasets after removing missing and
-    reducing the \code{daily} data to fertile window days as described in
-    \emph{Data Processing Steps}. If \code{NULL} was supplied for
-    \code{baseline} or \code{cycle}, then the value of \code{bas} or
-    \code{cyc} is also \code{NULL}. }
+        \item{TODO}{this section needs reworked}
 
-    \item{\code{redDat}}{A list containing objects \code{bas}, \code{cyc},
-    and \code{day}, which are the datasets after reducing the cleaned data to
-    the set of IDs and cycles that are common to every non-\code{NULL}
-    dataset.  If \code{NULL} was supplied for \code{baseline} or
-    \code{cycle}, then the value of \code{bas} or \code{cyc} is also
-    \code{NULL}. }
+        \item{\code{cleanDat}}{A list containing objects \code{bas},
+        \code{cyc}, and \code{day}, which are the datasets after removing
+        missing and reducing the \code{daily} data to fertile window days as
+        described in \emph{Data Processing Steps}. If \code{NULL} was
+        supplied for \code{baseline} or \code{cycle}, then the value of
+        \code{bas} or \code{cyc} is also \code{NULL}. }
 
-    \item{\code{combDat}}{ ******* }
+        \item{\code{redDat}}{A list containing objects \code{bas},
+        \code{cyc}, and \code{day}, which are the datasets after reducing the
+        cleaned data to the set of IDs and cycles that are common to every
+        non-\code{NULL} dataset.  If \code{NULL} was supplied for
+        \code{baseline} or \code{cycle}, then the value of \code{bas} or
+        \code{cyc} is also \code{NULL}. }
 
-    \item{\code{modelObj}}{A list containing objects \code{Y}, \code{X},
-    \code{U}, and \code{id}. \code{Y}, \code{X}, \code{U} are as in the
-    Dunson and Stanford paper, and \code{id} is a vector of subject IDs such
-    that each observation specifies the subject ID for the corresponding
-    observation. }
+        \item{\code{combDat}}{ ******* }
 
-    \item{\code{samplerObj}}{A list containing objects for use by the
-    \code{dsp} function when executing the MCMC algorithm}
+        \item{\code{modelObj}}{A list containing objects \code{Y}, \code{X},
+        \code{U}, and \code{id}. \code{Y}, \code{X}, \code{U} are as in the
+        Dunson and Stanford paper, and \code{id} is a vector of subject IDs
+        such that each observation specifies the subject ID for the
+        corresponding observation. }
 
-    \item{\code{datInfo}}{A list containing objects for use by the
-    \code{\link{summary}} function} }
+        \item{\code{samplerObj}}{A list containing objects for use by the
+        \code{dsp} function when executing the MCMC algorithm}
+
+        \item{\code{datInfo}}{A list containing objects for use by the
+        \code{\link{summary}} function}
+
+    }
 }
 \description{
 \code{dspDat} is used to create an object of \code{class} \code{"dspDat"};
@@ -168,19 +204,26 @@ It is natural to record fertility study data in up to three datasets
     design matrix for the specified model, so any of the usual
     \code{\link[stats]{formula}} commands are available. In particular, a
     formula has an implied intercept term which may not be desireable for
-    these types of models.  To remove this use either \code{y ~ x - 1} or
-    \code{y ~ 0 + x}.
+    these types of models.  To remove this use either e.g. \code{y ~ x - 1}
+    or \code{y ~ 0 + x}.
 }
 \section{Data Processing Steps}{
- \describe{ \item{Cleaning data}{If either a
-    \code{baseline} or \code{cycle} dataset is provided, then all
-    observations that contain missing data among the model variables are
-    removed.  All non-fertile window days are removed from the \code{daily}
-    dataset, and any cycles that either contain missing in the fertile window
-    or have too many or too few fertile window days are also removed.}
 
-    \item{Reducing data}{Each non-\code{NULL} dataset is reduced to the set
-    of IDs and cycles that are common to every non-\code{NULL} dataset.} }
+
+    \describe{
+
+        \item{Cleaning data}{If either a \code{baseline} or \code{cycle}
+        dataset is provided, then all observations that contain missing data
+        among the model variables are removed.  All non-fertile window days
+        are removed from the \code{daily} dataset, and any cycles that either
+        contain missing in the fertile window or have too many or too few
+        fertile window days are also removed.}
+
+        \item{Reducing data}{Each non-\code{NULL} dataset is reduced to the
+        set of IDs and cycles that are common to every non-\code{NULL}
+        dataset.}
+
+    }
 }
 
 \references{
