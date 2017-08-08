@@ -6,8 +6,6 @@
 #define SEX_YES   1
 #define SEX_MISS  2
 
-#using std::exp;
-
 
 
 
@@ -39,31 +37,58 @@ void XGen::sample() {
 
 
 
+// calculate the prior probabilities `P(X_ijk | X_{ij{k-1}})` for each day of
+// missing intercourse data in the cycle, and store in `prior_probs`.  The
+// return value is the intercourse status for the day before the first missing
+// day of intercourse in the cycle.
+//
+// In more detail, `prior_probs` is expected to have storage allocated for a
+// table with two columns, and the number of rows given by the number of missing
+// intercourse days in the cycle.  The 0-th column provides the prior
+// probability for the corresponding day given that the intercourse status for
+// the previous day was "no", while the 1-th column provides the prior
+// probability for the corresponding day given that the intercourse status for
+// the previous day was "yes."  Thus,
+//
+//     prior_probs[r][j] = P(X_{ijk_r} = 1 | X_{ij{k_r-1}} = j)
+//
+//         = 1 / (1 + exp(u_{ijk_r}^T tau)
+//
+// i.e. the logistic regression model where `tau` is a known set of regression
+// coefficients.
+//
+// Now, some of the time the intercourse status for the day before is known
+// (i.e. is nonmissing), and when this is the case then we will only fill in the
+// appropriate column for the corresponding row.  On the other hand, when the
+// previous day is missing, then we have to fill in both columns for the
+// appropriate row.
+//
+// One complication is what to do with a missing value for intercourse for the
+// day before the first day in the cycle.  What is done is to sample this value.
+// Then the return value then is either the true value of the day before the
+// first missing day of intercourse in the cycle if it is known, or the sampled
+// value if not known.
+
 int XGen::calc_prior_probs(double* prior_probs, XMissCyc* curr_miss_cyc, XMissDay* curr_miss_day) {
 
     int curr_beg_idx = curr_miss_cyc->beg_idx;
 
-    // calculate the prior probability of intercourse for the first missing element.  The reason
-    // that we handle this seperately is because how we deal with a missing
-    // intercourse value from the day before the fertile window differs than
-    // for the remaining cases.  If this intercourse value is indeed missing
-    // then we sample it before sampling the rest of the data.  Thus
-    // whatever the cycle day that the first missing observation may be, the
-    // day before it always have a nonmissing intercourse value.
-
-
-    // Perform the calculations for the first missing element.  The reason
-    // that we handle this seperately is because how we deal with a missing
-    // intercourse value from the day before the fertile window differs than
-    // for the remaining cases.  If this intercourse value is indeed missing
-    // then we sample it before sampling the rest of the data.
+    // perform the calculations for the first missing element.  The reason that
+    // we handle this seperately is because how we deal with a missing
+    // intercourse value from the day before the fertile window begins differs
+    // from how we deal with it for other days.  If this intercourse value is
+    // indeed missing then we sample it before sampling the rest of the data,
+    // based upon `P(X_0 = 1) = m_cohort_sex_prob`.  Whether or not the value
+    // needs to be sampled, the intercourse status for the day before the first
+    // missing intercourse day in the cycle is stored in the variable
+    // `day_before_fw_sex`.
     //
-    // Note that the first missing day in the cycle need not be the first
-    // day in the cycle.  But if that's the case then it won't have a
-    // missing previous day of intercourse, so we don't need to consider a
-    // special case for circumstance. Thus whatever the cycle day that the
-    // first missing observation may be, after this procedure, that day
-    // before it always have a nonmissing previous intercourse value.
+    // Note that the first missing day in the cycle need not be the first day in
+    // the cycle.  But if that's the case then it won't have a missing previous
+    // day of intercourse, so we don't need to consider a special case for that
+    // circumstance. Thus whatever the cycle day that the first missing
+    // observation may be, after this procedure, that day before it always have
+    // a nonmissing previous intercourse value stored in `day_before_fw_sex`.
 
     if ((curr_miss_day->prev == SEX_NO) ||
 	((curr_miss_day->prev == SEX_MISS) && (R::unif_rand() > m_cohort_sex_prob))) {
@@ -73,6 +98,9 @@ int XGen::calc_prior_probs(double* prior_probs, XMissCyc* curr_miss_cyc, XMissDa
 	day_before_fw_sex = 1;
     }
 
+    // calculate the prior probability for the first day with missing
+    // intercourse, and store in the appropriate location in the prior
+    // probabilities table
     switch (day_before_fw_sex) {
     case (0):
 	prior_probs[0][0] = 1 / (1 + exp(utau[curr_beg_idx]));
@@ -84,21 +112,23 @@ int XGen::calc_prior_probs(double* prior_probs, XMissCyc* curr_miss_cyc, XMissDa
 	break;
     }
 
-    // calculate the remaining cases
-    for (int k = 0; k < xmiss_cyc->n_miss; ++k) {
+    // calculate the remaining prior probabilities and store in the appropriate
+    // locations in the prior probabilities table.  Note that now it's possible
+    // for the value for intercourse in the preceeding day to also be missing,
+    // and when this is the case, we calculate the prior probabilities for both
+    // values.
+    for (int k = 0; k < curr_miss_cyc->n_miss; ++k) {
 
 	switch (prev_day_sex[k]) {
 	case SEX_NO:
-	case SEX_MISS_X0_NO:
-	    prior_probs[k][0] = 1 / (1 + exp(utau[xmiss_cyc->beg_idx + k]));
+	    prior_probs[k][0] = 1 / (1 + exp(utau[curr_beg_idx + k]));
 	    break;
 	case SEX_YES:
-	case SEX_MISS_X0_YES:
-	    prior_probs[k][1] = 1 / (1 + exp(utau[xmiss_cyc->beg_idx + k] + tau.sex_prev_coef));
+	    prior_probs[k][1] = 1 / (1 + exp(utau[curr_beg_idx + k] + tau.sex_coef));
 	    break;
 	case SEX_MISS_DURING:
-	    prior_probs[k][0] = 1 / (1 + exp(utau[xmiss_cyc->beg_idx + k]));
-	    prior_probs[k][1] = 1 / (1 + exp(utau[xmiss_cyc->beg_idx + k] + tau.sex_prev_coef));
+	    prior_probs[k][0] = 1 / (1 + exp(utau[curr_beg_idx + k]));
+	    prior_probs[k][1] = 1 / (1 + exp(utau[curr_beg_idx + k] + tau.sex_coef));
 	    break;
 	}
     }
@@ -142,8 +172,8 @@ void XGen::calc_posterior_probs(double* posterior_probs,
     //
     //     P(X_{ijk_r} = x_{ijk_r} | X_{ij{k_r-1}})
     //
-    // are performed, from which we can calculate the unnormalized posterior
-    // probability of the `t`-th permutation.
+    // are performed / obtained, from which we can calculate the unnormalized
+    // posterior probability of the `t`-th permutation.
     //
     // The permutation is determined by filling in the 0-th missing day with the
     // value of the 0-th bit of the binary representation of `t`, the 1-th
@@ -224,8 +254,8 @@ void XGen::calc_posterior_probs(double* posterior_probs,
 	if (sum_exp_ubeta > 0) {
 	    sum_exp_ubeta *= *(xi.vals() + curr_miss_cyc.subj_idx);
 	    double prob_y_ij = (curr_miss_cyc->preg) ?
-		1 - exp(-sum_exp_ubeta) :
-		exp(-sum_exp_ubeta);
+		1 - std::exp(-sum_exp_ubeta) :
+		std::exp(-sum_exp_ubeta);
 	    probs[t] = prob_y_ij * prod_priors;
 	}
 	// case: no days of intercourse occurred during the cycle under the
