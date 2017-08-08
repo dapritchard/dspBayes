@@ -76,7 +76,8 @@ MissCyc* MissCyc::list_to_arr(Rcpp::List& block_list) {
 	block_arr[t] = MissCyc(block_list_t["beg_idx"],
 			       block_list_t["n_days"],
 			       block_list_t["subj_idx"],
-			       block_list_t["n_miss"]);
+			       block_list_t["n_miss"],
+			       block_list_t["preg"]);
     }
 
     return block_arr;

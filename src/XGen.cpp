@@ -1,26 +1,32 @@
 #include <cmath>
 #include <algorithm>
 #include "Rcpp.h"
-#include "XGen.h"
 #include "UProdBeta.h"
 #include "UProdTau.h"
+#include "XGen.h"
+#include "XiGen.h"
 
 #define SEX_NO    0
 #define SEX_YES   1
 #define SEX_MISS  2
 
 
+
+
 // constructor
 XGen::XGen(Rcpp::IntegerVector& X_rcpp,
 	   Rcpp::List& miss_cyc,
 	   Rcpp::List& miss_day,
-	   int n_max_miss) :
+	   int n_max_miss,
+	   double cohort_sex_prob) :
     m_x_rcpp(X_rcpp),
     m_vals(X_rcpp.begin()),
     m_miss_cyc(MissCyc::list_to_arr(miss_cyc)),
-    m_miss_cyc(XMissDay::list_to_arr(miss_day)),
+    m_n_miss_cyc(miss_cyc.size()),
+    m_miss_day(XGen::XMissDay::list_to_arr(miss_day)),
     m_n_max_miss(n_max_miss),
-    m_n_max_miss_pow2(1 << m_n_max_miss) {
+    m_n_max_miss_pow2(1 << m_n_max_miss),
+    m_cohort_sex_prob(cohort_sex_prob) {
 }
 
 
@@ -43,7 +49,7 @@ XGen::~XGen() {
 // struct's member values of the same name.  The return value is a pointer to
 // the beginning of the array.
 
-XMissDay* XGen::XMissDay::list_to_arr(Rcpp::List& block_list) {
+XGen::XMissDay* XGen::XMissDay::list_to_arr(Rcpp::List& block_list) {
 
     XMissDay* block_arr = new XMissDay[block_list.size()];
 
@@ -51,7 +57,7 @@ XMissDay* XGen::XMissDay::list_to_arr(Rcpp::List& block_list) {
     // provided by the t-th element of `block_list`
     for (int t = 0; t < block_list.size(); ++t) {
 
-	Rcpp::IntegerVector block_list_t = as<Rcpp::IntegerVector>(block_list[t]);
+	Rcpp::IntegerVector block_list_t = Rcpp::as<Rcpp::IntegerVector>(block_list[t]);
 	block_arr[t] = XMissDay(block_list_t["idx"],
 				block_list_t["prev"]);
     }
@@ -63,15 +69,17 @@ XMissDay* XGen::XMissDay::list_to_arr(Rcpp::List& block_list) {
 
 
 // update the missing values of X
-void XGen::sample(UProdBeta ubeta, UProdTau utau) {
+void XGen::sample(const XiGen& xi, const UProdBeta& ubeta, const UProdTau& utau) {
 
     double prior_probs[m_n_max_miss][2];
     double posterior_probs[m_n_max_miss_pow2];
+    int day_before_fw_sex;
+    int curr_n_perms;
     int t;
 
-    MissCyc* curr_miss_cyc = m_miss_cyc;
-    MissCyc* miss_cyc_end = m_miss_cyc + m_n_miss_cyc;
-    XMissDay* curr_miss_day = m_miss_day;
+    const MissCyc* curr_miss_cyc = m_miss_cyc;
+    const MissCyc* miss_cyc_end = m_miss_cyc + m_n_miss_cyc;
+    const XMissDay* curr_miss_day = m_miss_day;
 
     // each iteration samples the missing intercourse values for the current
     // block of days specified by `curr_miss_day`
@@ -86,18 +94,19 @@ void XGen::sample(UProdBeta ubeta, UProdTau utau) {
 					    curr_miss_cyc,
 					    curr_miss_day,
 					    prior_probs,
-					    ubeta);
+					    xi,
+					    ubeta,
+					    day_before_fw_sex);
 
 	// sample the t-th permutation
 	t = sample_x_perm(posterior_probs, curr_n_perms);
 
 	// update X with the values corresponding to the k-th permutation
-	update_x(curr_miss_cyc, curr_miss_day, t);
+	update_cyc_x(curr_miss_cyc, curr_miss_day, t);
 
 	// update `curr_miss_day` to point to the next missing day
 	curr_miss_day += curr_miss_cyc->n_miss;
     }
-
 }
 
 
@@ -135,9 +144,14 @@ void XGen::sample(UProdBeta ubeta, UProdTau utau) {
 // first missing day of intercourse in the cycle if it is known, or the sampled
 // value if not known.
 
-int XGen::calc_prior_probs(double* prior_probs, MissCyc* curr_miss_cyc, XMissDay* curr_miss_day) {
+int XGen::calc_prior_probs(double prior_probs[][2],
+			   const MissCyc* curr_miss_cyc,
+			   const XMissDay* curr_miss_day,
+			   const UProdTau& utau) const {
 
-    int curr_beg_idx = curr_miss_cyc->beg_idx;
+    const double* utau_vals = utau.vals();
+    const int curr_beg_idx = curr_miss_cyc->beg_idx;
+    int day_before_fw_sex;
 
     // perform the calculations for the first missing element.  The reason that
     // we handle this seperately is because how we deal with a missing
@@ -169,11 +183,11 @@ int XGen::calc_prior_probs(double* prior_probs, MissCyc* curr_miss_cyc, XMissDay
     // probabilities table
     switch (day_before_fw_sex) {
     case (0):
-	prior_probs[0][0] = 1 / (1 + exp(utau[curr_beg_idx]));
+	prior_probs[0][0] = 1 / (1 + exp(utau_vals[curr_beg_idx]));
 	day_before_fw_sex = 0;
 	break;
     case (1):
-	prior_probs[0][1] = 1 / (1 + exp(utau[curr_beg_idx] + utau.sex_coef));
+	prior_probs[0][1] = 1 / (1 + exp(utau_vals[curr_beg_idx] + utau.sex_coef()));
 	day_before_fw_sex = 1;
 	break;
     }
@@ -185,16 +199,16 @@ int XGen::calc_prior_probs(double* prior_probs, MissCyc* curr_miss_cyc, XMissDay
     // values.
     for (int k = 0; k < curr_miss_cyc->n_miss; ++k) {
 
-	switch (prev_day_sex[k]) {
+	switch (curr_miss_day[k].prev) {
 	case SEX_NO:
-	    prior_probs[k][0] = 1 / (1 + exp(utau[curr_beg_idx + k]));
+	    prior_probs[k][0] = 1 / (1 + exp(utau_vals[curr_beg_idx + k]));
 	    break;
 	case SEX_YES:
-	    prior_probs[k][1] = 1 / (1 + exp(utau[curr_beg_idx + k] + utau.sex_coef));
+	    prior_probs[k][1] = 1 / (1 + exp(utau_vals[curr_beg_idx + k] + utau.sex_coef()));
 	    break;
-	case SEX_MISS_DURING:
-	    prior_probs[k][0] = 1 / (1 + exp(utau[curr_beg_idx + k]));
-	    prior_probs[k][1] = 1 / (1 + exp(utau[curr_beg_idx + k] + utau.sex_coef));
+	case SEX_MISS:
+	    prior_probs[k][0] = 1 / (1 + exp(utau_vals[curr_beg_idx + k]));
+	    prior_probs[k][1] = 1 / (1 + exp(utau_vals[curr_beg_idx + k] + utau.sex_coef()));
 	    break;
 	}
     }
@@ -208,23 +222,24 @@ int XGen::calc_prior_probs(double* prior_probs, MissCyc* curr_miss_cyc, XMissDay
 int XGen::calc_posterior_probs(double* posterior_probs,
 			       const MissCyc* curr_miss_cyc,
 			       const XMissDay* curr_miss_day,
-			       const double* prior_probs,
-			       const UProdBeta& ubeta) const {
+			       const double prior_probs[][2],
+			       const XiGen& xi,
+			       const UProdBeta& ubeta,
+			       int day_before_fw_sex) {
 
     // the bit shift operator calculates `2^{ curr_miss_cyc->n_miss_days }`.
     // Thus we set aside enough memory to store the unnormalized posterior
     // probability of every possible realization of the missing intercourse
     // terms in the current cycle.
-    int n_perms = 1 << curr_miss_cyc->n_miss_days;
-    double probs[n_perms];
+    int n_perms = 1 << curr_miss_cyc->n_miss;
 
     // calculate the `sum_{k: nonrand} x_ijk * exp(u_{ijk}^T beta)`, i.e. the
     // nonrandom part of the sum that stays constant over the various
     // permutations of the random parts of `X`.
-    double* ubeta_exp_vals = ubeta.exp_vals();
-    double sum_nonrand_exp_ubeta; = calc_sum_nonrand_exp_ubeta(curr_miss_cyc,
-							       curr_miss_day,
-							       ubeta);
+    const double* ubeta_exp_vals = ubeta.exp_vals();
+    const double nonrand_sum_exp_ubeta = calc_nonrand_sum_exp_ubeta(curr_miss_cyc,
+								    curr_miss_day,
+								    ubeta);
 
     // Each iteration `t` indexes a permutation of a vector of 0's and 1's from
     // among the possible realizations of missing itercourse data for the
@@ -248,7 +263,7 @@ int XGen::calc_posterior_probs(double* posterior_probs,
 
     for (int t = 0; t < n_perms; ++t) {
 
-	double sum_exp_ubeta = nonrandom_sum_exp_ubeta;
+	double sum_exp_ubeta = nonrand_sum_exp_ubeta;
 	double prod_priors;
 	int curr_x;
 
@@ -260,8 +275,8 @@ int XGen::calc_posterior_probs(double* posterior_probs,
 
 	// case: x_{ijk_1} = 1 for the `t`-th permutation
 	if (t & 1) {
-	    sum_exp_ubeta += ubeta_exp_vals[curr_miss_day[0]];
-	    prod_priors = priors_probs[0][day_before_fw_sex];
+	    sum_exp_ubeta += ubeta_exp_vals[curr_miss_day[0].idx];
+	    prod_priors = prior_probs[0][day_before_fw_sex];
 	    curr_x = 1;
 	}
 	// case: x_{ijk_1} = 0 for the `t`-th permutation.  Note that the
@@ -283,7 +298,7 @@ int XGen::calc_posterior_probs(double* posterior_probs,
 
 	    // case: x_{ijk_r} = 1 for the current permutation
 	    if (t & (1<<r)) {
-		sum_exp_ubeta += ubeta_exp_vals[miss_day[r].idx];
+		sum_exp_ubeta += ubeta_exp_vals[curr_miss_day[r].idx];
 		prod_priors *= (curr_miss_day[r].prev != SEX_MISS) ?
 		    prior_probs[r][curr_miss_day[r].prev] :
 		    prior_probs[r][curr_x];
@@ -318,17 +333,17 @@ int XGen::calc_posterior_probs(double* posterior_probs,
 	// case: at least one day with intercourse that occurred during the
 	// cycle, and hence `Y_ij` is a random variable.
 	if (sum_exp_ubeta > 0) {
-	    sum_exp_ubeta *= *(xi.vals() + curr_miss_cyc.subj_idx);
+	    sum_exp_ubeta *= *(xi.vals() + curr_miss_cyc->subj_idx);
 	    double prob_y_ij = (curr_miss_cyc->preg) ?
 		1 - std::exp(-sum_exp_ubeta) :
 		std::exp(-sum_exp_ubeta);
-	    probs[t] = prob_y_ij * prod_priors;
+	    posterior_probs[t] = prob_y_ij * prod_priors;
 	}
 	// case: no days of intercourse occurred during the cycle under the
 	// `t`-th permutation of missing intercourse values, so no pregnancy can
 	// possibly occur.
 	else {
-	    probs[t] = curr_miss_cyc->preg ? 0 : 1;
+	    posterior_probs[t] = curr_miss_cyc->preg ? 0 : 1;
 	}
     }
 
@@ -343,7 +358,7 @@ int XGen::calc_posterior_probs(double* posterior_probs,
 // where the bins are as shown below.
 //
 //    probs[0]    probs[1]   probs[2]                  probs[n-1]
-//  /         \ /         \ /        \                 /        \
+//  /         | /         | /        |                 /        |
 // |-----------|-----------|----------|----  ...  ----|----------|
 
 inline int XGen::sample_x_perm(double* probs, int n_perms) {
@@ -377,7 +392,10 @@ inline int XGen::sample_x_perm(double* probs, int n_perms) {
 // `t`, the 1-th missing day with the value of the of the 1-th bit of the binary
 // representation of `t`, and so on.
 
-inline void XGen::update_cyc_x(MissCyc* curr_miss_cyc, XMissDay* curr_miss_day, int t) {
+inline void XGen::update_cyc_x(const MissCyc* curr_miss_cyc,
+			       const XMissDay* curr_miss_day,
+			       int t) {
+
     for (int r = 0; r < curr_miss_cyc->n_miss; ++r) {
 	m_vals[curr_miss_day[r].idx] = t & (1<<r) ? 1 : 0;
     }
@@ -386,11 +404,11 @@ inline void XGen::update_cyc_x(MissCyc* curr_miss_cyc, XMissDay* curr_miss_day, 
 
 
 
-inline double XGen::calc_nonrandom_sum_exp_ubeta(MissCyc* curr_miss_cyc,
-						 XMissDay* curr_miss_day,
-						 UProdBeta& ubeta) {
+inline double XGen::calc_nonrand_sum_exp_ubeta(const MissCyc* curr_miss_cyc,
+					       const XMissDay* curr_miss_day,
+					       const UProdBeta& ubeta) {
 
-    double* ubeta_exp_vals = ubeta.exp_vals();
+    const double* ubeta_exp_vals = ubeta.exp_vals();
     double sum_val = 0;
     int curr_idx = curr_miss_cyc->beg_idx;
     int end_idx = curr_idx + curr_miss_cyc->n_days;
@@ -400,7 +418,7 @@ inline double XGen::calc_nonrandom_sum_exp_ubeta(MissCyc* curr_miss_cyc,
 	// case: the current index isn't a missing value for `X_ijk`.  Note that
 	// guarantees that it has a value of 1 or else it wouldn't be in the
 	// data.
-	if (curr_idx != curr_miss_day.idx) {
+	if (curr_idx != curr_miss_day->idx) {
 	    sum_val += ubeta_exp_vals[curr_idx];
 	}
 	// case: the current index is a missing value for `X_ijk`.  Don't do

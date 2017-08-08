@@ -233,12 +233,18 @@ ProposalFcns.o : ProposalFcns.h
 
 RcppExports.cpp : Dsp.cpp UTestDriver.cpp
 	Rscript -e 'Rcpp::compileAttributes("..")'
+
 RcppExports.o : RcppExports.cpp
 
-XiGen.o : XiGen.h PhiGen.h DayBlock.h UProdBeta.h
+UProdBeta.o : UProdBeta.h
+
+UProdTau.o : UProdTau.h
 
 WGen.o : WGen.h XiGen.h DayBlock.h UProdBeta.h
 
+XiGen.o : XiGen.h PhiGen.h DayBlock.h UProdBeta.h
+
+XGen.o : XGen.h UProdBeta.h UProdTau.h
 
 
 

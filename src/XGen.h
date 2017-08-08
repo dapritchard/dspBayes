@@ -5,11 +5,16 @@
 #include "DayBlock.h"
 #include "UProdBeta.h"
 #include "UProdTau.h"
+#include "XiGen.h"
+
+
 
 
 class XGen {
 
 public:
+
+    // ---- class members ---- //
 
     class XMissDay;
 
@@ -30,35 +35,53 @@ public:
     const int m_n_max_miss;
     const int m_n_max_miss_pow2;
 
-    XGen(Rcpp::IntegerVector& X_rcpp, Rcpp::List& miss_cyc, Rcpp::List& miss_day, int n_max_miss);
+    const double m_cohort_sex_prob;
 
-    void sample(UProdBeta ubeta, UProdTau utau);
 
-    int calc_prior_probs(double* prior_probs,
-			 MissCyc* curr_miss_cyc,
-			 XMissDay* curr_miss_day) const;
+    // ---- class functions ----- //
+
+    XGen(Rcpp::IntegerVector& X_rcpp,
+	 Rcpp::List& miss_cyc,
+	 Rcpp::List& miss_day,
+	 int n_max_miss,
+	 double cohort_sex_prob);
+    ~XGen();
+
+    void sample(const XiGen& xi, const UProdBeta& ubeta, const UProdTau& utau);
+
+    int calc_prior_probs(double prior_probs[][2],
+			 const MissCyc* curr_miss_cyc,
+			 const XMissDay* curr_miss_day,
+			 const UProdTau& utau) const;
 
     static int calc_posterior_probs(double* posterior_probs,
 				    const MissCyc* curr_miss_cyc,
 				    const XMissDay* curr_miss_day,
-				    const double* prior_probs,
-				    const UProdBeta& ubeta);
+				    const double prior_probs[][2],
+				    const XiGen& xi,
+				    const UProdBeta& ubeta,
+				    int day_before_fw_sex);
 
     static int sample_x_perm(double* probs, int n_perms);
 
-    static void XGen::update_cyc_x(MissCyc* curr_miss_cyc, XMissDay* curr_miss_day, int t);
+    void update_cyc_x(const MissCyc* curr_miss_cyc,
+		      const XMissDay* curr_miss_day,
+		      int t);
 
-    static double XGen::calc_nonrandom_sum_exp_ubeta(MissCyc* curr_miss_cyc,
-						     XMissDay* curr_miss_day,
-						     UProdBeta& ubeta);
+    static double calc_nonrand_sum_exp_ubeta(const MissCyc* curr_miss_cyc,
+					     const XMissDay* curr_miss_day,
+					     const UProdBeta& ubeta);
 
-    const int* vals() const { m_vals; }
+    int* vals() { return m_vals; }
+    const int* vals() const { return m_vals; }
 };
 
 
 
 
 class XGen::XMissDay {
+
+public:
 
     int idx;
     int prev;
