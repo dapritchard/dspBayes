@@ -20,6 +20,8 @@ struct DayBlock {
 };
 
 
+
+
 struct PregCyc : public DayBlock {
 
     int subj_idx;
@@ -35,10 +37,20 @@ struct PregCyc : public DayBlock {
 };
 
 
-struct XMissCyc : public PregCyc {
+
+
+struct MissCyc : public PregCyc {
 
     int n_miss;
-    int x_before;
+
+    MissCyc() : PregCyc(), n_miss(0) {}
+
+    MissCyc(int beg_idx, int n_days, int subj_idx, int n_miss) :
+	PregCyc(beg_idx, n_days, subj_idx),
+	n_miss(n_miss) {
+    }
+
+    static MissCyc* list_to_arr(Rcpp::List& block_list);
 };
 
 

@@ -8,7 +8,7 @@
 
 
 
-XiGen::XiGen(Rcpp::List subj_day_blocks, int n_samp, bool record_status) :
+XiGen::XiGen(Rcpp::List& subj_day_blocks, int n_samp, bool record_status) :
     // initialization list
     m_vals_rcpp(Rcpp::NumericVector(Rcpp::no_init(subj_day_blocks.size() *
     						  (record_status ? n_samp : 1)))),

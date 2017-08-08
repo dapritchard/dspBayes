@@ -30,7 +30,7 @@ public:
     // tracks whether we wish to save the samples of xi to return to the user
     bool m_record_status;
 
-    XiGen(Rcpp::List subj_day_blocks, int n_samp, bool record_status);
+    XiGen(Rcpp::List& subj_day_blocks, int n_samp, bool record_status);
     ~XiGen();
 
     void sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta);
