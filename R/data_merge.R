@@ -7,15 +7,14 @@
 # inserted for the remaining variables when they are not known.  If the number
 # of days in the fertile window for a cycle is smaller than `min_days_req`, then
 # the cycle is removed from the data. The returned data is sorted over subject
-# ID, cycle number, and fertile window day.
+# ID, cycle number, and fertile window day, in that order.
 #
 # PRE: `baseline`, `cycle`, and `daily` are data frames or objects that can be
 # coerced to a data frame.  `var_nm` is an object created by `extract_var_nm`.
 # `fw_incl` is a vector giving the fertile window days, and `min_days_req` is
 # the minimum number of days needed in the data to include a cycle.
 
-
-merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, min_days_req) {
+merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, fw_day_before, min_days_req) {
 
     # reduce each dataset to only contain the variables that we need.  Returns
     # NULL if the input is NULL.
@@ -27,12 +26,19 @@ merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, min_days_req
     # pregnancy outcome data
     keypairs <- get_keypairs(day_red, cyc_red, var_nm)
 
+    # conditionally create a variable in the daily data providing "intercourse
+    # the day before" information
+    if (! is.null(fw_day_before)) {
+        day_red <- daily_add_sex_yester(day_red, var_nm, fw_incl, fw_day_before)
+    }
+
     # reduce daily dataset to only include rows corresponding to days in the
     # fertile window.  Note that we must do this after obtaining `keypairs`,
     # because otherwise we could lose cycles that have pregnancy information but
     # where none of the fertile window days are recorded.
     keep_idx <- day_red[[var_nm$fw]] %in% fw_incl %>% which
     day_red <- day_red[keep_idx, ]
+    # TODO: verify that there are no duplicate (id, cyc, day) tuples
 
     # a data frame with observations given by the cross product of every day in
     # the fertile window and every (id, cycle) keypair
@@ -70,25 +76,7 @@ merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, min_days_req
     }
 
     # return data after sorting it
-    sort_dsp(comb_dat, fw_incl, var_nm)
-}
-
-
-
-
-# sort over id / cycle / fertile window
-#
-# PRE: `comb_dat` is a data frame with id, cycle, and fertile window variables
-# with names given by `var_nm`.  `fw_incl` provides the fertile window days.
-
-sort_dsp <- function(comb_dat, fw_incl, var_nm) {
-    # turn fertile window vector into a factor if it's not already so that
-    # `order` will give us the desired sorting
-    out <- comb_dat[order(comb_dat[, var_nm$id],
-                          comb_dat[, var_nm$cyc],
-                          comb_dat[, var_nm$fw] %>% factor(., levels = fw_incl)), ]
-    row.names(out) = NROW(comb_dat) %>% seq_len
-    out
+    sort_dsp(comb_dat, var_nm, fw_incl)
 }
 
 
@@ -162,6 +150,68 @@ get_keypairs <- function(daily, cycle, var_nm) {
 
     # return keypairs sorted by id and cycle
     keypairs_df[order(keypairs_df[, var_nm$id], keypairs_df[, var_nm$cyc]), ]
+}
+
+
+
+
+# returns the data frame `daily`, with a column appended to it named
+# `sex_yester`, which has the intercourse status of the day before the
+# observation for days in the fertile window.  For days outside of the fertile
+# window, the variable has a missing value.
+#
+# PRE: `daily` is a data frame with columns for id, cycle, cycle day, and
+# intercourse status and with names as specified by `var_nm`.  It is assumed
+# that there is no missing data in these variables, with the exception of
+# intercourse.  `fw_include` is a vector with element specifying which values
+# are in the fertile window, and `fw_day_before` is a single value specifying
+# the day before the fertile window.
+
+daily_add_sex_yester <- function(daily, var_nm, fw_incl, fw_day_before) {
+
+    # sort data so that we need only inspect the `i - 1`-th observation to look
+    # for the previous day's intercourse status
+    daily <- sort_dsp(daily, var_nm, fw_incl, fw_day_before)
+
+    # bind variable names for convenience
+    id <- daily[[var_nm$id]]
+    cyc <- daily[[var_nm$cyc]]
+    cycleday <- daily[[var_nm$fw]]
+    sex <- daily[[var_nm$sex]]
+
+    # copy sex and "NA out" the data
+    sex_yester <- sex
+    sex_yester[seq_along(sex_yester)] <- NA
+
+    # the fertile window with the day before prepended
+    fw_extend <- c(fw_day_before, fw_incl)
+
+    # each iteration looks to see if the -th observation is in the fertile
+    # window.  If so, then it looks to see if the `i - 1`-th observations is the
+    # previous day in the fertile window, and if so then records the intercourse
+    # status for that day.
+    for (i in 2L:length(cycleday)) {
+
+        # note: we assume that there is never more than 1 match here
+        fw_idx <- match(cycleday[i], fw_incl)
+
+        # case: a match was found
+        if (! is.na(fw_idx)) {
+
+            # case: the day before in the data is the previous day in the
+            # fertile window of the same subject and cycle.  Note: we assume
+            # that there is no missing data in these variables.
+            if ((cycleday[i - 1] == fw_extend[fw_idx]) &&
+                (cyc[i - 1L] == cyc[i]) &&
+                (id[i - 1L] == id[i])) {
+
+                sex_yester[i] <- sex[i - 1L]
+            }
+        }
+    }
+
+    daily$sex_yester <- sex_yester
+    daily
 }
 
 
@@ -342,4 +392,25 @@ rbind_similar_dfs <- function(list_of_dfs) {
     }
 
     data.frame(combined_list, stringsAsFactors = FALSE)
+}
+
+
+
+
+# sort over id / cycle / fertile window
+#
+# PRE: `comb_dat` is a data frame with id, cycle, and fertile window variables
+# with names given by `var_nm`.  `fw_incl` provides the fertile window days.
+
+sort_dsp <- function(comb_dat, var_nm, fw_incl, fw_day_before = NULL) {
+
+    fw_extend <- c(fw_day_before, fw_incl)
+
+    # turn fertile window vector into a factor if it's not already so that
+    # `order` will give us the desired sorting
+    out <- comb_dat[order(comb_dat[, var_nm$id],
+                          comb_dat[, var_nm$cyc],
+                          comb_dat[, var_nm$fw] %>% factor(., levels = fw_extend)), ]
+    row.names(out) = NROW(comb_dat) %>% seq_len
+    out
 }
