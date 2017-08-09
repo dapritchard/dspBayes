@@ -2,6 +2,7 @@
 #include "CoefGen.h"
 #include "PhiGen.h"
 #include "WGen.h"
+#include "XGen.h"
 #include "XiGen.h"
 
 #define DSP_BAYES_N_INTERRUPT_CHECK 1000
@@ -34,12 +35,17 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
 		Rcpp::IntegerVector day_to_subj_idx,
 		Rcpp::List gamma_specs,
 		Rcpp::NumericVector phi_specs,
+		Rcpp::List miss_cyc,
+		Rcpp::List miss_day,
 		int fw_len,
 		int n_burn,
-		int n_samp) {
+		int n_samp,
+		int n_max_miss,
+		double cohort_sex_prob) {
 
     // initialize global variable in case the value was set to true elsewhere
     g_record_status = false;
+    d2s = day_to_subj_idx.begin();
 
     // create data objects
     WGen W(w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, fw_len);
@@ -47,8 +53,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     CoefGen coefs(U, gamma_specs, n_samp);
     PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples
     UProdBeta u_prod_beta(U.size());
-    int* X = X_rcpp.begin();
-    d2s = day_to_subj_idx.begin();
+    XGen X(X_rcpp, miss_cyc, miss_day, n_max_miss, cohort_sex_prob);
+    int* X_temp = X_rcpp.begin();
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
@@ -60,8 +66,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     	xi.sample(W, phi, u_prod_beta);
 
     	// update the regression coefficients gamma and psi
-    	coefs.sample(W, xi, u_prod_beta, X);
-    	u_prod_beta.update_exp(X);
+    	coefs.sample(W, xi, u_prod_beta, X_temp);
+    	u_prod_beta.update_exp(X_temp);
 
     	// update phi, the variance parameter for xi
     	phi.sample(xi);
