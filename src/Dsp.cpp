@@ -35,12 +35,12 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
 		Rcpp::IntegerVector day_to_subj_idx,
 		Rcpp::List gamma_specs,
 		Rcpp::NumericVector phi_specs,
-		Rcpp::List miss_cyc,
-		Rcpp::List miss_day,
+		Rcpp::List x_miss_cyc,
+		Rcpp::List x_miss_day,
 		int fw_len,
 		int n_burn,
 		int n_samp,
-		int n_max_miss,
+		int n_x_max_miss,
 		double cohort_sex_prob) {
 
     // initialize global variable in case the value was set to true elsewhere
@@ -53,7 +53,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     CoefGen coefs(U, gamma_specs, n_samp);
     PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples
     UProdBeta u_prod_beta(U.size());
-    XGen X(X_rcpp, miss_cyc, miss_day, n_max_miss, cohort_sex_prob);
+    XGen X(X_rcpp, x_miss_cyc, x_miss_day, n_x_max_miss, cohort_sex_prob);
     int* X_temp = X_rcpp.begin();
 
     // begin sampler loop

@@ -39,6 +39,7 @@ merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, fw_day_befor
     keep_idx <- day_red[[var_nm$fw]] %in% fw_incl %>% which
     day_red <- day_red[keep_idx, ]
     # TODO: verify that there are no duplicate (id, cyc, day) tuples
+    # TODO: check if we threw out pregnancy cycles without any intercourse and throw a warning?
 
     # a data frame with observations given by the cross product of every day in
     # the fertile window and every (id, cycle) keypair

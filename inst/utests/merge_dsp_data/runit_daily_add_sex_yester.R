@@ -19,7 +19,7 @@ daily <- data.frame(id       = rep(id, each = 10),
 # create a true `sex_yester` variable by shifting the data up one, and turning
 # the days at the beginning of the fertile window into NAs
 sex_yester <- daily$sex[c(1L, 1L:(NROW(daily) - 1L))]
-sex_yester[c(1, 6, 11, 16] <- NA
+sex_yester[c(1, 6, 11, 16)] <- NA
 
 # arbitrary permutations of the data
 day_perm_idx <- c(14, 3, 17, 11, 6, 8, 1, 19, 5, 13, 2, 16, 7, 9, 10, 20, 15, 18, 4, 12)

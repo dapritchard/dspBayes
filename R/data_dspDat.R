@@ -226,17 +226,18 @@
 # Mung data into format for use by mcmc sampler ================================
 
 dspDat <- function(dsp_model,
-                   baseline     = NULL,
-                   cycle        = NULL,
+                   baseline      = NULL,
+                   cycle         = NULL,
                    daily,
                    id_name,
                    cyc_name,
                    sex_name,
                    fw_name,
                    fw_incl,
-                   use_na       = "none",
-                   req_min_days = 0L,
-                   keep_data    = TRUE) {
+                   fw_day_before = NULL,
+                   use_na        = "none",
+                   req_min_days  = 0L,
+                   keep_data     = TRUE) {
 
     # TODO: check valid input:
 
@@ -251,7 +252,7 @@ dspDat <- function(dsp_model,
 
     # merge the data provided by `baseline`, `cycle`, and `daily` into a data
     # frame
-    comb_dat <- merge_dsp_data(baseline, cycle, daily, var_nm, fw_incl, req_min_days)
+    comb_dat <- merge_dsp_data(baseline, cycle, daily, var_nm, fw_incl, fw_day_before, req_min_days)
 
     # conditionally remove any cycles from `comb_dat` that have either missing data
     # in the intercourse variable, other covariates, or both, depending on the value

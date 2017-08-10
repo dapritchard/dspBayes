@@ -20,6 +20,11 @@ var_nm <- list(id = "id", cyc = "cyc", fw = "day")
 # begin testing ----------------------------------------------------------------
 
 test_sort <- function() {
-    # should be able to recover data perfore permutation
-    checkEquals(daily, sort_dsp(daily, fw_incl, var_nm))
+
+    # should be able to recover data before permutation
+    checkEquals(daily, sort_dsp(daily, var_nm, fw_incl))
+
+    # we should get the same result if the fertile window is days 2 and 3, and
+    # the day before the fertile window is day 4
+    checkEquals(daily, sort_dsp(daily, var_nm, c(2, 3), 4))
 }

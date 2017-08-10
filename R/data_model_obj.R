@@ -8,16 +8,10 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
     subj_day_blocks <- get_subj_day_blocks(comb_dat, var_nm)
     day_to_subj_idx <- get_day_to_subj_idx(subj_day_blocks)
 
-    # extract intercourse data and index the missing values, and then initialize
-    # the missing to "no intercourse" status (using 0/1 coding for no/yes).
-    # Note that the expression for `miss_x_idx` does the right thing when there
-    # are no missing, which is to provide an `integer(0)` vector.
-    miss_x_bool <- is.na(comb_dat[[var_nm$sex]])
-    X <- as.integer(! miss_x_bool)
-    miss_x_idx <- which(miss_x_bool) - 1L
-
     U  = expand_model_rhs(comb_dat, dsp_model)
     #### TODO check if data is collinear or constant within outcome ####
+
+    intercourse_data <- get_intercourse_data(comb_dat, var_nm)
 
     cov_miss_info <- get_missing_var_info(U, dsp_model)
 
@@ -37,6 +31,8 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
 
 
 
+
+# TODO: modify this using `get_cycle_idx`
 
 get_w_day_blocks <- function(comb_dat, var_nm) {
 
@@ -223,4 +219,169 @@ get_var_categ_status <- function(cov_miss_info, n_vars) {
     }
 
     var_categ_status
+}
+
+
+
+
+get_intercourse_data <- function(comb_dat, var_nm) {
+
+    # store intercourse data as a binary variable.  Missing is preserved.
+    X <- map_vec_to_bool(comb_dat[, var_nm$sex]) %>% as.integer
+    x_miss_bool <- is.na(X)
+    x_miss_idx <- which(x_miss_bool)
+
+    # convert sex yesterday to a binary variable and map missings value to the
+    # flag for missing value, 2.
+    sex_yester <- map_vec_to_bool(comb_dat[["sex_yester"]])
+    sex_yester[is.na(sex_yester)] <- 2L
+
+    # a list with each element a vector of the days-specific indices
+    # corresponding to one of the cycles
+    cyc_idx_list <- get_cyc_idx(comb_dat, var_nm)
+
+    # containers to store missing intercourse information
+    x_miss_cyc <- vector("list", length(cyc_idx_list))
+    x_miss_day <- vector("list", sum(x_miss_bool))
+    x_n_max_miss <- 0L
+
+    # map subjects to indices
+    id_map <- get_id_map(comb_dat[[var_nm$id]])
+
+    # each iteration checks the current cycle for missing.  If some exists, then
+    # add an entry to `x_miss_cyc` detailing the missingness, and fill in the
+    # missing elements of X.  Also the maximum amount of missing in a cycle is
+    # tracked and stored in `x_n_max_miss`.
+    ctr <- 1L
+    for (curr_cyc_idx in cyc_idx_list) {
+
+        # which among the current cycle indices are missing, and how many
+        curr_miss_idx <- curr_cyc_idx[x_miss_bool[curr_cyc_idx]]
+        curr_n_miss <- length(curr_miss_idx)
+
+        # case: at least one day in the current cycle has missing intercourse
+        # data
+        if (curr_n_miss > 0L) {
+
+            # provide cycle missing information in `x_miss_cyc`.  Subtact 1 to
+            # adjust for 0-based indexing.
+            beg_idx <- curr_cyc_idx[1L]
+            x_miss_cyc[[ctr]] <- list(beg_idx  = beg_idx - 1L,
+                                      n_days   = length(curr_cyc_idx),
+                                      subj_idx = id_map[beg_idx] - 1L,
+                                      n_miss   = curr_n_miss)
+
+            # check if we need to update the maximum amount of missing in a
+            # cycle variable
+            if (curr_n_miss > x_n_max_miss) {
+                x_n_max_miss <- curr_n_miss
+            }
+
+            # set the first missing X in the cycle to 1, and the remaining
+            # missing to 0
+            X[curr_miss_idx[1L]] <- 1L
+            X[curr_miss_idx[-1L]] <- 0L
+
+            ctr <- ctr + 1L
+        }
+    }
+
+    # remove entries corresponding to cycles without any missing
+    x_miss_cyc <- x_miss_cyc[1:(ctr - 1L)]
+
+    # obtain indices and previous day intercourse status for each missing
+    # intercourse observation
+    for (i in seq_along(x_miss_idx)) {
+        curr_idx <- x_miss_idx[i]
+        x_miss_day[[i]] <- list(idx  = curr_idx - 1L,
+                                prev = comb_dat[curr_idx, "sex_yester"])
+    }
+
+    # return intercourse information
+    list(X            = X,
+         x_miss_cyc   = miss_cyc,
+         x_miss_day   = miss_day,
+         x_n_max_miss = n_max_miss)
+}
+
+
+
+
+# returns a list such that each element is a vector providing the indices in
+# `dataset` for a given cycle.  The cycles are in order within a vector and
+# across vectors, so that performing `unlist` on the return object yields a
+# vector with values `1, 2, ..., nrow(dataset)`.
+#
+# PRE: assumes `dataset` is a data.frame with columns for id and cycle and with
+# names as given in `var_nm`.  The function strongly relies on the fact that
+# `dataset` is already sorted on the id/cycle keypairs.
+
+
+get_cyc_idx <- function(dataset, var_nm) {
+
+    # container to store the indices in.  Set the length to the maximum possible
+    # elements that it could need.
+    n <- NROW(dataset)
+    cyc_idx_list <- vector("list", n)
+
+    # bind variable names to the data for convenience
+    id_vec <- dataset[[var_nm$id]]
+    cyc_vec <- dataset[[var_nm$cyc]]
+
+    # tracks the number of cycles in the data, and the index of the first
+    # observation in the current cycle
+    ctr <- 1L
+    start <- 1L
+
+    # each iteration steps through the current id/cycle keypair until a new
+    # cycle is found, and then saves a vector of the indices for the cycle to
+    # `cyc_idx_list`
+    while (start <= n) {
+
+        # obtain the id/cycle keypair for the current cycle
+        curr_id <- id_vec[start]
+        curr_cyc <- cyc_vec[start]
+
+        # `end` is used to search for one past the last day in the cycle
+        end <- start + 1L
+
+        # increment `end` until we get one past the last day in the cycle
+        while ((end <= n) && (cyc_vec[end] == curr_cyc) && (id_vec[end] == curr_id)) {
+            end <- end + 1L
+        }
+
+        # the current cycle index are the indices between `start` and one before
+        # `end`.  Updatate `start` and `ctr`.
+        cyc_idx_list[[ctr]] <- start : (end - 1L)
+        start <- end
+        ctr <- ctr + 1L
+    }
+
+    # return the data shortened to the number of cycles
+    cyc_idx_list[1:(ctr - 1L)]
+}
+
+
+
+
+# returns a vector of indices that maps the t-th element of `id` to the i-th unique value
+#
+# PRE: `id` is an atomic vector with length >= 1 that has already been sorted.
+
+get_id_map <- function(id) {
+
+    ctr <- 1L
+    id_idx <- vector("integer", length(id))
+    id_idx[1L] <- 1L
+
+    for (i in seq_along(id_idx)[-1L]) {
+
+        if (id[i] != id[i - 1]) {
+            ctr <- ctr + 1L
+        }
+
+        id_idx[i] <- ctr
+    }
+
+    id_idx
 }
