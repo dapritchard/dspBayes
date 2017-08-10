@@ -10,9 +10,9 @@
 int* d2s;
 bool g_record_status = false;
 
-Rcpp::List collect_output(const CoefGen& regr_coefs,
-			  const XiGen& xi,
-			  const PhiGen& phi);
+// Rcpp::List collect_output(const CoefGen& regr_coefs,
+// 			  const XiGen& xi,
+// 			  const PhiGen& phi);
 
 // w_day_blocks          used when sampling W
 // w_to_days_idx         categorical gamma: a_tilde
@@ -37,6 +37,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
 		Rcpp::NumericVector phi_specs,
 		Rcpp::List x_miss_cyc,
 		Rcpp::List x_miss_day,
+		Rcpp::NumericVector utau,
+		Rcpp::NumericVector tau_coefs,
 		int fw_len,
 		int n_burn,
 		int n_samp,

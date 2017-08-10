@@ -8,7 +8,7 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
     subj_day_blocks <- get_subj_day_blocks(comb_dat, var_nm)
     day_to_subj_idx <- get_day_to_subj_idx(subj_day_blocks)
 
-    U  = expand_model_rhs(comb_dat, dsp_model)
+    U = expand_model_rhs(comb_dat, dsp_model)
     #### TODO check if data is collinear or constant within outcome ####
 
     intercourse_data <- get_intercourse_data(comb_dat, var_nm)
@@ -287,7 +287,7 @@ get_intercourse_data <- function(comb_dat, var_nm) {
     }
 
     # remove entries corresponding to cycles without any missing
-    x_miss_cyc <- x_miss_cyc[1:(ctr - 1L)]
+    x_miss_cyc <- x_miss_cyc[seq_len(ctr - 1L)]
 
     # obtain indices and previous day intercourse status for each missing
     # intercourse observation
@@ -299,9 +299,9 @@ get_intercourse_data <- function(comb_dat, var_nm) {
 
     # return intercourse information
     list(X            = X,
-         x_miss_cyc   = miss_cyc,
-         x_miss_day   = miss_day,
-         x_n_max_miss = n_max_miss)
+         miss_cyc   = x_miss_cyc,
+         miss_day   = x_miss_day,
+         n_max_miss = x_n_max_miss)
 }
 
 

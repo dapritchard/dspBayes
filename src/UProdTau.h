@@ -11,9 +11,11 @@ class UProdTau {
     Rcpp::NumericVector& m_vals_rcpp;
     Rcpp::NumericVector::iterator m_vals;
 
-    double m_sex_coef;
+    const Rcpp::NumericVector& m_coefs;
 
-    UProdTau(Rcpp::NumericVector& utau_rcpp);
+    const double m_sex_coef;
+
+    UProdTau(Rcpp::NumericVector& utau_rcpp, Rcpp::NumericVector& tau_coefs, double tau_prev);
     ~UProdTau();
 
     double* vals() { return m_vals; }

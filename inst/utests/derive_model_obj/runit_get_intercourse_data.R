@@ -8,7 +8,12 @@ day <- c(-1,   0,   1,  -1,   0,   1,   0,  -1,   0,   1,  -1,   1,   0)
 sex <- c( 1,  NA,  NA,   1,  NA,   0,   1,   0,   1,   1,  NA,   0,  NA)
 yst <- c(2L,  0L,  2L,  2L,  1L,  2L,  2L,  2L,  0L,  1L,  2L,  2L,  2L)
 
+sex_nomiss <- c(1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0)
+
 daily <- data.frame(id, cyc, day, sex, sex_yester = yst, stringsAsFactors = FALSE)
+daily_nomiss <- data.frame(id, cyc, day, sex_nomiss, sex_yester = yst, stringsAsFactors = FALSE)
+colnames(daily_nomiss) <- colnames(daily)
+
 var_nm <- list(id = "id", cyc = "cyc", fw = "day", sex = "sex")
 
 
@@ -40,7 +45,17 @@ n_max_miss <- 2L
 
 # begin testing ----------------------------------------------------------------
 
-test_get_intercourse_data <- function() {
+test_no_missing <- function() {
+    out <- get_intercourse_data(daily_nomiss, var_nm)
+    checkIdentical(as.integer(sex_nomiss), out$X)
+    checkIdentical(vector("list", 0L), out$miss_cyc)
+    checkIdentical(vector("list", 0L), out$miss_day)
+    checkIdentical(0L, out$n_max_miss)
+}
+
+
+test_with_missing <- function() {
+    out <- get_intercourse_data(daily, var_nm)
     checkIdentical(X, out$X)
     checkIdentical(target_miss_cyc, out$miss_cyc)
     checkIdentical(target_miss_day, out$miss_day)
