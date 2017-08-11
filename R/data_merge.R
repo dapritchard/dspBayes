@@ -187,7 +187,7 @@ daily_add_sex_yester <- function(daily, var_nm, fw_incl, fw_day_before) {
     # the fertile window with the day before prepended
     fw_extend <- c(fw_day_before, fw_incl)
 
-    # each iteration looks to see if the -th observation is in the fertile
+    # each iteration looks to see if the i-th observation is in the fertile
     # window.  If so, then it looks to see if the `i - 1`-th observations is the
     # previous day in the fertile window, and if so then records the intercourse
     # status for that day.

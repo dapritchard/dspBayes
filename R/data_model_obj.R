@@ -224,26 +224,31 @@ get_var_categ_status <- function(cov_miss_info, n_vars) {
 
 
 
-get_intercourse_data <- function(comb_dat, var_nm) {
-
-    # store intercourse data as a binary variable.  Missing is preserved.
-    X <- map_vec_to_bool(comb_dat[, var_nm$sex]) %>% as.integer
-    x_miss_bool <- is.na(X)
-    x_miss_idx <- which(x_miss_bool)
-
-    # convert sex yesterday to a binary variable and map missings value to the
-    # flag for missing value, 2.
-    sex_yester <- map_vec_to_bool(comb_dat[["sex_yester"]])
-    sex_yester[is.na(sex_yester)] <- 2L
+get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
 
     # a list with each element a vector of the days-specific indices
     # corresponding to one of the cycles
     cyc_idx_list <- get_cyc_idx(comb_dat, var_nm)
 
+    # store intercourse data as a binary variable.  Missing is preserved.
+    X <- map_vec_to_bool(comb_dat[, var_nm$sex]) %>% as.integer
+    # TODO: check if there are any cycles with a pregnancy and only 1 missing
+    # day, and all other days are non-intercourse.  In this case X_ijk must be
+    # an intercourse.
+    x_miss_bool <- is.na(X)
+    x_miss_idx <- which(x_miss_bool)
+
+    # convert sex yesterday to a binary variable and map missings value to the
+    # corresponding flags
+    sex_yester <- get_sex_yester_coding(comb_dat, var_nm, fw_incl)
+
     # containers to store missing intercourse information
     x_miss_cyc <- vector("list", length(cyc_idx_list))
     x_miss_day <- vector("list", sum(x_miss_bool))
-    x_n_max_miss <- 0L
+
+    # maps a missing intercourse day to the index of `x_miss_idx`
+    idx_to_x_miss_idx <- vector("integer", length(X))
+    idx_to_x_miss_idx[x_miss_bool] <- seq_along(x_miss_idx)
 
     # map subjects to indices
     id_map <- get_id_map(comb_dat[[var_nm$id]])
@@ -256,29 +261,25 @@ get_intercourse_data <- function(comb_dat, var_nm) {
     for (curr_cyc_idx in cyc_idx_list) {
 
         # which among the current cycle indices are missing, and how many
-        curr_miss_idx <- curr_cyc_idx[x_miss_bool[curr_cyc_idx]]
+        curr_miss_bool <- x_miss_bool[curr_cyc_idx]
+        curr_miss_idx <- curr_cyc_idx[curr_miss_bool]
+        map_to_x_miss_idx <- idx_to_x_miss_idx[curr_miss_idx]
         curr_n_miss <- length(curr_miss_idx)
 
         # case: at least one day in the current cycle has missing intercourse
         # data
         if (curr_n_miss > 0L) {
 
-            # provide cycle missing information in `x_miss_cyc`.  Subtact 1 to
+            # provide cycle missing information in `x_miss_cyc`.  Subtract 1 to
             # adjust for 0-based indexing.
-            beg_idx <- curr_cyc_idx[1L]
-            x_miss_cyc[[ctr]] <- list(beg_idx  = beg_idx - 1L,
-                                      n_days   = length(curr_cyc_idx),
-                                      subj_idx = id_map[beg_idx] - 1L,
-                                      n_miss   = curr_n_miss)
-
-            # check if we need to update the maximum amount of missing in a
-            # cycle variable
-            if (curr_n_miss > x_n_max_miss) {
-                x_n_max_miss <- curr_n_miss
-            }
+            x_miss_cyc[[ctr]] <- list(beg_idx  = map_to_x_miss_idx[1L] - 1L,
+                                      n_days   = curr_n_miss,
+                                      subj_idx = id_map[curr_cyc_idx[1L]] - 1L)
 
             # set the first missing X in the cycle to 1, and the remaining
-            # missing to 0
+            # missing to 0.  The logic for this is that if a pregnancy has
+            # occurred in the cycle, then there must be at least 1 day with
+            # intercourse, and this guarantees that.
             X[curr_miss_idx[1L]] <- 1L
             X[curr_miss_idx[-1L]] <- 0L
 
@@ -294,14 +295,13 @@ get_intercourse_data <- function(comb_dat, var_nm) {
     for (i in seq_along(x_miss_idx)) {
         curr_idx <- x_miss_idx[i]
         x_miss_day[[i]] <- list(idx  = curr_idx - 1L,
-                                prev = comb_dat[curr_idx, "sex_yester"])
+                                prev = sex_yester[curr_idx])
     }
 
     # return intercourse information
-    list(X            = X,
-         miss_cyc   = x_miss_cyc,
-         miss_day   = x_miss_day,
-         n_max_miss = x_n_max_miss)
+    list(X        = X,
+         miss_cyc = x_miss_cyc,
+         miss_day = x_miss_day)
 }
 
 
@@ -384,4 +384,54 @@ get_id_map <- function(id) {
     }
 
     id_idx
+}
+
+
+
+
+# converts the `daily$sex_yester` data to an integer vector of the same length
+# as the data, where the elements take values -2L, -1L, 0L, and 1L, and which
+# correspond to
+#
+#     -2L:  a missing value for sex yesterday where yesterday was the day before
+#           the fertile window
+#     -1L:  a missing value for sex yesterday where yesterday was one of the
+#           days during the fertile window
+#      0L:  sex yesterday in known to be no
+#      1L:  sex yesterday is known to be yes
+#
+# PRE: daily is a data.frame with a column named "sex_yester" and a column for
+# cycle day with name as given by `var_nm$fw`.  `fw_incl` is a vector with the
+# values of the fertile window days, in the order that they occur.
+
+get_sex_yester_coding <- function(daily, var_nm, fw_incl) {
+
+    # hard-coded values which indicate what type of missingness occured
+    SEX_NO_INPUTE_BEFORE <- -2L
+    SEX_NO_INPUTE_DURING <- -1L
+
+    # map "sex yesterday" variable to binary data.  Missing values are
+    # preserved.
+    sex_yester <- map_vec_to_bool(daily$sex_yester) %>% as.integer
+    sex_yester_miss_idx <- which(is.na(sex_yester))
+
+    # bind `cycleday` variable to the fertile window day variable and set
+    # `fw_day_1` to be the value of the first day in the fertile window
+    cycleday <- daily[[var_nm$fw]]
+    fw_day_1 <- fw_incl[1L]
+
+    # each iteration checks one of the missing values of the "sex yesterday"
+    # variable and codes it so that the value of the variable indicates whether
+    # it occured on the day before the fertile window, or during the fertile
+    # window
+    for (i in sex_yester_miss_idx) {
+
+        if (cycleday[i] == fw_day_1) {
+            sex_yester[i] <- SEX_NO_INPUTE_BEFORE
+        } else {
+            sex_yester[i] <- SEX_NO_INPUTE_DURING
+        }
+    }
+
+    sex_yester
 }

@@ -58,27 +58,27 @@ PregCyc* PregCyc::list_to_arr(Rcpp::List& block_list) {
 
 
 
-// similar to `DayBlock::list_to_arr` and `PregCyc::list_to_arr`, but now each
-// element in `block_list` stores integer values that can be accessed using
-// names `beg_idx`, `n_days`, `subj_idx`, and `n_miss`, and which are used to
-// initialize the struct's member values of the same name.  The return value is
-// a pointer to the beginning of the array.
+// // similar to `DayBlock::list_to_arr` and `PregCyc::list_to_arr`, but now each
+// // element in `block_list` stores integer values that can be accessed using
+// // names `beg_idx`, `n_days`, `subj_idx`, and `n_miss`, and which are used to
+// // initialize the struct's member values of the same name.  The return value is
+// // a pointer to the beginning of the array.
 
-MissCyc* MissCyc::list_to_arr(Rcpp::List& block_list) {
+// MissCyc* MissCyc::list_to_arr(Rcpp::List& block_list) {
 
-    MissCyc* block_arr = new MissCyc[block_list.size()];
+//     MissCyc* block_arr = new MissCyc[block_list.size()];
 
-    // each iteration constructs a new struct based upon the information
-    // provided by the t-th element of `block_list`
-    for (int t = 0; t < block_list.size(); ++t) {
+//     // each iteration constructs a new struct based upon the information
+//     // provided by the t-th element of `block_list`
+//     for (int t = 0; t < block_list.size(); ++t) {
 
-	Rcpp::IntegerVector block_list_t = as<Rcpp::IntegerVector>(block_list[t]);
-	block_arr[t] = MissCyc(block_list_t["beg_idx"],
-			       block_list_t["n_days"],
-			       block_list_t["subj_idx"],
-			       block_list_t["n_miss"],
-			       block_list_t["preg"]);
-    }
+// 	Rcpp::IntegerVector block_list_t = as<Rcpp::IntegerVector>(block_list[t]);
+// 	block_arr[t] = MissCyc(block_list_t["beg_idx"],
+// 			       block_list_t["n_days"],
+// 			       block_list_t["subj_idx"],
+// 			       block_list_t["n_miss"],
+// 			       block_list_t["preg"]);
+//     }
 
-    return block_arr;
-}
+//     return block_arr;
+// }

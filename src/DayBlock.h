@@ -39,21 +39,21 @@ struct PregCyc : public DayBlock {
 
 
 
-struct MissCyc : public PregCyc {
+// struct MissCyc : public PregCyc {
 
-    int n_miss;
-    int preg;
+//     int n_miss;
+//     int preg;
 
-    MissCyc() : PregCyc(), n_miss(0) {}
+//     MissCyc() : PregCyc(), n_miss(0) {}
 
-    MissCyc(int beg_idx, int n_days, int subj_idx, int n_miss, int preg) :
-	PregCyc(beg_idx, n_days, subj_idx),
-	n_miss(n_miss),
-	preg(preg) {
-    }
+//     MissCyc(int beg_idx, int n_days, int subj_idx, int n_miss, int preg) :
+// 	PregCyc(beg_idx, n_days, subj_idx),
+// 	n_miss(n_miss),
+// 	preg(preg) {
+//     }
 
-    static MissCyc* list_to_arr(Rcpp::List& block_list);
-};
+//     static MissCyc* list_to_arr(Rcpp::List& block_list);
+// };
 
 
 #endif
