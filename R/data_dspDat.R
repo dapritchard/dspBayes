@@ -259,13 +259,19 @@ dspDat <- function(dsp_model,
     # of `use_na`
     clean_dat <- remove_cycs_with_miss(comb_dat, var_nm, fw_incl, use_na)
 
+    # fit a logistic regression model with intercourse as the outcome variable
+    # and sex yesterday and the model covariates as the predictor variables.
+    # Note that we have to do this before performing `remove_days_no_sex` or
+    # else we lose the "no intercourse" observations from the model
+    tau_fit <- get_tau_fit(comb_dat, var_nm, dsp_model, use_na)
+
     # removes all observations from `comb_dat` for which intercourse did not occur.
     # Observations with a missing value for intercourse remain in the data.
     sex_only_dat <- remove_days_no_sex(comb_dat, var_nm)
 
     #### TODO check if data is collinear or constant within outcome ####
 
-    dsp_data <- derive_model_obj(sex_days_dat, var_nm, dsp_model)
+    dsp_data <- derive_model_obj(sex_only_dat, var_nm, fw_incl, dsp_model, use_na, tau_fit)
 
     # TODO: Stats related to munging process for use by summary fcn
     # datInfo <- getDatInfo(dsp_model, baseline, cycle, daily, cleanDat,

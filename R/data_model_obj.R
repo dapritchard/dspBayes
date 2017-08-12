@@ -1,5 +1,4 @@
-derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
-
+derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_fit) {
 
     w_day_blocks <- get_w_day_blocks(comb_dat, var_nm)
     w_to_days_idx <- get_w_to_days_idx(comb_dat, var_nm)
@@ -11,9 +10,11 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
     U = expand_model_rhs(comb_dat, dsp_model)
     #### TODO check if data is collinear or constant within outcome ####
 
-    intercourse_data <- get_intercourse_data(comb_dat, var_nm)
+    intercourse_data <- get_intercourse_data(comb_dat, var_nm, fw_incl)
 
     cov_miss_info <- get_missing_var_info(U, dsp_model)
+
+    utau <- get_utau(U, tau_fit, intercourse_data)
 
     var_categ_status <- get_var_categ_status(cov_miss_info)
 
@@ -22,17 +23,16 @@ derive_model_obj <- function(comb_dat, var_nm, dsp_model) {
          w_cyc_to_subj_idx = w_cyc_to_subj_idx,
          subj_day_blocks   = subj_day_blocks,
          day_to_subj_idx   = day_to_subj_idx,
-         miss_x_idx        = miss_x_idx,
+         intercourse_data  = intercourse_data,
          cov_miss_info     = cov_miss_info,
          var_categ_status  = var_categ_status,
-         X                 = X,
+         tau_fit           = tau_fit,
+         utau              = utau,
          U                 = U)
 }
 
 
 
-
-# TODO: modify this using `get_cycle_idx`
 
 get_w_day_blocks <- function(comb_dat, var_nm) {
 
@@ -45,6 +45,8 @@ get_w_day_blocks <- function(comb_dat, var_nm) {
     # `cyc_idx_list`.
     ctr <- 1L
     for (i in seq_along(cyc_idx_list)) {
+
+        # TODO: modify this using `get_cycle_idx`
 
         # get the indices in `comb_dat` corresponding to the current cycle
         curr_id <- keypairs[i, var_nm$id]
@@ -232,6 +234,7 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
 
     # store intercourse data as a binary variable.  Missing is preserved.
     X <- map_vec_to_bool(comb_dat[, var_nm$sex]) %>% as.integer
+    # TODO: use use_na
     # TODO: check if there are any cycles with a pregnancy and only 1 missing
     # day, and all other days are non-intercourse.  In this case X_ijk must be
     # an intercourse.
@@ -239,7 +242,8 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
     x_miss_idx <- which(x_miss_bool)
 
     # convert sex yesterday to a binary variable and map missings value to the
-    # corresponding flags
+    # corresponding flags.  Returns NULL if no column "sex_yester" exists
+    # (i.e. we are not imputing missing intercourse data)
     sex_yester <- get_sex_yester_coding(comb_dat, var_nm, fw_incl)
 
     # containers to store missing intercourse information
@@ -298,10 +302,17 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
                                 prev = sex_yester[curr_idx])
     }
 
+    # if (length(intercourse_data$miss_day > 0L)) {
+    #     tau_data <- get_tau_data()
+    # } else {
+    #     tau_data <- 1
+    # }
+
     # return intercourse information
-    list(X        = X,
-         miss_cyc = x_miss_cyc,
-         miss_day = x_miss_day)
+    list(X          = X,
+         miss_cyc   = x_miss_cyc,
+         miss_day   = x_miss_day,
+         sex_yester = sex_yester)
 }
 
 
@@ -405,6 +416,12 @@ get_id_map <- function(id) {
 # values of the fertile window days, in the order that they occur.
 
 get_sex_yester_coding <- function(daily, var_nm, fw_incl) {
+
+    # case: no "sex yesterday" data in `daily`, i.e. we are not imputing missing
+    # intercourse data
+    if (! ("sex_yester" %in% colnames(daily))) {
+        return(NULL)
+    }
 
     # hard-coded values which indicate what type of missingness occured
     SEX_NO_INPUTE_BEFORE <- -2L

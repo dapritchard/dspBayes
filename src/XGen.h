@@ -23,7 +23,7 @@ public:
     Rcpp::IntegerVector::iterator m_vals;
 
     // information about the number of X missing for a given cycle
-    const MissCyc* m_miss_cyc;
+    const PregCyc* m_miss_cyc;
     const int m_n_miss_cyc;
 
     // tracks the indices of the missing values in X as well as whether
@@ -53,12 +53,12 @@ public:
 		const UProdTau& utau);
 
     int calc_prior_probs(double prior_probs[][2],
-			 const MissCyc* curr_miss_cyc,
+			 const PregCyc* curr_miss_cyc,
 			 const XMissDay* curr_miss_day,
 			 const UProdTau& utau) const;
 
     static int calc_posterior_probs(double* posterior_probs,
-				    const MissCyc* curr_miss_cyc,
+				    const PregCyc* curr_miss_cyc,
 				    const XMissDay* curr_miss_day,
 				    const double prior_probs[][2],
 				    const WGen& W,
@@ -69,14 +69,14 @@ public:
     static int sample_x_perm(double* probs, int n_perms);
 
     static int get_w_bitmap(const WGen& W,
-			    const MissCyc* curr_miss_cyc,
+			    const PregCyc* curr_miss_cyc,
 			    const XMissDay* curr_miss_day);
 
-    void update_cyc_x(const MissCyc* curr_miss_cyc,
+    void update_cyc_x(const PregCyc* curr_miss_cyc,
 		      const XMissDay* curr_miss_day,
 		      int t);
 
-    // static double calc_nonrand_sum_exp_ubeta(const MissCyc* curr_miss_cyc,
+    // static double calc_nonrand_sum_exp_ubeta(const PregCyc* curr_miss_cyc,
     // 					     const XMissDay* curr_miss_day,
     // 					     const UProdBeta& ubeta);
 
