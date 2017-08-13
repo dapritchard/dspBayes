@@ -37,7 +37,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
 		Rcpp::NumericVector phi_specs,
 		Rcpp::List x_miss_cyc,
 		Rcpp::List x_miss_day,
-		Rcpp::NumericVector utau,
+		Rcpp::NumericVector utau_rcpp,
 		Rcpp::List tau_coefs,
 		int fw_len,
 		int n_burn,
@@ -56,6 +56,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples
     UProdBeta u_prod_beta(U.size());
     XGen X(X_rcpp, x_miss_cyc, x_miss_day, n_x_max_miss, cohort_sex_prob);
+    UProdTau utau(utau_rcpp, tau_coefs);
     int* X_temp = X_rcpp.begin();
 
     // begin sampler loop

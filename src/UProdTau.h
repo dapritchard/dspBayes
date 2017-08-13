@@ -13,14 +13,11 @@ class UProdTau {
 
     const Rcpp::NumericVector& m_coefs;
 
-    const double m_sex_coef;
-
-    UProdTau(Rcpp::NumericVector& utau_rcpp, Rcpp::NumericVector& tau_coefs, double tau_prev);
+    UProdTau(Rcpp::NumericVector& utau, Rcpp::List& tau_coefs);
     ~UProdTau();
 
     double* vals() { return m_vals; }
     const double* vals() const { return m_vals; }
-    double sex_coef() const { return m_sex_coef; }
     int n_days() const { return m_vals_rcpp.size(); }
 };
 

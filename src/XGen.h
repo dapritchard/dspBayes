@@ -5,6 +5,7 @@
 #include "DayBlock.h"
 #include "UProdBeta.h"
 #include "UProdTau.h"
+#include "WGen.h"
 #include "XiGen.h"
 
 
@@ -13,8 +14,6 @@
 class XGen {
 
 public:
-
-    // ----- class members ----- //
 
     class XMissDay;
 
@@ -30,21 +29,20 @@ public:
     // intercourse occured on the previous day
     const XMissDay* m_miss_day;
 
-    // the number of missing in the cycle with the largest number of missing,
-    // and 2 to the power of this number
-    const int m_n_max_miss;
-    const int m_n_max_miss_pow2;
-
+    // global probability used to sample missing values of intercourse for the
+    // day before the fertile window
     const double m_cohort_sex_prob;
 
+    // the regression coefficient in the missing intercourse prior probabilities
+    // model coresponding to the previous day of intercourse
+    const double m_sex_coef;
 
-    // ----- class functions ----- //
 
     XGen(Rcpp::IntegerVector& X_rcpp,
 	 Rcpp::List& miss_cyc,
 	 Rcpp::List& miss_day,
-	 int n_max_miss,
-	 double cohort_sex_prob);
+	 double cohort_sex_prob,
+	 double sex_coef);
     ~XGen();
 
     void sample(const WGen& W,
@@ -52,36 +50,60 @@ public:
 		const UProdBeta& ubeta,
 		const UProdTau& utau);
 
-    int calc_prior_probs(double prior_probs[][2],
-			 const PregCyc* curr_miss_cyc,
-			 const XMissDay* curr_miss_day,
-			 const UProdTau& utau) const;
+    void sample_cycle(const PregCyc* miss_cyc,
+		      const WGen& W,
+		      const XiGen& xi,
+		      const UProdBeta& ubeta,
+		      const UProdTau& utau);
 
-    static int calc_posterior_probs(double* posterior_probs,
-				    const PregCyc* curr_miss_cyc,
-				    const XMissDay* curr_miss_day,
-				    const double prior_probs[][2],
-				    const WGen& W,
-				    const XiGen& xi,
-				    const UProdBeta& ubeta,
-				    int day_before_fw_sex);
+    double calc_prior_prob(const XMissDay* miss_day,
+			   const UProdTau& utau,
+			   const int prev_day_sex) const;
 
-    static int sample_x_perm(double* probs, int n_perms);
+    static double calc_posterior_prob(const XMissDay* miss_day,
+				      const UProdBeta& ubeta,
+				      const double xi_i);
 
-    static int get_w_bitmap(const WGen& W,
-			    const PregCyc* curr_miss_cyc,
-			    const XMissDay* curr_miss_day);
+    static int sample_x_ijk(const XMissDay* miss_day,
+			    const double prior_prob_yes,
+			    const double posterior_prob_yes);
 
-    void update_cyc_x(const PregCyc* curr_miss_cyc,
-		      const XMissDay* curr_miss_day,
-		      int t);
+    int sample_day_before_fw_sex() const;
 
-    // static double calc_nonrand_sum_exp_ubeta(const PregCyc* curr_miss_cyc,
-    // 					     const XMissDay* curr_miss_day,
-    // 					     const UProdBeta& ubeta);
+    // int calc_prior_probs(double prior_probs[][2],
+    // 			 const PregCyc* curr_miss_cyc,
+    // 			 const XMissDay* curr_miss_day,
+    // 			 const UProdTau& utau) const;
 
-    int* vals() { return m_vals; }
-    const int* vals() const { return m_vals; }
+    // static double XGen::calc_prior_prob(const XMissDay* miss_day,
+    // 					const UProdTau& utau,
+    // 					const int prev_day_sex);
+
+    // static int calc_posterior_probs(double* posterior_probs,
+    // 				    const PregCyc* curr_miss_cyc,
+    // 				    const XMissDay* curr_miss_day,
+    // 				    const double prior_probs[][2],
+    // 				    const WGen& W,
+    // 				    const XiGen& xi,
+    // 				    const UProdBeta& ubeta,
+    // 				    int day_before_fw_sex);
+
+    // static int sample_x_perm(double* probs, int n_perms);
+
+    // static int get_w_bitmap(const WGen& W,
+    // 			    const PregCyc* curr_miss_cyc,
+    // 			    const XMissDay* curr_miss_day);
+
+    // void update_cyc_x(const PregCyc* curr_miss_cyc,
+    // 		      const XMissDay* curr_miss_day,
+    // 		      int t);
+
+    // // static double calc_nonrand_sum_exp_ubeta(const PregCyc* curr_miss_cyc,
+    // // 					     const XMissDay* curr_miss_day,
+    // // 					     const UProdBeta& ubeta);
+
+    // int* vals() { return m_vals; }
+    // const int* vals() const { return m_vals; }
 };
 
 
