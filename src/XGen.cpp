@@ -57,9 +57,9 @@ XGen::XMissDay* XGen::XMissDay::list_to_arr(Rcpp::List& block_list) {
     // provided by the t-th element of `block_list`
     for (int t = 0; t < block_list.size(); ++t) {
 
-	Rcpp::IntegerVector block_list_t = Rcpp::as<Rcpp::IntegerVector>(block_list[t]);
-	block_arr[t] = XMissDay(block_list_t["idx"],
-				block_list_t["prev"]);
+    	Rcpp::IntegerVector block_list_t = Rcpp::as<Rcpp::IntegerVector>(block_list[t]);
+    	block_arr[t] = XMissDay(block_list_t["idx"],
+    				block_list_t["prev"]);
     }
 
     return block_arr;

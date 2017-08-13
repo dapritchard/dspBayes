@@ -41,9 +41,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
 		Rcpp::List tau_coefs,
 		int fw_len,
 		int n_burn,
-		int n_samp,
-		int n_x_max_miss,
-		double cohort_sex_prob) {
+		int n_samp) {
 
     // initialize global variable in case the value was set to true elsewhere
     g_record_status = false;
@@ -54,8 +52,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     XiGen xi(subj_day_blocks, n_samp, true);
     CoefGen coefs(U, gamma_specs, n_samp);
     PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples
-    UProdBeta u_prod_beta(U.size());
-    XGen X(X_rcpp, x_miss_cyc, x_miss_day, n_x_max_miss, cohort_sex_prob);
+    UProdBeta ubeta(U.size());
+    XGen X(X_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
     int* X_temp = X_rcpp.begin();
 
@@ -63,22 +61,26 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     for (int s = 0; s < n_samp; s++) {
 
     	// update the latent day-specific pregnancy variables W
-    	W.sample(xi, u_prod_beta);
+    	W.sample(xi, ubeta);
 
-    	// // update the woman-specific fecundability multipliers xi
-    	xi.sample(W, phi, u_prod_beta);
+    	// update the woman-specific fecundability multipliers xi
+    	xi.sample(W, phi, ubeta);
 
-    	// update the regression coefficients gamma and psi
-    	coefs.sample(W, xi, u_prod_beta, X_temp);
-    	u_prod_beta.update_exp(X_temp);
+    	// update the regression coefficients gamma and psi, and update the
+    	// resulting values of the `exp(U_{ijk}^T * beta)`
+    	coefs.sample(W, xi, ubeta, X_temp);
+    	ubeta.update_exp(X_temp);
 
     	// update phi, the variance parameter for xi
     	phi.sample(xi);
 
+	// update missing values for the intercourse variables X
+	X.sample(W, xi, ubeta, utau);
+
 	// case: burn-in phase is over so record samples.  Note that this occurs
 	// after the samples in this scan have been taken; this is because
-	// `g_record_status` actually informs the classes to not overwrite
-	// previous data.
+	// `g_record_status` has the effect of informing the various classes to
+	// not overwrite previous data.
 	if (s == 0) g_record_status = true;
 
 	// check for user interrupt every `DSP_BAYES_N_INTER_CHECK` iterations

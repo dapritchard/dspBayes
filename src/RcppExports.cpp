@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // dsp_
-Rcpp::List dsp_(Rcpp::NumericMatrix U, Rcpp::IntegerVector X_rcpp, Rcpp::List w_day_blocks, Rcpp::IntegerVector w_to_days_idx, Rcpp::IntegerVector w_cyc_to_subj_idx, Rcpp::List subj_day_blocks, Rcpp::IntegerVector day_to_subj_idx, Rcpp::List gamma_specs, Rcpp::NumericVector phi_specs, Rcpp::List x_miss_cyc, Rcpp::List x_miss_day, Rcpp::NumericVector utau_rcpp, Rcpp::List tau_coefs, int fw_len, int n_burn, int n_samp, int n_x_max_miss, double cohort_sex_prob);
-RcppExport SEXP _dspBayes_dsp_(SEXP USEXP, SEXP X_rcppSEXP, SEXP w_day_blocksSEXP, SEXP w_to_days_idxSEXP, SEXP w_cyc_to_subj_idxSEXP, SEXP subj_day_blocksSEXP, SEXP day_to_subj_idxSEXP, SEXP gamma_specsSEXP, SEXP phi_specsSEXP, SEXP x_miss_cycSEXP, SEXP x_miss_daySEXP, SEXP utau_rcppSEXP, SEXP tau_coefsSEXP, SEXP fw_lenSEXP, SEXP n_burnSEXP, SEXP n_sampSEXP, SEXP n_x_max_missSEXP, SEXP cohort_sex_probSEXP) {
+Rcpp::List dsp_(Rcpp::NumericMatrix U, Rcpp::IntegerVector X_rcpp, Rcpp::List w_day_blocks, Rcpp::IntegerVector w_to_days_idx, Rcpp::IntegerVector w_cyc_to_subj_idx, Rcpp::List subj_day_blocks, Rcpp::IntegerVector day_to_subj_idx, Rcpp::List gamma_specs, Rcpp::NumericVector phi_specs, Rcpp::List x_miss_cyc, Rcpp::List x_miss_day, Rcpp::NumericVector utau_rcpp, Rcpp::List tau_coefs, int fw_len, int n_burn, int n_samp);
+RcppExport SEXP _dspBayes_dsp_(SEXP USEXP, SEXP X_rcppSEXP, SEXP w_day_blocksSEXP, SEXP w_to_days_idxSEXP, SEXP w_cyc_to_subj_idxSEXP, SEXP subj_day_blocksSEXP, SEXP day_to_subj_idxSEXP, SEXP gamma_specsSEXP, SEXP phi_specsSEXP, SEXP x_miss_cycSEXP, SEXP x_miss_daySEXP, SEXP utau_rcppSEXP, SEXP tau_coefsSEXP, SEXP fw_lenSEXP, SEXP n_burnSEXP, SEXP n_sampSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -27,9 +27,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type fw_len(fw_lenSEXP);
     Rcpp::traits::input_parameter< int >::type n_burn(n_burnSEXP);
     Rcpp::traits::input_parameter< int >::type n_samp(n_sampSEXP);
-    Rcpp::traits::input_parameter< int >::type n_x_max_miss(n_x_max_missSEXP);
-    Rcpp::traits::input_parameter< double >::type cohort_sex_prob(cohort_sex_probSEXP);
-    rcpp_result_gen = Rcpp::wrap(dsp_(U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, x_miss_cyc, x_miss_day, utau_rcpp, tau_coefs, fw_len, n_burn, n_samp, n_x_max_miss, cohort_sex_prob));
+    rcpp_result_gen = Rcpp::wrap(dsp_(U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, x_miss_cyc, x_miss_day, utau_rcpp, tau_coefs, fw_len, n_burn, n_samp));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -58,7 +56,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_dspBayes_dsp_", (DL_FUNC) &_dspBayes_dsp_, 18},
+    {"_dspBayes_dsp_", (DL_FUNC) &_dspBayes_dsp_, 16},
     {"_dspBayes_utest_cpp_", (DL_FUNC) &_dspBayes_utest_cpp_, 13},
     {NULL, NULL, 0}
 };

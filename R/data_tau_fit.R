@@ -25,14 +25,18 @@ get_tau_fit <- function(comb_dat, var_nm, dsp_model, use_na) {
     tau_coefs <- coef(sex_outcome_fit)
     # TODO: check if fit is the same as for geeglm? should be using this?
 
-    list(u_coefs  = tau_coefs[-1L],
-         sex_coef = tau_coefs[1L])
+    # overall proportion of intercourse in the cohort
+    cohort_sex_prob <- mean(comb_dat[[var_nm$sex]], na.rm = TRUE)
+
+    list(u_coefs         = tau_coefs[-1L],
+         sex_coef        = tau_coefs[1L],
+         cohort_sex_prob = cohort_sex_prob)
 }
 
 
 
 
-get_utau <- function(U, tau_fit, intercourse_data) {
+get_utau <- function(U, tau_fit, intercourse_data, use_na) {
 
     # case: we're not imputing missing for sex, so return some empty data
     if (! ((use_na == "sex") || (use_na == "all"))) {
@@ -42,12 +46,12 @@ get_utau <- function(U, tau_fit, intercourse_data) {
     # assert that the tau model fit is consistent with the design matrix
     # expansion of the data, U.  This is an internal check since these should
     # always be consistent unless there is a bug in the code.
-    if (! identical(colnames(U), names(tau))) {
-        stop('internal inconsistency, the names for "U" do not match those for "tau"\n',
-             'U:  ', colnames(U), '\n', 'tau:  ', names(tau))
+    if (! identical(colnames(U), names(tau_fit$u_coefs))) {
+        stop('internal inconsistency, the names for "U" do not match those for "tau_fit"\n',
+             'U:  ', colnames(U), '\ntau_fit:  ', names(tau_fit$u_coefs))
     }
 
     # calculates `(U, sex_yester) %*% (tau, sex_coef)`.  The reason that
     # `sex_yester * sex_coef` term is calculated using the
-    U %*% tau$u_coefs + ifelse(intercourse_data$sex_yester == 1L, tau$sex_coef, 0)
+    U %*% tau_fit$u_coefs + ifelse(intercourse_data$sex_yester == 1L, tau_fit$sex_coef, 0)
 }
