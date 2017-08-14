@@ -5,7 +5,7 @@ dsp_ <- function(U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj
     .Call('_dspBayes_dsp_', PACKAGE = 'dspBayes', U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, x_miss_cyc, x_miss_day, utau_rcpp, tau_coefs, fw_len, n_burn, n_samp)
 }
 
-utest_cpp_ <- function(U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, fw_len, n_burn, n_samp, test_data) {
-    .Call('_dspBayes_utest_cpp_', PACKAGE = 'dspBayes', U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, fw_len, n_burn, n_samp, test_data)
+utest_cpp_ <- function(U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, x_miss_cyc, x_miss_day, utau_rcpp, tau_coefs, fw_len, n_burn, n_samp, test_data) {
+    .Call('_dspBayes_utest_cpp_', PACKAGE = 'dspBayes', U, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, x_miss_cyc, x_miss_day, utau_rcpp, tau_coefs, fw_len, n_burn, n_samp, test_data)
 }
 

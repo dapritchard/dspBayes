@@ -9,6 +9,7 @@
 #include "UTestGammaCateg.h"
 #include "UTestPhiGen.h"
 #include "UTestWGen.h"
+#include "UTestXGen.h"
 #include "UTestXiGen.h"
 
 extern int* d2s;
@@ -36,6 +37,10 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 	       Rcpp::IntegerVector day_to_subj_idx,
 	       Rcpp::List gamma_specs,
 	       Rcpp::NumericVector phi_specs,
+	       Rcpp::List x_miss_cyc,
+	       Rcpp::List x_miss_day,
+	       Rcpp::NumericVector utau_rcpp,
+	       Rcpp::List tau_coefs,
 	       int fw_len,
 	       int n_burn,
 	       int n_samp,
@@ -55,6 +60,10 @@ int utest_cpp_(Rcpp::NumericMatrix U,
     				day_to_subj_idx,
     				gamma_specs,
     				phi_specs,
+				x_miss_cyc,
+				x_miss_day,
+				utau_rcpp,
+				tau_coefs,
     				fw_len,
     				n_burn,
     				n_samp,
@@ -66,6 +75,7 @@ int utest_cpp_(Rcpp::NumericMatrix U,
     runner.addTest(GammaCategTest::suite());
     runner.addTest(PhiGenTest::suite());
     runner.addTest(WGenTest::suite());
+    runner.addTest(XGenTest::suite());
     runner.addTest(XiGenTest::suite());
 
     // run() returns true if successful, false otherwise

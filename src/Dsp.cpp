@@ -55,7 +55,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     UProdBeta ubeta(U.size());
     XGen X(X_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
-    int* X_temp = X_rcpp.begin();
+    // int* X_temp = X_rcpp.begin();
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
@@ -68,8 +68,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
 
     	// update the regression coefficients gamma and psi, and update the
     	// resulting values of the `exp(U_{ijk}^T * beta)`
-    	coefs.sample(W, xi, ubeta, X_temp);
-    	ubeta.update_exp(X_temp);
+    	coefs.sample(W, xi, ubeta, X.vals());
+    	ubeta.update_exp(X.vals());
 
     	// update phi, the variance parameter for xi
     	phi.sample(xi);

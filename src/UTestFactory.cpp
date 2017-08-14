@@ -1,6 +1,8 @@
 #include <algorithm>
 #include "Rcpp.h"
+
 #include "UTestFactory.h"
+#include "XGen.h"
 #include "XiGen.h"
 #include "WGen.h"
 #include "PhiGen.h"
@@ -13,6 +15,7 @@ using Rcpp::IntegerVector;
 
 double UTestFactory::epsilon = 0.0;
 
+
 UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
 			   Rcpp::IntegerVector X_rcpp,
 			   Rcpp::List w_day_blocks,
@@ -22,6 +25,10 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
 			   Rcpp::IntegerVector day_to_subj_idx,
 			   Rcpp::List gamma_specs,
 			   Rcpp::NumericVector phi_specs,
+			   Rcpp::List x_miss_cyc,
+			   Rcpp::List x_miss_day,
+			   Rcpp::NumericVector utau_rcpp,
+			   Rcpp::List tau_coefs,
 			   int fw_len,
 			   int n_burn,
 			   int n_samp,
@@ -36,6 +43,10 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix U,
     day_to_subj_idx(day_to_subj_idx),
     gamma_specs(gamma_specs),
     phi_specs(phi_specs),
+    x_miss_cyc(x_miss_cyc),
+    x_miss_day(x_miss_day),
+    utau_rcpp(utau_rcpp),
+    tau_coefs(tau_coefs),
     fw_len(fw_len),
     n_burn(n_burn),
     n_samp(n_samp),
@@ -106,6 +117,11 @@ UProdBeta* UTestFactory::ubeta() {
 }
 
 
+UProdTau* UTestFactory::utau() {
+    return new UProdTau(utau_rcpp, tau_coefs);
+}
+
+
 GammaCateg* UTestFactory::gamma_categ_all() {
     GammaCateg* all = new GammaCateg(U, as<NumericVector>(input_gamma_specs["gamma_specs_all"]));
     all->m_beta_val = target_data_gamma_categ["beta_prev"];
@@ -134,10 +150,22 @@ GammaCateg* UTestFactory::gamma_categ_zero_half() {
 }
 
 
-int** UTestFactory::X() {
+XGen* UTestFactory::X() {
+    return new XGen(X_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
+}
+
+
+int** UTestFactory::X_temp() {
     int** X = new int*;
-    *X = X_rcpp.begin();;
+    *X = X_rcpp.begin();
     return X;
+}
+
+
+XGen::XMissDay** UTestFactory::XMissDay() {
+    XGen::XMissDay** miss_day = new XGen::XMissDay*;
+    *miss_day = XGen::XMissDay::list_to_arr(x_miss_day);
+    return miss_day;
 }
 
 

@@ -94,7 +94,7 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
 			const UProdBeta& ubeta,
 			const UProdTau& utau) {
 
-    double prior_prob_yes, posterior_prob_yes, xi_i;
+    double prior_prob_yes, posterior_prob_yes;
     int prev_day_sex;
 
     // the first and one past the last day in `miss_cycle` with missing
@@ -103,7 +103,7 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
     const XMissDay* miss_end = curr_miss_day + miss_cyc->n_days;
 
     // value of xi for the subject that `miss_cycl` corresponds to
-    xi_i = xi.vals()[miss_cyc->subj_idx];
+    const double xi_i = xi.vals()[miss_cyc->subj_idx];
 
     // if we don't have missing intercourse data for the day before the fertile
     // window, then we sample it using a global probability.  Note that
@@ -114,12 +114,15 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
 	prev_day_sex = sample_day_before_fw_sex();
     }
 
-    //
+    // each iteration samples `X_{ijk_r}` for the day corresponding to
+    // `curr_miss_day`
     for ( ; curr_miss_day != miss_end; ++curr_miss_day) {
 
+	const int curr_day_idx = curr_miss_day->idx;
+
 	// case: W_{ijk_r} > 0, so intercourse must have occured on this day
-	if (W.vals()[curr_miss_day->idx] > 0) {
-	    m_vals[curr_miss_day->idx] = prev_day_sex = 1;
+	if (W.vals()[curr_day_idx] > 0) {
+	    m_vals[curr_day_idx] = prev_day_sex = 1;
 	    continue;
 	}
 
@@ -139,10 +142,9 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
 	// calculate `P(W_{ijk_r} = 0 | X_{ijk_r} = 1)`
 	posterior_prob_yes = calc_posterior_prob(curr_miss_day, ubeta, xi_i);
 
-	// sample `X_{ijk_r}
-	m_vals[curr_miss_day->idx] = prev_day_sex = sample_x_ijk(curr_miss_day,
-								 prior_prob_yes,
-								 posterior_prob_yes);
+	// sample `X_{ijk_r}`
+	m_vals[curr_day_idx] = prev_day_sex = sample_x_ijk(prior_prob_yes,
+							   posterior_prob_yes);
     }
 }
 
@@ -173,8 +175,7 @@ inline double XGen::calc_posterior_prob(const XMissDay* miss_day,
 
 
 
-inline int XGen::sample_x_ijk(const XMissDay* miss_day,
-			      const double prior_prob_yes,
+inline int XGen::sample_x_ijk(const double prior_prob_yes,
 			      const double posterior_prob_yes) {
 
     double prob_sex_no, prob_sex_yes, u;

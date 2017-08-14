@@ -6,7 +6,9 @@
 #include "XiGen.h"
 #include "WGen.h"
 #include "PhiGen.h"
+#include "XGen.h"
 #include "UProdBeta.h"
+#include "UProdTau.h"
 
 
 class UTestFactory {
@@ -25,6 +27,10 @@ public:
 		 Rcpp::IntegerVector day_to_subj_idx,
 		 Rcpp::List gamma_specs,
 		 Rcpp::NumericVector phi_specs,
+		 Rcpp::List x_miss_cyc,
+		 Rcpp::List x_miss_day,
+		 Rcpp::NumericVector utau_rcpp,
+		 Rcpp::List tau_coefs,
 		 int fw_len,
 		 int n_burn,
 		 int n_samp,
@@ -39,9 +45,12 @@ public:
     XiGen* xi_no_rec();
     WGen* W();
     UProdBeta* ubeta();
+    UProdTau* utau();
     PhiGen* phi();
     PhiGen* phi_no_rec();
-    int** X();
+    XGen* X();
+    int** X_temp();
+    XGen::XMissDay** XMissDay();
     static bool eq_dbl(double a, double b);
 
     // usual input
@@ -54,6 +63,10 @@ public:
     Rcpp::IntegerVector day_to_subj_idx;
     Rcpp::List gamma_specs;
     Rcpp::NumericVector phi_specs;
+    Rcpp::List x_miss_cyc;
+    Rcpp::List x_miss_day;
+    Rcpp::NumericVector utau_rcpp;
+    Rcpp::List tau_coefs;
     int fw_len;
     int n_burn;
     int n_samp;

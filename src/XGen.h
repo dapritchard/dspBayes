@@ -64,11 +64,14 @@ public:
 				      const UProdBeta& ubeta,
 				      const double xi_i);
 
-    static int sample_x_ijk(const XMissDay* miss_day,
-			    const double prior_prob_yes,
+    static int sample_x_ijk(const double prior_prob_yes,
 			    const double posterior_prob_yes);
 
     int sample_day_before_fw_sex() const;
+
+    int* vals() { return m_vals; }
+    const int* vals() const { return m_vals; }
+    int n_days() const { return m_x_rcpp.size(); }
 
     // int calc_prior_probs(double prior_probs[][2],
     // 			 const PregCyc* curr_miss_cyc,
