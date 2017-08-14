@@ -7,7 +7,7 @@ utest_w <- function(dsp_data, xi, ubeta, seed_val) {
 
     # for convenience
     w_day_blocks <- dsp_data$w_day_blocks
-    X <- dsp_data$X
+    X <- dsp_data$intercourse$X
 
     # container to store samples in
     w_list <- vector("list", length(w_day_blocks))

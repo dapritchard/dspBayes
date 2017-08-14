@@ -37,7 +37,7 @@ utest_xi <- function(dsp_data, W, ubeta, phi_val, seed_val) {
         curr_start_day <- curr_subj_day_block["beg_idx"] + 1L
         curr_end_day <- curr_subj_day_block["beg_idx"] + curr_subj_day_block["n_days"]
         curr_day_idx <- curr_start_day : curr_end_day
-        curr_exp_beta_sum <- sum(dsp_data$X[curr_day_idx] * exp(ubeta[curr_day_idx]))
+        curr_exp_beta_sum <- sum(dsp_data$intercourse$X[curr_day_idx] * exp(ubeta[curr_day_idx]))
 
         # sample i-th value of xi
         target_samples[i] <- rgamma(1L, phi_val + curr_w_sum, phi_val + curr_exp_beta_sum)

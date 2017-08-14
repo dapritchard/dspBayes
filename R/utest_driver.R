@@ -23,7 +23,7 @@ utest_cpp <- function(dsp_data,
 
     # sample U * beta
     set.seed(102L)
-    ubeta <- rnorm(length(dsp_data$X))
+    ubeta <- rnorm(length(dsp_data$intercourse$X))
 
     # phi testing data
     phi_seed <- 99L
@@ -32,6 +32,10 @@ utest_cpp <- function(dsp_data,
     # W testing data
     w_seed <- 207L
     target_samples_w <- utest_w(dsp_data, xi, ubeta, w_seed)
+
+    # X testing data
+    x_seed <- 7201L
+    out_utest_x <- utest_x(dsp_data, W, xi, ubeta, dsp_data$utau, x_seed)
 
     # xi testing data
     xi_seed <- 21L
@@ -45,25 +49,28 @@ utest_cpp <- function(dsp_data,
     seed_vals <- c(gamma_categ = gam_cat_seed,
                    phi         = phi_seed,
                    W           = w_seed,
+                   X           = x_seed,
                    xi          = xi_seed)
 
     # collect testing objects
     test_data <- list(input_gamma_specs          = out_utest_gamma_categ$input_specs,
                       input_ubeta                = ubeta,
                       input_w                    = W,
+                      input_x                    = out_utest_x$test_data,
                       input_xi                   = xi,
                       target_data_gamma_categ    = out_utest_gamma_categ$target_data,
                       target_data_phi            = out_utest_phi$target_data,
                       target_samples_gamma_categ = out_utest_gamma_categ$target_samples,
                       target_samples_phi         = out_utest_phi$target_samples,
                       target_samples_w           = target_samples_w,
+                      target_samples_x           = out_utest_x$target_output,
                       target_samples_xi          = target_samples_xi,
                       seed_vals                  = seed_vals,
                       epsilon                    = 1e-12)
 
     # pass testing data to C++ testing driver
     utest_cpp_(U                 = dsp_data$U,
-               X_rcpp            = dsp_data$X,
+               X_rcpp            = dsp_data$intercourse$X,
                w_day_blocks      = dsp_data$w_day_blocks,
                w_to_days_idx     = dsp_data$w_to_days_idx,
                w_cyc_to_subj_idx = dsp_data$w_cyc_to_subj_idx,
@@ -71,6 +78,10 @@ utest_cpp <- function(dsp_data,
                day_to_subj_idx   = dsp_data$day_to_subj_idx,
                gamma_specs       = gamma_hyper_list,
                phi_specs         = phi_specs,
+               x_miss_cyc        = dsp_data$intercourse$miss_cyc,
+               x_miss_day        = dsp_data$intercourse$miss_day,
+               utau_rcpp         = dsp_data$utau,
+               tau_coefs         = dsp_data$tau_fit,
                fw_len            = 5,
                n_burn            = 0,
                n_samp            = n_samp,

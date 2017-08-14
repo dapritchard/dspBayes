@@ -67,7 +67,7 @@ void GammaCategTest::setUp() {
     ubeta = g_ut_factory.ubeta();
 
     // construct X
-    X = g_ut_factory.X();
+    X = g_ut_factory.X_temp();
 }
 
 

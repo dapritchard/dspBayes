@@ -23,7 +23,7 @@ utest_gamma_categ <- function(dsp_data, W, xi, ubeta, seed_val) {
 
     calc_b_tilde <- function(dsp_data, hyp_b, xi_day, ubeta_no_h, h) {
         U_h <- dsp_data$U[, h + 1L]
-        X <- dsp_data$X
+        X <- dsp_data$intercourse$X
         hyp_b + sum(U_h * X * (exp(log(xi_day) + ubeta_no_h)))
     }
 

@@ -157,8 +157,8 @@ inline double XGen::calc_prior_prob(const XMissDay* miss_day,
 
     const double* utau_vals = utau.vals();
     return prev_day_sex ?
-	1 / (1 + exp(utau_vals[miss_day->idx] + m_sex_coef)) :
-	1 / (1 + exp(utau_vals[miss_day->idx]));
+	1 / (1 + exp(-utau_vals[miss_day->idx] - m_sex_coef)) :
+	1 / (1 + exp(-utau_vals[miss_day->idx]));
 }
 
 

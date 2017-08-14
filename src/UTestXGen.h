@@ -54,7 +54,6 @@ class XGenTest : public CppUnit::TestFixture {
     double prior_prob_yes;
     double posterior_prob_yes;
     double xi_i;
-    int prev_day_sex;
     int seed_val;
     double epsilon;
 
@@ -62,7 +61,8 @@ class XGenTest : public CppUnit::TestFixture {
     Rcpp::IntegerVector target_x_samples;
     Rcpp::IntegerVector target_x_ijk_samples;
     Rcpp::IntegerVector target_day_before_samples;
-    double target_prior_prob;
+    double target_prior_prob_no_prev;
+    double target_prior_prob_yes_prev;
     double target_posterior_prob;
 };
 

@@ -85,8 +85,11 @@ void XGenTest::test_sample() {
 
 void XGenTest::test_calc_prior_prob() {
 
-    double out = X->calc_prior_prob(*miss_day, *utau, prev_day_sex);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(target_prior_prob, out, epsilon);
+    double out_no = X->calc_prior_prob(*miss_day, *utau, 0);
+    double out_yes = X->calc_prior_prob(*miss_day, *utau, 1);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(target_prior_prob_no_prev, out_no, epsilon);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(target_prior_prob_yes_prev, out_yes, epsilon);
 }
 
 
