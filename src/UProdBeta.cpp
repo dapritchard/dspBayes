@@ -50,8 +50,6 @@ void UProdBeta::add_uh_prod_beta_h(const double* U_h, double beta_h) {
 
 void UProdBeta::update_exp(int* X) {
     for (int i = 0; i < m_n_days; i++) {
-	m_exp_vals[i] = X[i] ?
-	    std::exp(m_vals[i]) :
-	    0;
+	m_exp_vals[i] = std::exp(m_vals[i]);
     }
 }

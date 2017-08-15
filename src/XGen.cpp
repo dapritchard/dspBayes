@@ -22,7 +22,7 @@ XGen::XGen(Rcpp::IntegerVector& X_rcpp,
 	   double sex_coef) :
     m_x_rcpp(X_rcpp),
     m_vals(X_rcpp.begin()),
-    m_miss_cyc(PregCyc::list_to_arr(miss_cyc)),
+    m_miss_cyc(XMissCyc::list_to_arr(miss_cyc)),
     m_n_miss_cyc(miss_cyc.size()),
     m_miss_day(XGen::XMissDay::list_to_arr(miss_day)),
     m_cohort_sex_prob(cohort_sex_prob),
@@ -41,8 +41,37 @@ XGen::~XGen() {
 
 
 
+// construct an array of `XMissCyc`s based upon an `Rcpp::List` that provides
+// the specifications for each block.  In more detail, an array of `XMissCyc`s is
+// created with length given by the length of `block_list`.  Furthermore, it is
+// assumed that each element in `block_list` stores integer values that can be
+// accessed using names `beg_idx`, `n_days`, `subj_idx`, and `preg`, and which
+// are used to initialize the struct's member values of the same name.  The
+// return value is a pointer to the beginning of the array.
+
+XGen::XMissCyc* XGen::XMissCyc::list_to_arr(Rcpp::List& block_list) {
+
+    XMissCyc* block_arr = new XMissCyc[block_list.size()];
+
+    // each iteration constructs a new struct based upon the information
+    // provided by the t-th element of `block_list`
+    for (int t = 0; t < block_list.size(); ++t) {
+
+    	Rcpp::IntegerVector block_list_t = Rcpp::as<Rcpp::IntegerVector>(block_list[t]);
+    	block_arr[t] = XMissCyc(block_list_t["beg_idx"],
+				block_list_t["n_days"],
+				block_list_t["subj_idx"],
+				block_list_t["preg"]);
+    }
+
+    return block_arr;
+}
+
+
+
+
 // construct an array of `XMissDay`s based upon an `Rcpp::List` that provides
-// the specifications for each block.  In more detail, an array of `PregCyc`s
+// the specifications for each block.  In more detail, an array of `XMissDay`s
 // is created with length given by the length of `block_list`.  Furthermore, it
 // is assumed that each element in `block_list` stores integer values that can
 // be accessed using names `idx` and `prev` and which are used to initialize the
@@ -74,25 +103,26 @@ void XGen::sample(const WGen& W,
 		  const UProdBeta& ubeta,
 		  const UProdTau& utau) {
 
-    const PregCyc* curr_miss_cyc = m_miss_cyc;
-    const PregCyc* cyc_end = m_miss_cyc + m_n_miss_cyc;
+    const XMissCyc* curr_miss_cyc = m_miss_cyc;
+    const XMissCyc* cyc_end = m_miss_cyc + m_n_miss_cyc;
+    const int* w_vals = W.vals();
 
     // each iteration samples the missing intercourse values for the current
     // block of days specified by `curr_miss_cyc`
     for ( ; curr_miss_cyc != cyc_end; ++curr_miss_cyc) {
 
-	sample_cycle(curr_miss_cyc, W, xi, ubeta, utau);
+	w_vals = sample_cycle(curr_miss_cyc, w_vals, xi, ubeta, utau);
     }
 }
 
 
 
 
-void XGen::sample_cycle(const PregCyc* miss_cyc,
-			const WGen& W,
-			const XiGen& xi,
-			const UProdBeta& ubeta,
-			const UProdTau& utau) {
+const int* XGen::sample_cycle(const XMissCyc* miss_cyc,
+			      const int* w_vals,
+			      const XiGen& xi,
+			      const UProdBeta& ubeta,
+			      const UProdTau& utau) {
 
     double prior_prob_yes, posterior_prob_yes;
     int prev_day_sex;
@@ -116,14 +146,13 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
 
     // each iteration samples `X_{ijk_r}` for the day corresponding to
     // `curr_miss_day`
-    const int n_days = miss_cyc->n_days;
-    for (int r = miss_cyc->beg_idx; r < n_days; ++r) {
-    // for ( ; curr_miss_day != miss_end; ++curr_miss_day) {
+    const int r_end = miss_cyc->beg_idx + miss_cyc->n_days;
+    for (int r = miss_cyc->beg_idx; r < r_end; ++r) {
 
 	const int curr_day_idx = m_miss_day[r].idx;
 
 	// case: W_{ijk_r} > 0, so intercourse must have occured on this day
-	if (W.vals()[curr_day_idx] > 0) {
+	if (miss_cyc->preg && *w_vals++) {
 	    m_vals[curr_day_idx] = prev_day_sex = 1;
 	    continue;
 	}
@@ -148,6 +177,8 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
 	m_vals[curr_day_idx] = prev_day_sex = sample_x_ijk(prior_prob_yes,
 							   posterior_prob_yes);
     }
+
+    return w_vals;
 }
 
 

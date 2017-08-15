@@ -17,8 +17,8 @@ extern UTestFactory g_ut_factory;
 
 XGenTest::XGenTest() :
     X_rcpp(g_ut_factory.X_rcpp),
-    // miss_cyc(g_ut_factory.x_miss_cyc),
-    // miss_day(XGen::XMissDay::list_to_arr(g_ut_factory.x_miss_day)),
+    miss_cyc_rcpp(g_ut_factory.x_miss_cyc),
+    miss_day_rcpp(g_ut_factory.x_miss_day),
     cohort_sex_prob(g_ut_factory.tau_coefs["cohort_sex_prob"]),
     sex_coef(g_ut_factory.tau_coefs["sex_coef"]),
     miss_day_idx((int) g_ut_factory.input_x["miss_day_idx"]),
@@ -41,7 +41,6 @@ XGenTest::XGenTest() :
 
 void XGenTest::setUp() {
 
-    X     = g_ut_factory.X();
     W     = g_ut_factory.W();
     xi    = g_ut_factory.xi_no_rec();
     ubeta = g_ut_factory.ubeta();
@@ -49,30 +48,40 @@ void XGenTest::setUp() {
 
     // copy X data so that tests don't cause persistent changes
     x_rcpp_copy = new Rcpp::IntegerVector(X_rcpp.begin(), X_rcpp.end());
-    X->m_x_rcpp = *x_rcpp_copy;
-    X->m_vals = x_rcpp_copy->begin();
+    X = new XGen(*x_rcpp_copy, miss_cyc_rcpp, miss_day_rcpp, cohort_sex_prob, sex_coef);
+
 }
 
 
 
 
 void XGenTest::tearDown() {
-    // delete x_rcpp_copy;
-    // delete X;
+    delete X;
     delete W;
     delete xi;
     delete ubeta;
     delete utau;
+    delete x_rcpp_copy;
 }
 
 
 
 
 void XGenTest::test_constructor() {
+
+    PregCyc* miss_cyc = PregCyc::list_to_arr(miss_cyc_rcpp);
+    XGen::XMissDay* miss_day = XGen::XMissDay::list_to_arr(miss_day_rcpp);
+
     CPPUNIT_ASSERT(Rcpp::is_true(Rcpp::all(X_rcpp == X->m_x_rcpp)));
-    // CPPUNIT_ASSERT_EQUAL((int) miss_cyc.size(), X->m_n_miss_cyc);
+    CPPUNIT_ASSERT_EQUAL(X->m_vals, X->m_x_rcpp.begin());
+    // TODO: test m_miss_cyc
+    CPPUNIT_ASSERT_EQUAL((int) miss_cyc_rcpp.size(), X->m_n_miss_cyc);
+    // TODO: test m_miss_day
     CPPUNIT_ASSERT_EQUAL(cohort_sex_prob, X->m_cohort_sex_prob);
     CPPUNIT_ASSERT_EQUAL(sex_coef, X->m_sex_coef);
+
+    delete[] miss_cyc;
+    delete[] miss_day;
 }
 
 
@@ -80,31 +89,35 @@ void XGenTest::test_constructor() {
 
 void XGenTest::test_sample() {
 
-    // // register seed function
-    // Rcpp::Environment base("package:base");
-    // Rcpp::Function set_seed = base["set.seed"];
-    // set_seed(seed_val);
+    // register seed function
+    Rcpp::Environment base("package:base");
+    Rcpp::Function set_seed = base["set.seed"];
+    set_seed(seed_val);
 
-    // X->sample(*W, *xi, *ubeta, *utau);
-    // CPPUNIT_ASSERT(std::equal(target_x_samples.begin(),
-    // 			      target_x_samples.end(),
-    // 			      X->vals()));
+    X->sample(*W, *xi, *ubeta, *utau);
+    CPPUNIT_ASSERT(std::equal(target_x_samples.begin(),
+    			      target_x_samples.end(),
+    			      X->vals()));
 }
 
 
 
-
+// // TODO: test a single cycle?
 // void XGenTest::test_sample_cycle() {
+
+//     PregCyc* miss_cyc = PregCyc::list_to_arr(miss_cyc_rcpp);
 
 //     // register seed function
 //     Rcpp::Environment base("package:base");
 //     Rcpp::Function set_seed = base["set.seed"];
 //     set_seed(seed_val);
 
-//     X->sample_cycle(miss_cyc, W, xi, ubeta, utau);
+//     X->sample_cycle(miss_cyc + , W, xi, ubeta, utau);
 //     CPPUNIT_ASSERT(std::equal(target_sample_cycle.begin(),
 // 			      target_sample_cycle.end(),
 // 			      X.vals() + miss_day[miss_cyc->beg_idx].idx));
+
+//     delete[] miss_cyc;
 // }
 
 

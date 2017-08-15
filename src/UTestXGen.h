@@ -48,8 +48,8 @@ class XGenTest : public CppUnit::TestFixture {
 
     // testing data
     Rcpp::IntegerVector X_rcpp;
-    // Rcpp::List miss_cyc;
-    // XGen::XMissDay** miss_day;
+    Rcpp::List miss_cyc_rcpp;
+    Rcpp::List miss_day_rcpp;
     double cohort_sex_prob;
     double sex_coef;
     int miss_day_idx;

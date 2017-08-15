@@ -15,6 +15,7 @@ class XGen {
 
 public:
 
+    class XMissCyc;
     class XMissDay;
 
     // storage for the X values
@@ -22,7 +23,7 @@ public:
     Rcpp::IntegerVector::iterator m_vals;
 
     // information about the number of X missing for a given cycle
-    const PregCyc* m_miss_cyc;
+    const XMissCyc* m_miss_cyc;
     const int m_n_miss_cyc;
 
     // tracks the indices of the missing values in X as well as whether
@@ -50,11 +51,11 @@ public:
 		const UProdBeta& ubeta,
 		const UProdTau& utau);
 
-    void sample_cycle(const PregCyc* miss_cyc,
-		      const WGen& W,
-		      const XiGen& xi,
-		      const UProdBeta& ubeta,
-		      const UProdTau& utau);
+    const int* sample_cycle(const XMissCyc* miss_cyc,
+			    const int* W,
+			    const XiGen& xi,
+			    const UProdBeta& ubeta,
+			    const UProdTau& utau);
 
     double calc_prior_prob(const UProdTau& utau,
 			   const int miss_day_idx,
@@ -107,6 +108,25 @@ public:
 
     // int* vals() { return m_vals; }
     // const int* vals() const { return m_vals; }
+};
+
+
+
+
+class XGen::XMissCyc : public PregCyc {
+
+public:
+
+    bool preg;
+
+    XMissCyc() : PregCyc(), preg(false) {}
+
+    XMissCyc(int beg_idx, int n_days, int subj_idx, int preg) :
+    	PregCyc(beg_idx, n_days, subj_idx),
+    	preg((bool) preg) {
+    }
+
+    static XMissCyc* list_to_arr(Rcpp::List& block_list);
 };
 
 
