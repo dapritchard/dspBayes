@@ -3,9 +3,10 @@
 
 #include "Rcpp.h"
 #include "WGen.h"
+#include "XGen.h"
 #include "XiGen.h"
 #include "UProdBeta.h"
-#include "UTestFactory.h"
+#include "UProdTau.h"
 #include "UTestFactory.h"
 #include "cppunit/extensions/HelperMacros.h"
 
@@ -43,14 +44,16 @@ class XGenTest : public CppUnit::TestFixture {
     XiGen* xi;
     UProdBeta* ubeta;
     UProdTau* utau;
+    Rcpp::IntegerVector* x_rcpp_copy;
 
     // testing data
     Rcpp::IntegerVector X_rcpp;
-    Rcpp::List miss_cyc;
-    XGen::XMissDay** miss_day;
-    // Rcpp::List miss_day_rcpp;
+    // Rcpp::List miss_cyc;
+    // XGen::XMissDay** miss_day;
     double cohort_sex_prob;
     double sex_coef;
+    int miss_day_idx;
+    int day_idx;
     double prior_prob_yes;
     double posterior_prob_yes;
     double xi_i;

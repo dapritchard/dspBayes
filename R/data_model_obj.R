@@ -298,8 +298,8 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
     # intercourse observation
     for (i in seq_along(x_miss_idx)) {
         curr_idx <- x_miss_idx[i]
-        x_miss_day[[i]] <- c(nonmiss_idx = curr_idx - 1L,
-                             prev        = sex_yester[curr_idx])
+        x_miss_day[[i]] <- c(idx  = curr_idx - 1L,
+                             prev = sex_yester[curr_idx])
     }
 
     # if (length(intercourse_data$miss_day > 0L)) {

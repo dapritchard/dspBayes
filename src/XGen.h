@@ -56,13 +56,13 @@ public:
 		      const UProdBeta& ubeta,
 		      const UProdTau& utau);
 
-    double calc_prior_prob(const XMissDay* miss_day,
-			   const UProdTau& utau,
+    double calc_prior_prob(const UProdTau& utau,
+			   const int miss_day_idx,
 			   const int prev_day_sex) const;
 
-    static double calc_posterior_prob(const XMissDay* miss_day,
-				      const UProdBeta& ubeta,
-				      const double xi_i);
+    static double calc_posterior_prob(const UProdBeta& ubeta,
+				      const double xi_i,
+				      const int day_idx);
 
     static int sample_x_ijk(const double prior_prob_yes,
 			    const double posterior_prob_yes);

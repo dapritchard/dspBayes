@@ -75,7 +75,7 @@ int utest_cpp_(Rcpp::NumericMatrix U,
     runner.addTest(GammaCategTest::suite());
     runner.addTest(PhiGenTest::suite());
     runner.addTest(WGenTest::suite());
-    // runner.addTest(XGenTest::suite());
+    runner.addTest(XGenTest::suite());
     runner.addTest(XiGenTest::suite());
 
     // run() returns true if successful, false otherwise

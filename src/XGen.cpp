@@ -97,10 +97,10 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
     double prior_prob_yes, posterior_prob_yes;
     int prev_day_sex;
 
-    // the first and one past the last day in `miss_cycle` with missing
-    // intercourse data
-    const XMissDay* curr_miss_day = m_miss_day + miss_cyc->beg_idx;
-    const XMissDay* miss_end = curr_miss_day + miss_cyc->n_days;
+    // // the first and one past the last day in `miss_cycle` with missing
+    // // intercourse data
+    // const XMissDay* curr_miss_day = m_miss_day + miss_cyc->beg_idx;
+    // const XMissDay* miss_end = curr_miss_day + miss_cyc->n_days;
 
     // value of xi for the subject that `miss_cycl` corresponds to
     const double xi_i = xi.vals()[miss_cyc->subj_idx];
@@ -110,15 +110,17 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
     // `curr_miss_day` need not be the first day in the fertile window, but if
     // not then the intercourse data for the previous day is known and hence
     // this conditional is still valid.
-    if (curr_miss_day->prev == SEX_MISS) {
+    if (m_miss_day[miss_cyc->beg_idx].prev == SEX_MISS) {
 	prev_day_sex = sample_day_before_fw_sex();
     }
 
     // each iteration samples `X_{ijk_r}` for the day corresponding to
     // `curr_miss_day`
-    for ( ; curr_miss_day != miss_end; ++curr_miss_day) {
+    const int n_days = miss_cyc->n_days;
+    for (int r = miss_cyc->beg_idx; r < n_days; ++r) {
+    // for ( ; curr_miss_day != miss_end; ++curr_miss_day) {
 
-	const int curr_day_idx = curr_miss_day->idx;
+	const int curr_day_idx = m_miss_day[r].idx;
 
 	// case: W_{ijk_r} > 0, so intercourse must have occured on this day
 	if (W.vals()[curr_day_idx] > 0) {
@@ -132,15 +134,15 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
 	// `prev_day_sex` is given by the known value rather than whatever
 	// value was previous sampled (i.e. the previous missing day was 2
 	// or more days ago).
-	if (curr_miss_day->prev != SEX_MISS) {
-	    prev_day_sex = curr_miss_day->prev;
+	if (m_miss_day[r].prev != SEX_MISS) {
+	    prev_day_sex = m_miss_day[r].prev;
 	}
 
 	// calculate `P(X_{ijk_r} = 1 | X_{ij{k_r-1}})`
-	prior_prob_yes = calc_prior_prob(curr_miss_day, utau, prev_day_sex);
+	prior_prob_yes = calc_prior_prob(utau, r, prev_day_sex);
 
 	// calculate `P(W_{ijk_r} = 0 | X_{ijk_r} = 1)`
-	posterior_prob_yes = calc_posterior_prob(curr_miss_day, ubeta, xi_i);
+	posterior_prob_yes = calc_posterior_prob(ubeta, xi_i, curr_day_idx);
 
 	// sample `X_{ijk_r}`
 	m_vals[curr_day_idx] = prev_day_sex = sample_x_ijk(prior_prob_yes,
@@ -151,25 +153,25 @@ void XGen::sample_cycle(const PregCyc* miss_cyc,
 
 
 
-inline double XGen::calc_prior_prob(const XMissDay* miss_day,
-				    const UProdTau& utau,
+inline double XGen::calc_prior_prob(const UProdTau& utau,
+				    const int miss_day_idx,
 				    const int prev_day_sex) const {
 
     const double* utau_vals = utau.vals();
     return prev_day_sex ?
-	1 / (1 + exp(-utau_vals[miss_day->idx] - m_sex_coef)) :
-	1 / (1 + exp(-utau_vals[miss_day->idx]));
+	1 / (1 + exp(-utau_vals[miss_day_idx] - m_sex_coef)) :
+	1 / (1 + exp(-utau_vals[miss_day_idx]));
 }
 
 
 
 
-inline double XGen::calc_posterior_prob(const XMissDay* miss_day,
-					const UProdBeta& ubeta,
-					const double xi_i) {
+inline double XGen::calc_posterior_prob(const UProdBeta& ubeta,
+					const double xi_i,
+					const int day_idx) {
 
     const double* ubeta_exp_vals = ubeta.exp_vals();
-    return exp(-xi_i * ubeta_exp_vals[miss_day->idx]);
+    return exp(-xi_i * ubeta_exp_vals[day_idx]);
 }
 
 

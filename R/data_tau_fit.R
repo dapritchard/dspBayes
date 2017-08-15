@@ -51,7 +51,7 @@ get_utau <- function(U, tau_fit, intercourse_data, use_na) {
              'U:  ', colnames(U), '\ntau_fit:  ', names(tau_fit$u_coefs))
     }
 
-    miss_idx <- sapply(intercourse_data$miss_day, function(x) x["nonmiss_idx"] + 1L)
+    miss_idx <- sapply(intercourse_data$miss_day, function(x) x["idx"] + 1L)
     tau <- matrix(tau_fit$u_coefs, ncol = 1L)
     drop(U[miss_idx, , drop = FALSE] %*% tau)
 }

@@ -75,12 +75,14 @@ public:
     Rcpp::List input_gamma_specs;
     Rcpp::NumericVector input_ubeta;
     Rcpp::NumericVector input_w;
+    Rcpp::NumericVector input_x;
     Rcpp::NumericVector input_xi;
     Rcpp::NumericVector target_data_gamma_categ;
     Rcpp::NumericVector target_data_phi;
     Rcpp::List target_samples_gamma_categ;
     Rcpp::NumericVector target_samples_phi;
     Rcpp::NumericVector target_samples_w;
+    Rcpp::List target_samples_x;
     Rcpp::NumericVector target_samples_xi;
 
     // global testing objects

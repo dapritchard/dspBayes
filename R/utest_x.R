@@ -30,9 +30,9 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
             }
 
             prior_prob_yes <- calc_prior_prob(utau, curr_miss_day_idx, prev_day_sex)
-            posterior_prob_yes <- calc_posterior_prob(ubeta, xi_i, miss_day)
+            posterior_prob_yes <- calc_posterior_prob(ubeta, xi_i, miss_day["idx"])
 
-            X[miss_day["nonmiss_idx"] + 1L] <<- prev_day_sex <- sample_x_ijk(prior_prob_yes,
+            X[miss_day["idx"] + 1L] <<- prev_day_sex <- sample_x_ijk(prior_prob_yes,
                                                                              posterior_prob_yes)
         }
     }
@@ -40,15 +40,16 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
 
     calc_prior_prob <- function(utau, miss_day_idx, prev_day_sex) {
         if (prev_day_sex == 0L) {
-            1 / (1 + exp(-utau[miss_day_idx] - sex_coef))
-        } else {
             1 / (1 + exp(-utau[miss_day_idx]))
+        } else {
+            1 / (1 + exp(-utau[miss_day_idx] - sex_coef))
         }
     }
 
 
-    calc_posterior_prob <- function(ubeta, xi_i, miss_day) {
-        exp(-xi_i * exp(ubeta[miss_day["nonmiss_idx"] + 1L]))
+    calc_posterior_prob <- function(ubeta, xi_i, day_idx) {
+
+        exp(-xi_i * exp(ubeta[day_idx]))
     }
 
 
@@ -63,7 +64,7 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
 
 
     sample_day_before_fw_sex <- function() {
-        as.integer(runif(1L) > cohort_sex_prob)
+        as.integer(runif(1L) < cohort_sex_prob)
     }
 
 
@@ -82,7 +83,7 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
     # xi_i
     test_data_miss_day_idx <- 1L
     test_data_miss_day <- x_miss_day_list[[test_data_miss_day_idx]]
-    test_data_nonmiss_day_idx <- test_data_miss_day["nonmiss_idx"] + 1L
+    test_data_nonmiss_day_idx <- unname(test_data_miss_day["idx"] + 1L)
     test_data_prior_prob <- 0.5
     test_data_posterior_prob <- 0.9
     test_data_xi_i <- 1.2
@@ -92,25 +93,26 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
     sample(W, xi, ubeta, utau)
 
     # # calculate prior probabilities for `X_ijk`
-    target_prior_prob_no_prev <- calc_prior_prob(utau, test_data_nonmiss_day_idx, 0L)
-    target_prior_prob_yes_prev <- calc_prior_prob(utau, test_data_nonmiss_day_idx, 1L)
+    target_prior_prob_no_prev <- calc_prior_prob(utau, test_data_miss_day_idx, 0L)
+    target_prior_prob_yes_prev <- calc_prior_prob(utau, test_data_miss_day_idx, 1L)
 
     # calculate posterior probabilities for `X_ijk`
-    target_posterior_prob <- calc_posterior_prob(ubeta, test_data_xi_i, test_data_miss_day)
+    target_posterior_prob <- calc_posterior_prob(ubeta, test_data_xi_i, test_data_nonmiss_day_idx)
 
     # sample a sequence of values for `X_ijk`
     set.seed(seed_val)
     target_x_ijk_samples <- replicate(N_TEST_SAMPLES,
-                                      sample_x_ijk(test_data_prior_prob, test_data_prior_prob))
+                                      sample_x_ijk(test_data_prior_prob, test_data_posterior_prob))
 
     # sample a sequence of values for sex on the day before the fertile window
-    target_day_before_samples <- as.integer(runif(N_TEST_SAMPLES) > cohort_sex_prob)
+    set.seed(seed_val)
+    target_day_before_samples <- as.integer(runif(N_TEST_SAMPLES) < cohort_sex_prob)
 
-    test_data <- list(miss_day_idx    = test_data_miss_day_idx - 1L,
-                      nonmiss_day_idx = test_data_nonmiss_day_idx,
-                      prior_prob      = test_data_prior_prob,
-                      posterior_prob  = test_data_posterior_prob,
-                      xi_i            = test_data_xi_i)
+    test_data <- c(miss_day_idx   = test_data_miss_day_idx - 1L,
+                   day_idx        = test_data_nonmiss_day_idx - 1L,
+                   prior_prob     = test_data_prior_prob,
+                   posterior_prob = test_data_posterior_prob,
+                   xi_i           = test_data_xi_i)
 
     target_output <- list(x_samples           = X,
                           x_ijk_samples       = target_x_ijk_samples,
