@@ -36,6 +36,9 @@ void XiGenTest::setUp() {
     // construct phi
     phi = g_ut_factory.phi();
 
+    // construct X
+    X = g_ut_factory.X();
+
     // constuct ubeta
     ubeta = g_ut_factory.ubeta();
 }
@@ -48,6 +51,7 @@ void XiGenTest::tearDown() {
     delete xi_no_rec;
     delete W;
     delete phi;
+    delete X;
     delete ubeta;
 }
 
@@ -80,9 +84,9 @@ void XiGenTest::test_sample_yes_record() {
 
     // two samples using the same seed
     set_seed(seed_val);
-    xi->sample(*W, *phi, *ubeta);
+    xi->sample(*W, *phi, *ubeta, *X);
     set_seed(seed_val);
-    xi->sample(*W, *phi, *ubeta);
+    xi->sample(*W, *phi, *ubeta, *X);
 
     // check that placement of iterator points to beginning of second sample
     CPPUNIT_ASSERT_EQUAL(xi->m_vals_rcpp.begin() + 2 * n_subj, xi->m_vals);
@@ -108,9 +112,9 @@ void XiGenTest::test_sample_no_record() {
 
     // two samples using the same seed
     set_seed(seed_val);
-    xi_no_rec->sample(*W, *phi, *ubeta);
+    xi_no_rec->sample(*W, *phi, *ubeta, *X);
     set_seed(seed_val);
-    xi_no_rec->sample(*W, *phi, *ubeta);
+    xi_no_rec->sample(*W, *phi, *ubeta, *X);
 
     // check that placement of iterator points to beginning of data
     CPPUNIT_ASSERT_EQUAL(xi_no_rec->m_vals_rcpp.begin(), xi_no_rec->m_vals);

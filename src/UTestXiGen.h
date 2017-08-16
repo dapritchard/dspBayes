@@ -35,6 +35,7 @@ private:
     XiGen* xi_no_rec;
     WGen* W;
     PhiGen* phi;
+    XGen* X;
     UProdBeta* ubeta;
 
     // testing data

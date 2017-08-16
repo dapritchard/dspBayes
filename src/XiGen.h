@@ -4,6 +4,7 @@
 #include "Rcpp.h"
 class WGen;
 class PhiGen;
+class XGen;
 #include "DayBlock.h"
 #include "UProdBeta.h"
 
@@ -33,7 +34,7 @@ public:
     XiGen(Rcpp::List& subj_day_blocks, int n_samp, bool record_status);
     ~XiGen();
 
-    void sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta);
+    void sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta, const XGen& X);
 
     const double* vals() const { return m_vals; }
     const int n_subj() const { return m_n_subj; }
@@ -42,5 +43,6 @@ public:
 
 #include "WGen.h"
 #include "PhiGen.h"
+#include "XGen.h"
 
 #endif

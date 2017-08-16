@@ -4,6 +4,7 @@
 class XiGen;
 #include "DayBlock.h"
 #include "UProdBeta.h"
+#include "XGen.h"
 
 
 class WGen {
@@ -57,7 +58,7 @@ public:
 	 int fw_len);
     ~WGen();
 
-    void sample(XiGen& xi, UProdBeta& ubeta);
+    void sample(XiGen& xi, UProdBeta& ubeta, XGen& X);
     const int* vals() const { return m_vals; }
     const int* sum_vals() const { return m_sums; }
     const int* days_idx() const { return m_days_idx.begin(); }

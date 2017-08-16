@@ -34,6 +34,9 @@ void WGenTest::setUp() {
 
     // constuct ubeta
     ubeta = g_ut_factory.ubeta();
+
+    // construct X
+    X = g_ut_factory.X();
 }
 
 
@@ -43,6 +46,7 @@ void WGenTest::tearDown() {
     delete W;
     delete xi;
     delete ubeta;
+    delete X;
 }
 
 
@@ -64,7 +68,7 @@ void WGenTest::test_sample() {
     set_seed(seed_val);
 
     // check values of samples
-    W->sample(*xi, *ubeta);
+    W->sample(*xi, *ubeta, *X);
     CPPUNIT_ASSERT(std::equal(target_samples.begin(),
 			      target_samples.end(),
 			      W->m_vals,

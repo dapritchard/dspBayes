@@ -61,10 +61,10 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     for (int s = 0; s < n_samp; s++) {
 
     	// update the latent day-specific pregnancy variables W
-    	W.sample(xi, ubeta);
+    	W.sample(xi, ubeta, X);
 
     	// update the woman-specific fecundability multipliers xi
-    	xi.sample(W, phi, ubeta);
+    	xi.sample(W, phi, ubeta, X);
 
     	// update the regression coefficients gamma and psi, and update the
     	// resulting values of the `exp(U_{ijk}^T * beta)`
@@ -74,8 +74,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     	// update phi, the variance parameter for xi
     	phi.sample(xi);
 
-	// update missing values for the intercourse variables X
-	X.sample(W, xi, ubeta, utau);
+	// // update missing values for the intercourse variables X
+	// X.sample(W, xi, ubeta, utau);
 
 	// case: burn-in phase is over so record samples.  Note that this occurs
 	// after the samples in this scan have been taken; this is because

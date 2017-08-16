@@ -1,6 +1,7 @@
 #include "Rcpp.h"
 #include "WGen.h"
 #include "DayBlock.h"
+#include "XGen.h"
 
 
 
@@ -32,7 +33,7 @@ WGen::~WGen() {
 
 
 
-void WGen::sample(XiGen& xi, UProdBeta& ubeta) {
+void WGen::sample(XiGen& xi, UProdBeta& ubeta, XGen& X) {
 
     // point to the beginning of the arrays storing the `W_ijk` and `sum_k
     // W_ijk`
@@ -40,6 +41,8 @@ void WGen::sample(XiGen& xi, UProdBeta& ubeta) {
     int* curr_w_sum = m_sums;
     // point to the beginning of the array storing the current values of `xi`
     const double* xi_vals = xi.vals();
+    // point to the beginning of the array storing the current values of `X`
+    const int* x_vals = X.vals();
     // point to the beginning of the array storing the current values of `X_ijk
     // * exp( u_{ijk}^T beta )`
     const double* ubeta_exp_vals = ubeta.exp_vals();
@@ -73,7 +76,7 @@ void WGen::sample(XiGen& xi, UProdBeta& ubeta) {
 
 	    // copy and add in the `X_ijk * exp( u_{ijk}^T beta )` term to the
 	    // running total for `sum_k W_ijk`
-	    curr_sum_val += mult_probs[v] = ubeta_exp_vals[r];
+	    curr_sum_val += mult_probs[v] = x_vals[r] * ubeta_exp_vals[r];
 	}
 
 	// normalize the multinomial probabilities
@@ -84,7 +87,7 @@ void WGen::sample(XiGen& xi, UProdBeta& ubeta) {
 	// calculate `xi_i * sum_k { X_ijk * exp( u_{ijk}^T beta ) }`
 	double pois_mean = xi_vals[ curr_subj_idx ] * curr_sum_val;
 
-	// sample new `sum_k W_ijk`   **********  TODO: must be truncated  *********************
+	// sample new `sum_k W_ijk`
 	*curr_w_sum = rpois_zero_tr(pois_mean);
 
 	// sample new `W_ij | { sum_k W_ijk }`

@@ -2,6 +2,7 @@
 #include "XiGen.h"
 #include "WGen.h"
 #include "PhiGen.h"
+#include "XGen.h"
 #include "DayBlock.h"
 #include "UProdBeta.h"
 
@@ -33,15 +34,13 @@ XiGen::~XiGen() {
 
 
 
-void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta) {
-
-    int curr_idx, curr_end;
-    double curr_w_sum, curr_sum_exp_ubeta;
+void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta, const XGen& X) {
 
     const int* w_subj_idx = W.subj_idx();
     const int* w_sum_vals = W.sum_vals();
+    const double phi_val = phi.val();
+    const int* x_vals = X.vals();
     const double* ubeta_exp_vals = ubeta.exp_vals();
-    double phi_val = phi.val();
 
     // if we are past the burn phase then move the pointer past the samples so
     // that we don't overwrite them
@@ -51,6 +50,9 @@ void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta) {
 
     // each iteration samples the i-th value of `xi_i` and stores it `m_xi_vals`
     for (int i = 0; i < m_n_subj; ++i) {
+
+	int curr_idx, curr_end;
+	double curr_w_sum, curr_sum_exp_ubeta;
 
     	// obtain `sum_jk W_ijk`
     	if (i == *w_subj_idx) {
@@ -69,8 +71,9 @@ void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta) {
     	// obtain `sum_jk { X_ijk * exp( u_{ijk}^T beta ) }`
     	curr_sum_exp_ubeta = 0;
     	for ( ; curr_idx < curr_end; ++curr_idx) {
-    	    // `ubeta_exp_vals` is already 0 if corresponding `X_ijk` is 0
-    	    curr_sum_exp_ubeta += ubeta_exp_vals[curr_idx];
+	    if (x_vals[curr_idx]) {
+		curr_sum_exp_ubeta += ubeta_exp_vals[curr_idx];
+	    }
     	}
 
     	// sample new value of `xi_i`

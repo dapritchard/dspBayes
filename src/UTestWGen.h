@@ -32,6 +32,7 @@ class WGenTest : public CppUnit::TestFixture {
     WGen* W;
     XiGen* xi;
     UProdBeta* ubeta;
+    XGen* X;
 
     // testing data
     Rcpp::NumericVector target_samples;

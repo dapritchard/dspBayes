@@ -6,6 +6,10 @@
 #include "UTestFactory.h"
 #include "UTestXGen.h"
 
+
+#include <iostream>
+
+
 using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
 using Rcpp::as;

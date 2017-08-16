@@ -32,7 +32,7 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
                 w_ctr <- w_ctr + 1L
 
                 if (W[w_ctr] > 0L) {
-                    X[curr_day_idx] <- prev_day_sex <- 1L
+                    X[curr_day_idx] <<- prev_day_sex <- 1L
                     next
                 }
             }
@@ -106,7 +106,7 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
     set.seed(seed_val)
     sample(W, xi, ubeta, utau)
 
-    # # calculate prior probabilities for `X_ijk`
+    # calculate prior probabilities for `X_ijk`
     target_prior_prob_no_prev <- calc_prior_prob(utau, test_data_miss_day_idx, 0L)
     target_prior_prob_yes_prev <- calc_prior_prob(utau, test_data_miss_day_idx, 1L)
 
