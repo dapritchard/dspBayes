@@ -246,8 +246,11 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
     # (i.e. we are not imputing missing intercourse data)
     sex_yester <- get_sex_yester_coding(comb_dat, var_nm)
 
-    # map the pregnancy data to binary values
-    preg_vec <- map_vec_to_bool(comb_dat[[var_nm$preg]]) %>% as.integer
+    # map the days to pregnancy days.  If the value is 0 then this signals that
+    # the day was not a day that occured during a pregnancy cycle.
+    preg_day_bool <- map_vec_to_bool( comb_dat[[var_nm$preg]] )
+    preg_day_map <- vector("integer", length(X))
+    preg_day_map[preg_day_bool] <- sum(preg_day_bool) %>% seq_len
 
     # containers to store missing intercourse information
     x_miss_cyc <- vector("list", length(cyc_idx_list))
@@ -282,7 +285,7 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
             x_miss_cyc[[ctr]] <- c(beg_idx  = map_to_x_miss_idx[1L] - 1L,
                                    n_days   = curr_n_miss,
                                    subj_idx = id_map[curr_cyc_idx[1L]] - 1L,
-                                   preg     = preg_vec[curr_cyc_idx[1L]])
+                                   preg_idx = preg_day_map[curr_cyc_idx[1L]] - 1L)
 
             # set the first missing X in the cycle to 1, and the remaining
             # missing to 0.  The logic for this is that if a pregnancy has

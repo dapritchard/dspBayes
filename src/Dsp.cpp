@@ -52,7 +52,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     XiGen xi(subj_day_blocks, n_samp, true);
     CoefGen coefs(U, gamma_specs, n_samp);
     PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples
-    UProdBeta ubeta(U.size());
+    UProdBeta ubeta(U.nrow());
     XGen X(X_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
     // int* X_temp = X_rcpp.begin();
@@ -74,8 +74,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     	// update phi, the variance parameter for xi
     	phi.sample(xi);
 
-	// // update missing values for the intercourse variables X
-	// X.sample(W, xi, ubeta, utau);
+	// update missing values for the intercourse variables X
+	X.sample(W, xi, ubeta, utau);
 
 	// case: burn-in phase is over so record samples.  Note that this occurs
 	// after the samples in this scan have been taken; this is because

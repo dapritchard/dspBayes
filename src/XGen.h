@@ -117,13 +117,13 @@ class XGen::XMissCyc : public PregCyc {
 
 public:
 
-    bool preg;
+    int preg_idx;
 
-    XMissCyc() : PregCyc(), preg(false) {}
+    XMissCyc() : PregCyc(), preg_idx(0) {}
 
-    XMissCyc(int beg_idx, int n_days, int subj_idx, int preg) :
+    XMissCyc(int beg_idx, int n_days, int subj_idx, int preg_idx) :
     	PregCyc(beg_idx, n_days, subj_idx),
-    	preg((bool) preg) {
+    	preg_idx(preg_idx) {
     }
 
     static XMissCyc* list_to_arr(Rcpp::List& block_list);

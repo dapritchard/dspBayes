@@ -61,7 +61,7 @@ XGen::XMissCyc* XGen::XMissCyc::list_to_arr(Rcpp::List& block_list) {
     	block_arr[t] = XMissCyc(block_list_t["beg_idx"],
 				block_list_t["n_days"],
 				block_list_t["subj_idx"],
-				block_list_t["preg"]);
+				block_list_t["preg_idx"]);
     }
 
     return block_arr;
@@ -127,13 +127,12 @@ const int* XGen::sample_cycle(const XMissCyc* miss_cyc,
     double prior_prob_yes, posterior_prob_yes;
     int prev_day_sex;
 
-    // // the first and one past the last day in `miss_cycle` with missing
-    // // intercourse data
-    // const XMissDay* curr_miss_day = m_miss_day + miss_cyc->beg_idx;
-    // const XMissDay* miss_end = curr_miss_day + miss_cyc->n_days;
-
     // value of xi for the subject that `miss_cycl` corresponds to
     const double xi_i = xi.vals()[miss_cyc->subj_idx];
+
+    // either -1 or the index in W of the first day in the cycle.  If -1, then
+    // this signals that the cycle was not a pregnancy cycle.
+    int curr_preg_idx = miss_cyc->preg_idx;
 
     // if we don't have missing intercourse data for the day before the fertile
     // window, then we sample it using a global probability.  Note that
@@ -152,7 +151,7 @@ const int* XGen::sample_cycle(const XMissCyc* miss_cyc,
 	const int curr_day_idx = m_miss_day[r].idx;
 
 	// case: W_{ijk_r} > 0, so intercourse must have occured on this day
-	if (miss_cyc->preg && *w_vals++) {
+	if ((curr_preg_idx >= 0) && w_vals[curr_preg_idx++]) {
 	    m_vals[curr_day_idx] = prev_day_sex = 1;
 	    continue;
 	}

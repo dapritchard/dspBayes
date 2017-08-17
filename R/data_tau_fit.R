@@ -2,8 +2,9 @@ get_tau_fit <- function(comb_dat, var_nm, dsp_model, use_na) {
 
     # case: we're not imputing missing for sex, so return some empty data
     if (! ((use_na == "sex") || (use_na == "all"))) {
-        return(list(u_coefs  = numeric(0L),
-                    sex_coef = 0))
+        return(list(u_coefs         = numeric(0L),
+                    sex_coef        = 0,
+                    cohort_sex_prob = 0))
     }
 
     # strips the response variable (i.e. pregnancy) from the model, replaces it
