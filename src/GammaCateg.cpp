@@ -45,6 +45,7 @@ double GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, cons
 
     // change the values of the data pointed to by `ubeta` to take the values of
     // `U * beta` using the newly sampled value of `gamma_h`
+    // TODO: check that gamma isn't 1 before calling
     ubeta.add_uh_prod_beta_h(m_Uh, m_beta_val);
 
     return m_gam_val;
@@ -164,6 +165,7 @@ double GammaCateg::calc_b_tilde(UProdBeta& ubeta, const XiGen& xi, const int* X)
 	// case: U_{ijkh} has a value of 1, so update the ijk-th element of
 	// `ubeta_vals` to have the value of the ijk-th element of `U*beta -
 	// U_h*beta_h`.  If U_{ijkh} has a value of 0 then no update is needed.
+	// TODO: check that gamma_h isn't 1
 	if (m_Uh[r]) {
 
 	    ubeta_vals[r] -= m_beta_val;

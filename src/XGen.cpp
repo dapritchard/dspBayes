@@ -117,6 +117,7 @@ void XGen::sample(const WGen& W,
 
 
 
+// TODO: make this a void function
 
 const int* XGen::sample_cycle(const XMissCyc* miss_cyc,
 			      const int* w_vals,
