@@ -23,6 +23,8 @@ public:
     ~CoefGen();
 
     void sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X);
+
+    const double* vals() const { return m_vals; }
 };
 
 

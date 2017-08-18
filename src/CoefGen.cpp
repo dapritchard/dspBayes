@@ -35,7 +35,7 @@ CoefGen::~CoefGen() {
 void CoefGen::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X) {
 
     // if we're past the burn-in phase then update the `m_vals` so that we don't
-    // overwrite the previoussamples in the current scan
+    // overwrite the previous samples in the current scan
     if (g_record_status) {
 	m_vals += m_n_gamma;
     }
