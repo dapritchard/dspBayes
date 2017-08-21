@@ -35,9 +35,6 @@ public:
     // days in the day-specific data
     const PregCyc* m_preg_cyc;
 
-    // // some scratch storage that we use to place multinomial probabilities into
-    // double* m_mult_probs;
-
     // the number of days for which intercourse occured during a cycle that
     // resulted in a pregnancy.  This value provides the amount of storage that
     // is associated with `m_vals` and `m_days_idx`.

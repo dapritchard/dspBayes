@@ -72,7 +72,9 @@ public:
 
     int* vals() { return m_vals; }
     const int* vals() const { return m_vals; }
+    const XMissDay* miss_day() const { return m_miss_day; }
     int n_days() const { return m_x_rcpp.size(); }
+    double sex_coef() const { return m_sex_coef; }
 
     // int calc_prior_probs(double prior_probs[][2],
     // 			 const PregCyc* curr_miss_cyc,
@@ -117,6 +119,7 @@ class XGen::XMissCyc : public PregCyc {
 
 public:
 
+    // either -1 or the index in W of the first day in the cycle
     int preg_idx;
 
     XMissCyc() : PregCyc(), preg_idx(0) {}
@@ -136,8 +139,8 @@ class XGen::XMissDay {
 
 public:
 
-    int idx;
-    int prev;
+    int idx;   // index in day specific data
+    int prev;  // whether intercourse occurred in the previous day
 
     XMissDay() : idx(0), prev(0) {}
 
