@@ -9,44 +9,36 @@ class UGen {
 public:
 
     struct UMissBlock;
-    struct UMissDay;
 
     const int m_col_start;
     const int m_col_end;
     const int m_ref_col;
-    /* const int m_n_cols; */
     const int m_n_categs;
-    // const bool m_is_ref_cell_coding;
+
+    const int m_max_alt_exp_ubeta_size;
+    const int m_max_alt_utau_size;
 
     const double* m_u_prior_probs;
 
     UMissBlock* m_miss_block;
-    /* UMissBlock* m_curr_block; */
-    /* const UMissBlock* const m_end_block; */
-    /* const int m_n_miss_block; */
-    /* int m_block_idx; */
+    const UMissBlock* const m_end_block;
 
-    const UMissDay* m_miss_day;
-    /* const int m_n_miss_day; */
-    /* int m_day_idx; */
+    const int* m_w_idx;
+    const int* m_x_idx;
 
-    int* m_w_idx;
-    int* m_x_idx;
+    UGen(Rcpp::IntegerVector& var_info,
+	 Rcpp::NumericVector& u_prior_probs,
+	 Rcpp::List& var_block_list,
+	 Rcpp::IntegerVector& w_idx,
+	 Rcpp::IntegerVector& u_idx);
+    ~UGen();
 
-    UGen();
-
-    // void calc_posterior_w_probs(double* posterior_w_probs,
-    // 				const WGen& W,
-    // 				const XiGen& xi,
-    // 				const CoefGen& coefs,
-    // 				const UProdBeta& ubeta,
-    // 				const UMissBlock* const miss_block) const;
-
-    // void calc_ubeta_possibs(double* alt_exp_ubeta_vals,
-    // 			    const double** categ_exp_ubeta_arrs,
-    // 			    const CoefGen& coefs,
-    // 			    const UProdBeta& ubeta,
-    // 			    const UMissBlock* const miss_block) const;
+    void sample(const WGen& W,
+		const XiGen& xi,
+		const CoefGen& coefs,
+		const XGen& X,
+		UProdBeta& ubeta,
+		UProdTau& utau);
 
     void calc_posterior_w(double* posterior_w_probs,
 			  double* alt_exp_ubeta_vals,
@@ -92,17 +84,35 @@ struct UGen::UMissBlock {
 
     int u_col;
     int subj_idx;
+
+    UMissBlock() :
+	beg_day_idx(0),
+	n_days(0),
+	beg_w_idx(0),
+	beg_sex_idx(0),
+	n_sex_days(0),
+	u_col(0),
+	subj_idx(0) {
+    }
+
+    UMissBlock(int beg_day_idx,
+	       int n_days,
+	       int beg_w_idx,
+	       int beg_sex_idx,
+	       int n_sex_days,
+	       int u_col,
+	       int subj_idx) :
+	beg_day_idx(beg_day_idx),
+	n_days(n_days),
+	beg_w_idx(beg_w_idx),
+	beg_sex_idx(beg_sex_idx),
+	n_sex_days(n_sex_days),
+	u_col(u_col),
+	subj_idx(subj_idx) {
+    }
+
+    static UMissBlock* list_to_arr(Rcpp::List& block_list);
 };
-
-
-
-
-// struct UGen::UMissDay {
-
-//     int day_idx;
-//     int w_day_idx;
-//     // int x_day_idx;
-// };
 
 
 #endif

@@ -11,35 +11,127 @@
 
 #define REF_CELL         -1
 #define IN_NON_PREG_CYC  -1
-#define NONMISS_SEX_DAY  -1
 
 
 
 
-UGen::UGen() :
-    m_col_start(0),
-    m_col_end(0),
-    m_ref_col(0),
-    m_n_categs(0),
-    // m_is_ref_cell_coding(0),
-    m_miss_block(0)// ,
-    // m_w_idx(0)
-{
+UGen::UGen(Rcpp::IntegerVector& var_info,
+	   Rcpp::NumericVector& u_prior_probs,
+	   Rcpp::List& var_block_list,
+	   Rcpp::IntegerVector& w_idx,
+	   Rcpp::IntegerVector& u_idx) :
+    m_col_start(var_info["col_start"]),
+    m_col_end(var_info["col_end"]),
+    m_ref_col(var_info["ref_col"]),
+    m_n_categs(var_info["n_categs"]),
+    m_max_alt_exp_ubeta_size(var_info["max_alt_exp_ubeta_size"]),
+    m_max_alt_utau_size(var_info["max_alt_utau_size"]),
+    m_u_prior_probs(u_prior_probs.begin()),
+    m_miss_block(UMissBlock::list_to_arr(var_block_list)),
+    m_end_block(m_miss_block + var_block_list.size()),
+    m_w_idx(w_idx.begin()),
+    m_x_idx(u_idx.begin()) {
 }
 
 
 
-// void UGen::sample() {
 
-//     m_curr_block = m_miss_block;
-//     m_curr_day = m_miss_day;
+UGen::~UGen() {
+    delete[] m_miss_block;
+}
 
-//     for ( ; m_curr_block < m_end_block; ++m_curr_block) {
 
-// 	sample_block();
-//     }
 
-// }
+
+UGen::UMissBlock* UGen::UMissBlock::list_to_arr(Rcpp::List& block_list) {
+
+    UMissBlock* block_arr = new UMissBlock[block_list.size()];
+
+    // each iteration constructs a new struct based upon the information
+    // provided by the t-th element of `block_list`
+    for (int t = 0; t < block_list.size(); ++t) {
+
+    	Rcpp::IntegerVector block_list_t = Rcpp::as<Rcpp::IntegerVector>(block_list[t]);
+    	block_arr[t] = UMissBlock(block_list_t["beg_day_idx"],
+				  block_list_t["n_days"],
+				  block_list_t["beg_w_idx"],
+				  block_list_t["beg_sex_idx"],
+				  block_list_t["n_sex_days"],
+				  block_list_t["u_col"],
+				  block_list_t["subj_idx"]);
+    }
+
+    return block_arr;
+}
+
+
+
+
+void UGen::sample(const WGen& W,
+		  const XiGen& xi,
+		  const CoefGen& coefs,
+		  const XGen& X,
+		  UProdBeta& ubeta,
+		  UProdTau& utau) {
+
+    // storage for derived posterior probabilities of `W` and of `X` for each of
+    // the possible categories of the missing covariate
+    double posterior_w_probs[m_n_categs];
+    double posterior_x_probs[m_n_categs];
+
+    // if there are no missing values for `X` then the just set the posterior
+    // probabilities to be all 1
+    double all_ones[m_n_categs];
+    std::fill(all_ones, all_ones + m_n_categs, 1.0);
+
+    // storage for values of `exp(U * beta)` and for `U * tau` for each of the
+    // possible categories of the missing covariate and over the values of `U`
+    // affected by the covariate.  The storage is reused over all of the missing
+    // observations, so we set the size to be the maximum needed for each.
+    double alt_exp_ubeta_vals[m_max_alt_exp_ubeta_size];
+    double alt_utau_vals[m_max_alt_utau_size];
+
+    // each iteration samples a new values for the missing covariate
+    // corresponding to `curr_block`, and updates the observations in `ubeta`
+    // and `utau` that are affected by the missing covariate
+    for (UMissBlock* curr_block = m_miss_block;
+	 curr_block < m_end_block;
+	 ++curr_block) {
+
+	double* posterior_x_ptr;
+
+	// calculate the posterior probabilities for `W` for each of the
+	// possible categories of the missing covariate and store in
+	// `posterior_w_probs`
+	calc_posterior_w(posterior_w_probs, alt_exp_ubeta_vals, W, xi, coefs, ubeta, curr_block);
+
+	// calculate the posterior probabilities for `X` for each of the
+	// possible categories of the missing covariate and store in
+	// `posterior_x_probs`
+	if (curr_block->n_sex_days > 0) {
+	    calc_posterior_x(posterior_x_probs, alt_utau_vals, X, utau, curr_block);
+	    posterior_x_ptr = posterior_x_probs;
+	}
+	// case: there are no missing in `X` for the observations affected by
+	// the covariate, so simply set the posterior probabilities each to 1
+	else {
+	    posterior_x_ptr = all_ones;
+	}
+
+	// sample the new category for the missing covariate
+	int u_categ = sample_covariate(posterior_w_probs, posterior_x_ptr);
+
+	// update `ubeta` and `utau` to reflect the newly sampled category for
+	// the missing covariate
+	update_ubeta(ubeta, u_categ, alt_exp_ubeta_vals, curr_block);
+	if (curr_block->n_sex_days > 0) {
+	    update_utau(utau, u_categ, alt_utau_vals, curr_block);
+	}
+
+	// update the missing covariate with the newly sampled category
+	curr_block->u_col = u_categ + m_col_start;
+    }
+}
 
 
 
