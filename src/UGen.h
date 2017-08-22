@@ -15,9 +15,10 @@ public:
     const int m_col_end;
     const int m_ref_col;
     /* const int m_n_cols; */
-    // const int m_n_categs;
-
+    const int m_n_categs;
     // const bool m_is_ref_cell_coding;
+
+    const double* m_u_prior_probs;
 
     UMissBlock* m_miss_block;
     /* UMissBlock* m_curr_block; */
@@ -48,6 +49,7 @@ public:
     // 			    const UMissBlock* const miss_block) const;
 
     void calc_posterior_w(double* posterior_w_probs,
+			  double* alt_exp_ubeta_vals,
 			  const WGen& W,
 			  const XiGen& xi,
 			  const CoefGen& coefs,
@@ -55,9 +57,24 @@ public:
 			  const UMissBlock* const miss_block) const;
 
     void calc_posterior_x(double* posterior_x_probs,
+			  double* alt_utau_vals,
 			  const XGen& X,
 			  const UProdTau& utau,
 			  const UMissBlock* const miss_block) const;
+
+    int sample_covariate(const double* posterior_w_probs,
+			 const double* posterior_x_probs) const;
+
+    static void update_ubeta(UProdBeta& ubeta,
+			     const int u_categ,
+			     const double* alt_exp_ubeta_vals,
+			     const UMissBlock* const miss_block);
+
+    static void update_utau(UProdTau& utau,
+			    const int u_categ,
+			    const double* alt_utau_vals,
+			    const UMissBlock* const miss_block);
+
 };
 
 

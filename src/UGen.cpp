@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 #include "Rcpp.h"
 
 #include "CoefGen.h"
@@ -8,9 +9,9 @@
 #include "WGen.h"
 #include "XiGen.h"
 
-#define REF_CELL     -1
-#define IN_NON_PREG_CYC -1
-#define NONMISS_SEX_DAY -1
+#define REF_CELL         -1
+#define IN_NON_PREG_CYC  -1
+#define NONMISS_SEX_DAY  -1
 
 
 
@@ -19,7 +20,7 @@ UGen::UGen() :
     m_col_start(0),
     m_col_end(0),
     m_ref_col(0),
-    // m_n_categs(0),
+    m_n_categs(0),
     // m_is_ref_cell_coding(0),
     m_miss_block(0)// ,
     // m_w_idx(0)
@@ -75,6 +76,7 @@ UGen::UGen() :
 
 
 void UGen::calc_posterior_w(double* posterior_w_probs,
+			    double* alt_exp_ubeta_vals,
 			    const WGen& W,
 			    const XiGen& xi,
 			    const CoefGen& coefs,
@@ -130,17 +132,19 @@ void UGen::calc_posterior_w(double* posterior_w_probs,
 	// affected by the missing covariate
 	for (int r = 0 ; r < block_n_days; ++r) {
 
-		// the mean value for the Poisson distribution of `W_ijk`, and the
-		// index in `W.vals()` corresponding to observation `ijk`
-		const double curr_mean_val = xi_i * block_exp_ubeta_vals[r] * exp_beta_diff;
-		const int curr_w_idx       = block_w_idx[r];
+	    *alt_exp_ubeta_vals = block_exp_ubeta_vals[r] * exp_beta_diff;
 
-		// the value of `log p(W_ijk | U, data)`.  If `curr_w_idx` has the
-		// flag value indicating that observation `ijk` corresponds to a
-		// day in a non-pregnancy cycle, then `W_ijk` has a value of 0.
-		log_dpois_sum += (curr_w_idx == IN_NON_PREG_CYC) ?
-		    -curr_mean_val :
-		    R::dpois(w_vals[curr_w_idx], curr_mean_val, 1);
+	    // the mean value for the Poisson distribution of `W_ijk`, and the
+	    // index in `W.vals()` corresponding to observation `ijk`
+	    const double curr_mean_val = xi_i * *alt_exp_ubeta_vals++;
+	    const int curr_w_idx       = block_w_idx[r];
+
+	    // the value of `log p(W_ijk | U, data)`.  If `curr_w_idx` has the
+	    // flag value indicating that observation `ijk` corresponds to a
+	    // day in a non-pregnancy cycle, then `W_ijk` has a value of 0.
+	    log_dpois_sum += (curr_w_idx == IN_NON_PREG_CYC) ?
+		-curr_mean_val :
+		R::dpois(w_vals[curr_w_idx], curr_mean_val, 1);
 	}
 
 	// exponentiate to recover the posterior probability, and store the
@@ -153,6 +157,7 @@ void UGen::calc_posterior_w(double* posterior_w_probs,
 
 
 void UGen::calc_posterior_x(double* posterior_x_probs,
+			    double* alt_utau_vals,
 			    const XGen& X,
 			    const UProdTau& utau,
 			    const UMissBlock* const miss_block) const {
@@ -198,9 +203,10 @@ void UGen::calc_posterior_x(double* posterior_x_probs,
 
 	    // a value of <= 0 corresponds to no sex on the previous day, and >=
 	    // 1 corresponds to yes sex on the previous day
+	    *alt_utau_vals = utau_vals[curr_x_day_idx] + tau_diff;
 	    const double curr_utau_val = (curr_sex_prev <= 0) ?
-		utau_vals[curr_x_day_idx] + tau_diff :
-		utau_vals[curr_x_day_idx] + tau_diff + sex_coef;
+		*alt_utau_vals++ :
+		*alt_utau_vals++ + sex_coef;
 
 	    // add `-log P(X_ijk | U_ijk)` to the running total, where `P(X_ijk
 	    // | U_ijk)` follows a logistic regression model
@@ -213,4 +219,79 @@ void UGen::calc_posterior_x(double* posterior_x_probs,
 	// probability, and store the result
 	*posterior_x_probs++ = exp(- neg_log_probs_sum);
     }
+}
+
+
+
+
+int UGen::sample_covariate(const double* posterior_w_probs,
+			   const double* posterior_x_probs) const {
+
+    double unnormalized_probs[m_n_categs];
+    double normalizing_constant;
+
+    // each iteration calculates the unnormalized posterior probability for the
+    // j-th category for the missing covariate, and adds the value to the
+    // running total for the normalizing constant
+    normalizing_constant = 0.0;
+    for (int j = 0; j < m_n_categs; ++j) {
+	normalizing_constant +=
+	    unnormalized_probs[j] =
+	    posterior_x_probs[j] * posterior_w_probs[j] * m_u_prior_probs[j];
+    }
+
+    // sample a value from a `unif(0, normalizing_constant)` distribution
+    const double u = R::unif_rand() * normalizing_constant;
+
+    // draw from a multinomial distribution with 1 draw and `m_n_categs` bins
+    int j = 0;
+    double bin_rhs = unnormalized_probs[0];
+    while (u > bin_rhs) {
+	bin_rhs += unnormalized_probs[++j];
+    }
+
+    return j;
+}
+
+
+
+
+void UGen::update_ubeta(UProdBeta& ubeta,
+			int u_categ,
+			const double* alt_exp_ubeta_vals,
+			const UMissBlock* const miss_block) {
+
+    const int block_beg_day_idx = miss_block->beg_day_idx;
+    const int block_n_days      = miss_block->n_days;
+
+    double* block_ubeta_vals             = ubeta.vals() + block_beg_day_idx;
+    double* block_exp_ubeta_vals         = ubeta.exp_vals() + block_beg_day_idx;
+    const double* updated_exp_ubeta_vals = alt_exp_ubeta_vals + (u_categ * block_n_days);
+
+    for (int r = 0; r < block_n_days; ++r) {
+
+	const double curr_updated_exp_ubeta = updated_exp_ubeta_vals[r];
+
+	block_ubeta_vals[r] = log(curr_updated_exp_ubeta);
+	block_exp_ubeta_vals[r] = curr_updated_exp_ubeta;
+    }
+}
+
+
+
+
+void UGen::update_utau(UProdTau& utau,
+		       const int u_categ,
+		       const double* alt_utau_vals,
+		       const UMissBlock* const miss_block) {
+
+    const int block_beg_sex_idx = miss_block->beg_sex_idx;
+    const int block_n_sex_days  = miss_block->n_sex_days;
+
+    double* block_utau_vals         = utau.vals() + block_beg_sex_idx;
+    const double* updated_utau_vals = alt_utau_vals + (u_categ * block_n_sex_days);
+
+    std::copy(updated_utau_vals,
+	      updated_utau_vals + block_n_sex_days,
+	      block_utau_vals);
 }
