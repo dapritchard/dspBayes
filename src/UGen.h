@@ -29,29 +29,30 @@ public:
     /* const int m_n_miss_day; */
     /* int m_day_idx; */
 
-    // int* m_w_idx;
+    int* m_w_idx;
     int* m_x_idx;
 
     UGen();
 
-    void calc_posterior_w_probs(double* posterior_w_probs,
-				const WGen& W,
-				const XiGen& xi,
-				const CoefGen& coefs,
-				const UProdBeta& ubeta,
-				const UMissBlock* const miss_block) const;
+    // void calc_posterior_w_probs(double* posterior_w_probs,
+    // 				const WGen& W,
+    // 				const XiGen& xi,
+    // 				const CoefGen& coefs,
+    // 				const UProdBeta& ubeta,
+    // 				const UMissBlock* const miss_block) const;
 
-    void calc_ubeta_possibs(double* alt_exp_ubeta_vals,
-			    const double** categ_exp_ubeta_arrs,
-			    const CoefGen& coefs,
-			    const UProdBeta& ubeta,
-			    const UMissBlock* const miss_block) const;
+    // void calc_ubeta_possibs(double* alt_exp_ubeta_vals,
+    // 			    const double** categ_exp_ubeta_arrs,
+    // 			    const CoefGen& coefs,
+    // 			    const UProdBeta& ubeta,
+    // 			    const UMissBlock* const miss_block) const;
 
-    void calc_posterior_w_from_ubetas(double* posterior_w_probs,
-				      const WGen& W,
-				      const XiGen& xi,
-				      const UMissBlock* const miss_block,
-				      const double* const * categ_exp_ubeta_arrs) const;
+    void calc_posterior_w(double* posterior_w_probs,
+			  const WGen& W,
+			  const XiGen& xi,
+			  const CoefGen& coefs,
+			  const UProdBeta& ubeta,
+			  const UMissBlock* const miss_block) const;
 
     void calc_posterior_x(double* posterior_x_probs,
 			  const XGen& X,
