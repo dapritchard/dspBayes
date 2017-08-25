@@ -1,3 +1,5 @@
+# TODO: test for tracking variables (late addition)
+
 # construct data ---------------------------------------------------------------
 
 # store as variables to ensure consistency between baseline, cycle, and daily

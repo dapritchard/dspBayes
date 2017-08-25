@@ -11,12 +11,13 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
     #### TODO check if data is collinear or constant within outcome ####
 
     intercourse_data <- get_intercourse_data(comb_dat, var_nm, fw_incl)
-
-    cov_miss_info <- get_missing_var_info(U, dsp_model)
-
     utau <- get_utau(U, tau_fit, intercourse_data, use_na)
 
-    var_categ_status <- get_var_categ_status(cov_miss_info)
+    cov_col_miss_info <- get_cov_col_miss_info(U, dsp_model, use_na)
+    cov_row_miss_info <- get_cov_row_miss_info(comb_dat, var_nm, U, cov_col_miss_info)
+    ugen_info <- get_ugen_info(cov_col_miss_info, cov_row_miss_info)
+
+    # var_categ_status <- get_var_categ_status(cov_miss_info)
 
     list(w_day_blocks      = w_day_blocks,
          w_to_days_idx     = w_to_days_idx,
@@ -24,10 +25,14 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
          subj_day_blocks   = subj_day_blocks,
          day_to_subj_idx   = day_to_subj_idx,
          intercourse       = intercourse_data,
-         cov_miss_info     = cov_miss_info,
-         var_categ_status  = var_categ_status,
+         cov_col_miss_info = cov_col_miss_info,
+         # var_categ_status  = var_categ_status,
          tau_fit           = tau_fit,
          utau              = utau,
+         ugen_info         = ugen_info,
+         cov_row_miss      = cov_row_miss_info$cov_row_miss_list,
+         cov_miss_w_idx    = cov_row_miss_info$cov_miss_w_idx,
+         cov_miss_x_idx    = cov_row_miss_info$cov_miss_x_idx,
          U                 = U)
 }
 
@@ -111,18 +116,6 @@ get_w_to_days_idx <- function(comb_dat, var_nm) {
 
 
 
-# get_cyc_idx <- function(preg_cyc_list) {
-
-#     cyc_idx <- vector("integer", length(preg_cyc_list))
-#     for (i in seq_along(preg_cyc_list)) {
-#         cyc_idx[i] <- preg_cyc_list[[i]]["cyc_idx"]
-#     }
-
-#     cyc_idx
-# }
-
-
-
 
 get_w_cyc_to_subj_idx <- function(preg_cyc_list) {
     sapply(preg_cyc_list, function(x) x["subj_idx"]) %>% structure(., names = NULL)
@@ -197,31 +190,31 @@ expand_model_rhs <- function(comb_dat, dsp_model) {
 
 
 
+# # TODO: what is this function? should it be used?
+# get_var_categ_status <- function(cov_miss_info, n_vars) {
 
-get_var_categ_status <- function(cov_miss_info, n_vars) {
+#     # the k-th element of `var_categ_status` tracks whether the k-th column in
+#     # the design matrix is a binary or continuous variable
+#     var_categ_status <- rep(FALSE, n_vars)
 
-    # the k-th element of `var_categ_status` tracks whether the k-th column in
-    # the design matrix is a binary or continuous variable
-    var_categ_status <- rep(FALSE, n_vars)
+#     # each iteration looks up the information for one of the unexpanded
+#     # variables in the data, and if it is categorical changes the status of the
+#     # elements in `var_categ_status` corresponding to the expanded design
+#     # matrix.
+#     for (curr_var in cov_miss_info) {
 
-    # each iteration looks up the information for one of the unexpanded
-    # variables in the data, and if it is categorical changes the status of the
-    # elements in `var_categ_status` corresponding to the expanded design
-    # matrix.
-    for (curr_var in cov_miss_info) {
+#         # if current unexpanded variable is categorical, then get the start and
+#         # end indices corresponding to the design matrix, and set the
+#         # corresponding indices in `var_categ_status` to TRUE.  The `+ 1L` is
+#         # because the indices are stored using 0-based indexing.
+#         if (curr_var$categ) {
+#             curr_idx <- seq(curr_var$col_start, curr_var$col_end, 1L) + 1L
+#             var_categ_status[curr_idx] <- TRUE
+#         }
+#     }
 
-        # if current unexpanded variable is categorical, then get the start and
-        # end indices corresponding to the design matrix, and set the
-        # corresponding indices in `var_categ_status` to TRUE.  The `+ 1L` is
-        # because the indices are stored useing 0-based indexing.
-        if (curr_var$categ) {
-            curr_idx <- seq(curr_var$col_start, curr_var$col_end, 1L) + 1L
-            var_categ_status[curr_idx] <- TRUE
-        }
-    }
-
-    var_categ_status
-}
+#     var_categ_status
+# }
 
 
 
@@ -230,7 +223,7 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
 
     # a list with each element a vector of the days-specific indices
     # corresponding to one of the cycles
-    cyc_idx_list <- get_cyc_idx(comb_dat, var_nm)
+    cyc_idx_list <- get_cyc_idx_list(comb_dat, var_nm)
 
     # store intercourse data as a binary variable.  Missing is preserved.
     X <- map_vec_to_bool(comb_dat[, var_nm$sex]) %>% as.integer
@@ -324,6 +317,51 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
 
 
 
+get_subj_idx_list <- function(dataset, var_nm) {
+
+    # container to store the indices in.  Set the length to the maximum possible
+    # elements that it could need.
+    n <- NROW(dataset)
+    subj_idx_list <- vector("list", n)
+
+    # bind variable name to the data for convenience
+    id_vec <- dataset[[var_nm$id]]
+
+    # tracks the number of cycles in the data, and the index of the first
+    # observation in the current cycle
+    ctr <- 1L
+    start <- 1L
+
+    # each iteration steps through the current id/cycle keypair until a new
+    # cycle is found, and then saves a vector of the indices for the cycle to
+    # `subj_idx_list`
+    while (start <= n) {
+
+        # obtain the id for the current cycle
+        curr_id <- id_vec[start]
+
+        # `end` is used to search for one past the last day for the subject
+        end <- start + 1L
+
+        # increment `end` until we get one past the last day for the subject
+        while ((end <= n) && (id_vec[end] == curr_id)) {
+            end <- end + 1L
+        }
+
+        # the current subject index are the indices between `start` and one
+        # before `end`.  Updatate `start` and `ctr`.
+        subj_idx_list[[ctr]] <- start : (end - 1L)
+        start <- end
+        ctr <- ctr + 1L
+    }
+
+    # return the data shortened to the number of cycles
+    subj_idx_list[1:(ctr - 1L)]
+}
+
+
+
+
 # returns a list such that each element is a vector providing the indices in
 # `dataset` for a given cycle.  The cycles are in order within a vector and
 # across vectors, so that performing `unlist` on the return object yields a
@@ -333,8 +371,7 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
 # names as given in `var_nm`.  The function strongly relies on the fact that
 # `dataset` is already sorted on the id/cycle keypairs.
 
-
-get_cyc_idx <- function(dataset, var_nm) {
+get_cyc_idx_list <- function(dataset, var_nm) {
 
     # container to store the indices in.  Set the length to the maximum possible
     # elements that it could need.
@@ -405,6 +442,7 @@ get_id_map <- function(id) {
 
 
 
+# TODO: redo this back to -1 and 2 scoring
 
 # converts the `daily$sex_yester` data to an integer vector of the same length
 # as the data, where the elements take values -2L, -1L, 0L, and 1L, and which

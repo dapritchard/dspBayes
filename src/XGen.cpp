@@ -117,7 +117,9 @@ void XGen::sample(const WGen& W,
 
 
 
+
 // TODO: make this a void function
+// TODO: have to record imputed sex previous using -1 and 2 flags
 
 const int* XGen::sample_cycle(const XMissCyc* miss_cyc,
 			      const int* w_vals,

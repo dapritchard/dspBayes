@@ -3,6 +3,13 @@
 
 #include "Rcpp.h"
 
+#include "CoefGen.h"
+#include "UProdBeta.h"
+#include "UProdTau.h"
+#include "WGen.h"
+#include "XGen.h"
+#include "XiGen.h"
+
 
 class UGen {
 

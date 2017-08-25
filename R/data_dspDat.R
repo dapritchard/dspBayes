@@ -252,7 +252,14 @@ dspDat <- function(dsp_model,
 
     # merge the data provided by `baseline`, `cycle`, and `daily` into a data
     # frame
-    comb_dat <- merge_dsp_data(baseline, cycle, daily, var_nm, fw_incl, fw_day_before, req_min_days)
+    comb_dat <- merge_dsp_data(baseline,
+                               cycle,
+                               daily,
+                               var_nm,
+                               fw_incl,
+                               fw_day_before,
+                               use_na,
+                               req_min_days)
 
     # conditionally remove any cycles from `comb_dat` that have either missing data
     # in the intercourse variable, other covariates, or both, depending on the value

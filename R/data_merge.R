@@ -14,7 +14,30 @@
 # `fw_incl` is a vector giving the fertile window days, and `min_days_req` is
 # the minimum number of days needed in the data to include a cycle.
 
-merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, fw_day_before, min_days_req) {
+merge_dsp_data <- function(baseline,
+                           cycle,
+                           daily,
+                           var_nm,
+                           fw_incl,
+                           fw_day_before,
+                           use_na,
+                           min_days_req) {
+
+    # # conditionally create some variables that track where baseline- and
+    # # cycle-specific variables end up after merging
+    # if ((use_na == "covariates") || (use_na == "all")) {
+
+    #     # add to `var_nm` to prevent from being dropped
+    #     var_nm$all <- c(var_nm$all, "track_base__", "track_cyc__")
+
+    #     # tracking variables
+    #     if (! is.null(baseline)) {
+    #         baseline$track_base__ <- NROW(baseline) %>% seq_len
+    #     }
+    #     if (! is.null(cycle)) {
+    #         cycle$track_cyc__ <- NROW(cycle) %>% seq_len
+    #     }
+    # }
 
     # reduce each dataset to only contain the variables that we need.  Returns
     # NULL if the input is NULL.
@@ -76,7 +99,7 @@ merge_dsp_data <- function(baseline, cycle, daily, var_nm, fw_incl, fw_day_befor
         }
     }
 
-    # return data after sorting it
+    # return data sorted over id, cycle, and cycle day
     sort_dsp(comb_dat, var_nm, fw_incl)
 }
 

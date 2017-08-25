@@ -7,9 +7,9 @@
 #include "UProdBeta.h"
 #include "UProdTau.h"
 #include "WGen.h"
+#include "XGen.h"
 #include "XiGen.h"
 
-#define REF_CELL         -1
 #define IN_NON_PREG_CYC  -1
 
 
@@ -212,7 +212,7 @@ void UGen::calc_posterior_w(double* posterior_w_probs,
 	    const double beta_j = (j == m_ref_col) ?
 		0.0 :
 		beta_coefs[j];
-	    const double beta_star = (block_u_col == REF_CELL) ?
+	    const double beta_star = (block_u_col == m_ref_col) ?
 		0.0 :
 		beta_coefs[block_u_col];
 
@@ -280,7 +280,7 @@ void UGen::calc_posterior_x(double* posterior_x_probs,
 	const double tau_j = (j == m_ref_col) ?
 	    0.0 :
 	    tau_coefs[j];
-	const double tau_diff = (block_u_col == REF_CELL) ?
+	const double tau_diff = (block_u_col == m_ref_col) ?
 	    tau_j:
 	    tau_j - tau_coefs[block_u_col];
 
