@@ -236,7 +236,9 @@ RcppExports.cpp : Dsp.cpp UTestDriver.cpp
 
 RcppExports.o : RcppExports.cpp
 
-UGen.o : CoefGen.h UGen.h UProdBeta.h UProdTau.h WGen.h XiGen.h
+UGenVar.o : UGenVar.h
+
+UGenVarCateg.o : CoefGen.h UGenVar.h UProdBeta.h UProdTau.h WGen.h XiGen.h
 
 UProdBeta.o : UProdBeta.h
 

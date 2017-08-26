@@ -11,7 +11,32 @@
 #include "XiGen.h"
 
 
-class UGen {
+
+
+class UGenVar {
+
+ public:
+
+    const int* m_w_idx;
+    const int* m_x_idx;
+
+    UGenVar() {}
+
+    UGenVar(Rcpp::IntegerVector& preg_map,
+	    Rcpp::IntegerVector& sex_map);
+
+    virtual void sample(const WGen& W,
+			const XiGen& xi,
+			const CoefGen& coefs,
+			const XGen& X,
+			UProdBeta& ubeta,
+			UProdTau& utau) = 0;
+};
+
+
+
+
+class UGenVarCateg : public UGenVar {
 
 public:
 
@@ -30,15 +55,12 @@ public:
     UMissBlock* m_miss_block;
     const UMissBlock* const m_end_block;
 
-    const int* m_w_idx;
-    const int* m_x_idx;
-
-    UGen(Rcpp::IntegerVector& var_info,
+    UGenVarCateg(Rcpp::IntegerVector& var_info,
 	 Rcpp::NumericVector& u_prior_probs,
 	 Rcpp::List& var_block_list,
-	 Rcpp::IntegerVector& w_idx,
-	 Rcpp::IntegerVector& u_idx);
-    ~UGen();
+	 Rcpp::IntegerVector& preg_map,
+	 Rcpp::IntegerVector& sex_map);
+    ~UGenVarCateg();
 
     void sample(const WGen& W,
 		const XiGen& xi,
@@ -73,13 +95,12 @@ public:
 			    const int u_categ,
 			    const double* alt_utau_vals,
 			    const UMissBlock* const miss_block);
-
 };
 
 
 
 
-struct UGen::UMissBlock {
+struct UGenVarCateg::UMissBlock {
 
     int beg_day_idx;
     int n_days;

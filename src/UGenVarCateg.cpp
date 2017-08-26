@@ -3,7 +3,7 @@
 #include "Rcpp.h"
 
 #include "CoefGen.h"
-#include "UGen.h"
+#include "UGenVar.h"
 #include "UProdBeta.h"
 #include "UProdTau.h"
 #include "WGen.h"
@@ -15,11 +15,12 @@
 
 
 
-UGen::UGen(Rcpp::IntegerVector& var_info,
-	   Rcpp::NumericVector& u_prior_probs,
-	   Rcpp::List& var_block_list,
-	   Rcpp::IntegerVector& w_idx,
-	   Rcpp::IntegerVector& u_idx) :
+UGenVarCateg::UGenVarCateg(Rcpp::IntegerVector& var_info,
+			   Rcpp::NumericVector& u_prior_probs,
+			   Rcpp::List& var_block_list,
+			   Rcpp::IntegerVector& preg_map,
+			   Rcpp::IntegerVector& sex_map) :
+    UGenVar(preg_map, sex_map),
     m_col_start(var_info["col_start"]),
     m_col_end(var_info["col_end"]),
     m_ref_col(var_info["ref_col"]),
@@ -28,22 +29,20 @@ UGen::UGen(Rcpp::IntegerVector& var_info,
     m_max_alt_utau_size(var_info["max_alt_utau_size"]),
     m_u_prior_probs(u_prior_probs.begin()),
     m_miss_block(UMissBlock::list_to_arr(var_block_list)),
-    m_end_block(m_miss_block + var_block_list.size()),
-    m_w_idx(w_idx.begin()),
-    m_x_idx(u_idx.begin()) {
+    m_end_block(m_miss_block + var_block_list.size()) {
 }
 
 
 
 
-UGen::~UGen() {
+UGenVarCateg::~UGenVarCateg() {
     delete[] m_miss_block;
 }
 
 
 
 
-UGen::UMissBlock* UGen::UMissBlock::list_to_arr(Rcpp::List& block_list) {
+UGenVarCateg::UMissBlock* UGenVarCateg::UMissBlock::list_to_arr(Rcpp::List& block_list) {
 
     UMissBlock* block_arr = new UMissBlock[block_list.size()];
 
@@ -67,12 +66,12 @@ UGen::UMissBlock* UGen::UMissBlock::list_to_arr(Rcpp::List& block_list) {
 
 
 
-void UGen::sample(const WGen& W,
-		  const XiGen& xi,
-		  const CoefGen& coefs,
-		  const XGen& X,
-		  UProdBeta& ubeta,
-		  UProdTau& utau) {
+void UGenVarCateg::sample(const WGen& W,
+			  const XiGen& xi,
+			  const CoefGen& coefs,
+			  const XGen& X,
+			  UProdBeta& ubeta,
+			  UProdTau& utau) {
 
     // storage for derived posterior probabilities of `W` and of `X` for each of
     // the possible categories of the missing covariate
@@ -167,13 +166,13 @@ void UGen::sample(const WGen& W,
 
 
 
-void UGen::calc_posterior_w(double* posterior_w_probs,
-			    double* alt_exp_ubeta_vals,
-			    const WGen& W,
-			    const XiGen& xi,
-			    const CoefGen& coefs,
-			    const UProdBeta& ubeta,
-			    const UMissBlock* const miss_block) const {
+void UGenVarCateg::calc_posterior_w(double* posterior_w_probs,
+				    double* alt_exp_ubeta_vals,
+				    const WGen& W,
+				    const XiGen& xi,
+				    const CoefGen& coefs,
+				    const UProdBeta& ubeta,
+				    const UMissBlock* const miss_block) const {
 
     // const int block_beg_day_idx = miss_block->beg_day_idx;
     // const int block_beg_w_idx   = miss_block->beg_w_idx;
@@ -248,11 +247,11 @@ void UGen::calc_posterior_w(double* posterior_w_probs,
 
 
 
-void UGen::calc_posterior_x(double* posterior_x_probs,
-			    double* alt_utau_vals,
-			    const XGen& X,
-			    const UProdTau& utau,
-			    const UMissBlock* const miss_block) const {
+void UGenVarCateg::calc_posterior_x(double* posterior_x_probs,
+				    double* alt_utau_vals,
+				    const XGen& X,
+				    const UProdTau& utau,
+				    const UMissBlock* const miss_block) const {
 
     const int block_beg_sex_idx = miss_block->beg_sex_idx;
     const int block_n_sex_days  = miss_block->n_sex_days;
@@ -316,8 +315,8 @@ void UGen::calc_posterior_x(double* posterior_x_probs,
 
 
 
-int UGen::sample_covariate(const double* posterior_w_probs,
-			   const double* posterior_x_probs) const {
+int UGenVarCateg::sample_covariate(const double* posterior_w_probs,
+				   const double* posterior_x_probs) const {
 
     double unnormalized_probs[m_n_categs];
     double normalizing_constant;
@@ -348,10 +347,10 @@ int UGen::sample_covariate(const double* posterior_w_probs,
 
 
 
-void UGen::update_ubeta(UProdBeta& ubeta,
-			int u_categ,
-			const double* alt_exp_ubeta_vals,
-			const UMissBlock* const miss_block) {
+void UGenVarCateg::update_ubeta(UProdBeta& ubeta,
+				int u_categ,
+				const double* alt_exp_ubeta_vals,
+				const UMissBlock* const miss_block) {
 
     const int block_beg_day_idx = miss_block->beg_day_idx;
     const int block_n_days      = miss_block->n_days;
@@ -372,10 +371,10 @@ void UGen::update_ubeta(UProdBeta& ubeta,
 
 
 
-void UGen::update_utau(UProdTau& utau,
-		       const int u_categ,
-		       const double* alt_utau_vals,
-		       const UMissBlock* const miss_block) {
+void UGenVarCateg::update_utau(UProdTau& utau,
+			       const int u_categ,
+			       const double* alt_utau_vals,
+			       const UMissBlock* const miss_block) {
 
     const int block_beg_sex_idx = miss_block->beg_sex_idx;
     const int block_n_sex_days  = miss_block->n_sex_days;
