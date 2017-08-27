@@ -1,6 +1,7 @@
 #include "Rcpp.h"
 #include "CoefGen.h"
 #include "PhiGen.h"
+#include "UGen.h"
 #include "WGen.h"
 #include "XGen.h"
 #include "XiGen.h"
@@ -26,8 +27,8 @@ bool g_record_status = false;
 
 
 // [[Rcpp::export]]
-Rcpp::List dsp_(Rcpp::NumericMatrix U,
-		Rcpp::IntegerVector X_rcpp,
+Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
+		Rcpp::IntegerVector x_rcpp,
 		Rcpp::List w_day_blocks,
 		Rcpp::IntegerVector w_to_days_idx,
 		Rcpp::IntegerVector w_cyc_to_subj_idx,
@@ -39,6 +40,10 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
 		Rcpp::List x_miss_day,
 		Rcpp::NumericVector utau_rcpp,
 		Rcpp::List tau_coefs,
+		Rcpp::List u_miss_info,
+		Rcpp::IntegerVector u_miss_type,
+		Rcpp::IntegerVector u_preg_map,
+		Rcpp::IntegerVector u_sex_map,
 		int fw_len,
 		int n_burn,
 		int n_samp) {
@@ -50,12 +55,12 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     // create data objects
     WGen W(w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, fw_len);
     XiGen xi(subj_day_blocks, n_samp, true);
-    CoefGen coefs(U, gamma_specs, n_samp);
+    CoefGen coefs(u_rcpp, gamma_specs, n_samp);
     PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples
-    UProdBeta ubeta(U.nrow());
-    XGen X(X_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
+    UProdBeta ubeta(u_rcpp.nrow());
+    XGen X(x_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
-    // int* X_temp = X_rcpp.begin();
+    UGen U(u_miss_info, u_miss_type, u_preg_map, u_sex_map);
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
@@ -69,13 +74,16 @@ Rcpp::List dsp_(Rcpp::NumericMatrix U,
     	// update the regression coefficients gamma and psi, and update the
     	// resulting values of the `exp(U_{ijk}^T * beta)`
     	coefs.sample(W, xi, ubeta, X.vals());
-    	ubeta.update_exp(X.vals());
+    	ubeta.update_exp(X.vals());  // <--- TODO: let's put this inside sample()
 
     	// update phi, the variance parameter for xi
     	phi.sample(xi);
 
 	// update missing values for the intercourse variables X
 	X.sample(W, xi, ubeta, utau);
+
+	// update missing values for the covariate data U
+	U.sample(W, xi, coefs, X, ubeta, utau);
 
 	// case: burn-in phase is over so record samples.  Note that this occurs
 	// after the samples in this scan have been taken; this is because

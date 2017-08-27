@@ -1,5 +1,5 @@
-#ifndef DSP_BAYES_SRC_U_GEN_H
-#define DSP_BAYES_SRC_U_GEN_H
+#ifndef DSP_BAYES_SRC_U_GEN_VAR_H
+#define DSP_BAYES_SRC_U_GEN_VAR_H
 
 #include "Rcpp.h"
 
@@ -15,7 +15,7 @@
 
 class UGenVar {
 
- public:
+public:
 
     const int* m_w_idx;
     const int* m_x_idx;
@@ -47,19 +47,21 @@ public:
     const int m_ref_col;
     const int m_n_categs;
 
-    const int m_max_alt_exp_ubeta_size;
-    const int m_max_alt_utau_size;
+    const int m_max_n_days_miss;
+    const int m_max_n_sex_days_miss;
 
     const double* m_u_prior_probs;
 
     UMissBlock* m_miss_block;
     const UMissBlock* const m_end_block;
 
+    UGenVarCateg(Rcpp::List& var_info_list);
+
     UGenVarCateg(Rcpp::IntegerVector& var_info,
-	 Rcpp::NumericVector& u_prior_probs,
-	 Rcpp::List& var_block_list,
-	 Rcpp::IntegerVector& preg_map,
-	 Rcpp::IntegerVector& sex_map);
+		 Rcpp::NumericVector& u_prior_probs,
+		 Rcpp::List& var_block_list,
+		 Rcpp::IntegerVector& preg_map,
+		 Rcpp::IntegerVector& sex_map);
     ~UGenVarCateg();
 
     void sample(const WGen& W,

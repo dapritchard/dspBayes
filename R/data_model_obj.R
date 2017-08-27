@@ -15,7 +15,7 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
 
     cov_col_miss_info <- get_cov_col_miss_info(U, dsp_model, use_na)
     cov_row_miss_info <- get_cov_row_miss_info(comb_dat, var_nm, U, cov_col_miss_info)
-    ugen_info <- get_ugen_info(cov_col_miss_info, cov_row_miss_info)
+    u_miss_info <- get_u_miss_info(cov_col_miss_info, cov_row_miss_info)
 
     # var_categ_status <- get_var_categ_status(cov_miss_info)
 
@@ -29,7 +29,7 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
          # var_categ_status  = var_categ_status,
          tau_fit           = tau_fit,
          utau              = utau,
-         ugen_info         = ugen_info,
+         u_miss_info       = u_miss_info,
          cov_row_miss      = cov_row_miss_info$cov_row_miss_list,
          cov_miss_w_idx    = cov_row_miss_info$cov_miss_w_idx,
          cov_miss_x_idx    = cov_row_miss_info$cov_miss_x_idx,
@@ -215,6 +215,11 @@ expand_model_rhs <- function(comb_dat, dsp_model) {
 
 #     var_categ_status
 # }
+
+
+get_var_categ_status <- function(cov_col_miss_info) {
+    sapply(cov_col_miss_info, function(x) as.integer(! x["categ"]))
+}
 
 
 

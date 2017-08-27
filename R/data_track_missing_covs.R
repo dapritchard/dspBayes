@@ -38,10 +38,14 @@ get_cov_col_miss_info <- function(expanded_df, dsp_model, use_na) {
         cov_miss_list[[k]] <- vector("list", 0L)
 
         # current variable name and corresponding column indices in the design
-        # matrix
+        # matrix.  We need only check the first column to see if any are missing
+        # because if any are missing then the whole row is missing.
         curr_var_nm <- explan_var_nm[k]
         curr_idx <- which(map_expand_to_orig == k)
         curr_data <- expanded_df[, curr_idx, drop = FALSE]
+        if (! any(is.na(curr_data[, 1L]))) {
+            next
+        }
         cov_miss_list[[k]]$idx <- curr_idx
 
         # the names of the variables in the original data from which the current
@@ -49,42 +53,32 @@ get_cov_col_miss_info <- function(expanded_df, dsp_model, use_na) {
         curr_var_composition_nm <- var_orig_nm[ as.logical(var_composition_mat[, k]) ]
         cov_miss_list[[k]]$composition_nm <- curr_var_composition_nm
 
-        # # store current variable column indices using 0-based indexing
-        # cov_miss_list[[k]]$col_start <- head(curr_idx, 1L) - 1L
-        # cov_miss_list[[k]]$col_end <- tail(curr_idx, 1L)
-
         # case: not a categorical variable
         if (! all(curr_var_composition_nm %in% categ_nm)) {
             cov_miss_list[[k]]$categ <- FALSE
-            cov_miss_list[[k]]$all_cells <- TRUE
         }
         # case: a categorical variable.  Find out if it is also a reference cell
-        # coding or not.
+        # coding and calculate the empirical class distribution.
         else {
-
             cov_miss_list[[k]]$categ <- TRUE
+            cov_miss_list[[k]]$all_cells <- ifelse(all(rowSums(curr_data) == 1L), TRUE, FALSE)
 
-            if (all(rowSums(curr_data) == 1L)) {
-                cov_miss_list[[k]]$all_cells <- TRUE
-            } else {
-                cov_miss_list[[k]]$all_cells <- FALSE
+            # the number of categories is equal to the number of columns and then
+            # possibly plus 1 if the variable uses reference cell coding
+            curr_n_categs <- length(curr_idx) + !cov_miss_list[[k]]$all_cells
+
+            # calculate the empirical class distributions
+            curr_empirical_probs <- vector("numeric", curr_n_categs)
+            for (j in 1:(curr_n_categs - 1L)) {
+                curr_empirical_probs[j] <- mean(expanded_df[, curr_idx[j]], na.rm = TRUE)
             }
+            curr_empirical_probs[curr_n_categs] <- 1 - sum(curr_empirical_probs)
+            cov_miss_list[[k]]$empirical_probs <- curr_empirical_probs
         }
-
-        curr_n_categs <- length(curr_idx) + !cov_miss_list[[k]]$all_cells
-
-        # calculate the empirical class distributions
-        curr_empirical_probs <- vector("numeric", curr_n_categs)
-        for (j in 1:(curr_n_categs - 1L)) {
-            curr_empirical_probs[j] <- mean(expanded_df[, curr_idx[j]], na.rm = TRUE)
-        }
-        curr_empirical_probs[curr_n_categs] <- 1 - sum(curr_empirical_probs)
-        cov_miss_list[[k]]$empirical_probs <- curr_empirical_probs
-
-        cov_miss_list[[k]]$any_miss <- any(is.na(expanded_df[, curr_idx]))
     }
 
-    Filter(function(x) x["any_miss"], cov_miss_list)
+    # remove covariates without any missing and return
+    Filter(length, cov_miss_list)
 }
 
 
@@ -162,7 +156,7 @@ get_cov_row_miss_info <- function(comb_dat, var_nm, U, cov_col_miss_info) {
                                                       map_to_sex_idx,
                                                       sex_miss_bool,
                                                       get_id_map(comb_dat[[var_nm$id]]))
-        # TODO: pass in `id_map` from elsewhere
+        # TODO: pass in `id_map` from elsewhere?
     }
 
     list(cov_row_miss_list    = cov_row_miss_list,
@@ -235,39 +229,43 @@ get_miss_block_info <- function(U,
 
 
 
-get_ugen_info <- function(cov_col_miss_info, cov_row_miss_info) {
+get_u_miss_info <- function(cov_col_miss_info, cov_row_miss_info) {
 
-    ugen_info_list <- vector("list", length(cov_col_miss_info))
+    u_miss_info_list <- vector("list", length(cov_col_miss_info))
 
-    for (i in seq_along(ugen_info_list)) {
+    # each iteration collects the missing covariate information needed for the
+    # sampler for the i-th covariate
+    for (i in seq_along(u_miss_info_list)) {
 
         curr_col_info <- cov_col_miss_info[[i]]
         curr_row_miss_info <- cov_row_miss_info$cov_row_miss_list[[i]]
 
+        # the maximum number of missing for an observation in the expanded data,
+        # and the maximum number of missing intercourse days for a an
+        # observation in the expanded data
         max_n_days_miss <- sapply(curr_row_miss_info, function(x) x["n_days"]) %>% max
         max_n_sex_days_miss <- sapply(curr_row_miss_info, function(x) x["n_sex_days"]) %>% max
 
-        # since we're switching to 0-based indexing, then
-        # `tail(curr_col_info$idx, 1L)` gives us one past the last column index.
-        # If however, we're using reference-cell coding, then we add another
-        # column to represent the referernce category.
-        col_start <- curr_col_info$idx[1L] - 1L
-        col_end <- tail(curr_col_info$idx, 1L) + !curr_col_info$all_cells
+        # the number of categories for the current variable
+        n_categs <- length(curr_col_info$empirical_probs)
 
         # if there is a reference category then we make it one past the last
         # column.  If not then just set the value to -1 as a flag.
         ref_col <- ifelse(curr_col_info$all_cells, -1, col_end)
 
-        ugen_info_list[[i]] <- c(col_start           = col_start,
-                                 col_end             = col_end,
-                                 ref_col             = ref_col,
-                                 n_categs            = col_end - col_start,
-                                 max_n_days_miss     = max_n_days_miss,
-                                 max_n_sex_days_miss = max_n_sex_days_miss,
-                                 u_prior_probs       = cov_row_miss_info$empirical_probs[[i]],
-                                 w_idx               = cov_row_miss_info$cov_miss_w_idx,
-                                 x_idx               = cov_row_miss_info$cov_miss_x_idx)
+        # format missing variable information for use by the sampler
+        var_info <- c(col_start           = col_start,
+                      col_end             = col_end,
+                      ref_col             = ref_col,
+                      n_categs            = n_categs,
+                      max_n_days_miss     = max_n_days_miss,
+                      max_n_sex_days_miss = max_n_sex_days_miss)
+
+        # bundle the missing covariate information needed for the sampler
+        u_miss_info_list[[i]] <- list(var_info      = var_info,
+                                     u_prior_probs  = cov_row_miss_info$empirical_probs[[i]],
+                                     var_block_list = cov_row_miss_info[[i]])
     }
 
-    ugen_info_list
+    u_miss_info_list
 }

@@ -12,6 +12,19 @@
 
 #define IN_NON_PREG_CYC  -1
 
+// using Rcpp::as;
+
+
+
+
+// UGenVarCateg::UGenVarCateg(Rcpp::List& var_info_list) :
+//     UGenVarCateg::UGenVarCateg(as<Rcpp::IntegerVector>(var_info_list["var_info"]),
+// 			       as<Rcpp::NumericVector>(var_info_list["u_prior_probs"]),
+// 			       as<Rcpp::List>(var_info_list["var_block_list"]),
+// 			       as<Rcpp::IntegerVector>(var_info_list["preg_map"]),
+// 			       as<Rcpp::IntegerVector>(var_info_list["sex_map"])) {
+// }
+
 
 
 
@@ -25,8 +38,8 @@ UGenVarCateg::UGenVarCateg(Rcpp::IntegerVector& var_info,
     m_col_end(var_info["col_end"]),
     m_ref_col(var_info["ref_col"]),
     m_n_categs(var_info["n_categs"]),
-    m_max_alt_exp_ubeta_size(var_info["max_alt_exp_ubeta_size"]),
-    m_max_alt_utau_size(var_info["max_alt_utau_size"]),
+    m_max_n_days_miss(var_info["max_n_days_miss"]),
+    m_max_n_sex_days_miss(var_info["max_n_sex_days_miss"]),
     m_u_prior_probs(u_prior_probs.begin()),
     m_miss_block(UMissBlock::list_to_arr(var_block_list)),
     m_end_block(m_miss_block + var_block_list.size()) {
@@ -87,8 +100,8 @@ void UGenVarCateg::sample(const WGen& W,
     // possible categories of the missing covariate and over the values of `U`
     // affected by the covariate.  The storage is reused over all of the missing
     // observations, so we set the size to be the maximum needed for each.
-    double alt_exp_ubeta_vals[m_max_alt_exp_ubeta_size];
-    double alt_utau_vals[m_max_alt_utau_size];
+    double alt_exp_ubeta_vals[m_max_n_days_miss];
+    double alt_utau_vals[m_max_n_sex_days_miss];
 
     // each iteration samples a new values for the missing covariate
     // corresponding to `curr_block`, and updates the observations in `ubeta`
@@ -129,6 +142,8 @@ void UGenVarCateg::sample(const WGen& W,
 
 	// update the missing covariate with the newly sampled category
 	curr_block->u_col = u_categ + m_col_start;
+
+	// TODO: update U with the new data
     }
 }
 
