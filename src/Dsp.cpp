@@ -60,7 +60,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     UProdBeta ubeta(u_rcpp.nrow());
     XGen X(x_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
-    UGen U(u_miss_info, u_miss_type, u_preg_map, u_sex_map);
+    // UGen U(u_miss_info, u_miss_type, u_preg_map, u_sex_map);
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
@@ -82,8 +82,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
 	// update missing values for the intercourse variables X
 	X.sample(W, xi, ubeta, utau);
 
-	// update missing values for the covariate data U
-	U.sample(W, xi, coefs, X, ubeta, utau);
+	// // update missing values for the covariate data U
+	// U.sample(W, xi, coefs, X, ubeta, utau);
 
 	// case: burn-in phase is over so record samples.  Note that this occurs
 	// after the samples in this scan have been taken; this is because

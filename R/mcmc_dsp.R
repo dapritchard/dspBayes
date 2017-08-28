@@ -16,8 +16,8 @@ dsp <- function(dsp_data,
     # start timer
     start_time <- proc.time()
 
-    out <- dsp_(U                 = dsp_data$U,
-                X_rcpp            = dsp_data$intercourse$X,
+    out <- dsp_(u_rcpp            = dsp_data$U,
+                x_rcpp            = dsp_data$intercourse$X,
                 w_day_blocks      = dsp_data$w_day_blocks,
                 w_to_days_idx     = dsp_data$w_to_days_idx,
                 w_cyc_to_subj_idx = dsp_data$w_cyc_to_subj_idx,
@@ -29,6 +29,10 @@ dsp <- function(dsp_data,
                 x_miss_day        = dsp_data$intercourse$miss_day,
                 utau_rcpp         = dsp_data$utau,
                 tau_coefs         = dsp_data$tau_fit,
+                u_miss_info       = dsp_data$u_miss_info,
+                u_miss_type       = dsp_data$u_miss_type,
+                u_preg_map        = dsp_data$cov_miss_w_idx,
+                u_sex_map         = dsp_data$cov_miss_x_idx,
                 fw_len            = 5L,
                 n_burn            = 0L,
                 n_samp            = n_samp)

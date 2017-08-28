@@ -16,8 +16,8 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
     cov_col_miss_info <- get_cov_col_miss_info(U, dsp_model, use_na)
     cov_row_miss_info <- get_cov_row_miss_info(comb_dat, var_nm, U, cov_col_miss_info)
     u_miss_info <- get_u_miss_info(cov_col_miss_info, cov_row_miss_info)
-
-    # var_categ_status <- get_var_categ_status(cov_miss_info)
+    u_miss_type <- get_var_categ_status(cov_col_miss_info)
+    u_miss_filled_in <- get_u_miss_filled_in(U, cov_col_miss_info)
 
     list(w_day_blocks      = w_day_blocks,
          w_to_days_idx     = w_to_days_idx,
@@ -26,14 +26,13 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
          day_to_subj_idx   = day_to_subj_idx,
          intercourse       = intercourse_data,
          cov_col_miss_info = cov_col_miss_info,
-         # var_categ_status  = var_categ_status,
          tau_fit           = tau_fit,
          utau              = utau,
          u_miss_info       = u_miss_info,
-         cov_row_miss      = cov_row_miss_info$cov_row_miss_list,
+         u_miss_type       = u_miss_type,
          cov_miss_w_idx    = cov_row_miss_info$cov_miss_w_idx,
          cov_miss_x_idx    = cov_row_miss_info$cov_miss_x_idx,
-         U                 = U)
+         U                 = u_miss_filled_in)
 }
 
 
@@ -218,7 +217,11 @@ expand_model_rhs <- function(comb_dat, dsp_model) {
 
 
 get_var_categ_status <- function(cov_col_miss_info) {
-    sapply(cov_col_miss_info, function(x) as.integer(! x["categ"]))
+    if (length(cov_col_miss_info) > 0L) {
+        sapply(cov_col_miss_info, function(x) x["categ"] %>% as.integer)
+    } else {
+        vector("integer", 0L)
+    }
 }
 
 
@@ -502,9 +505,10 @@ get_sex_yester_coding <- function(daily, var_nm) {
 
     # sex_yester
 
-    # map "sex yesterday" variable to binary data, and where missing values are
-    # coded as a 2
+    # map "sex yesterday" variable to binary data and where missing values are
+    # coded as a -2, which is the code for an imputed value of "no sex
+    # yesterday"
     sex_yester <- map_vec_to_bool(daily$sex_yester) %>% as.integer
-    sex_yester[is.na(sex_yester)] <- 2L
+    sex_yester[is.na(sex_yester)] <- -2L
     sex_yester
 }

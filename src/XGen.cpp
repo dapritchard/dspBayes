@@ -7,7 +7,9 @@
 #include "XGen.h"
 #include "XiGen.h"
 
-#define SEX_MISS  2
+#define SEX_YES            1
+#define SEX_IMPUTE_SHIFT   2
+#define NON_PREG_CYC      -1
 
 using std::exp;
 
@@ -111,21 +113,21 @@ void XGen::sample(const WGen& W,
     // block of days specified by `curr_miss_cyc`
     for ( ; curr_miss_cyc != cyc_end; ++curr_miss_cyc) {
 
-	w_vals = sample_cycle(curr_miss_cyc, w_vals, xi, ubeta, utau);
+	sample_cycle(curr_miss_cyc, w_vals, xi, ubeta, utau);
     }
 }
 
 
 
 
-// TODO: make this a void function
+
 // TODO: have to record imputed sex previous using -1 and 2 flags
 
-const int* XGen::sample_cycle(const XMissCyc* miss_cyc,
-			      const int* w_vals,
-			      const XiGen& xi,
-			      const UProdBeta& ubeta,
-			      const UProdTau& utau) {
+void XGen::sample_cycle(const XMissCyc* miss_cyc,
+			const int* w_vals,
+			const XiGen& xi,
+			const UProdBeta& ubeta,
+			const UProdTau& utau) {
 
     double prior_prob_yes, posterior_prob_yes;
     int prev_day_sex;
@@ -133,8 +135,8 @@ const int* XGen::sample_cycle(const XMissCyc* miss_cyc,
     // value of xi for the subject that `miss_cycl` corresponds to
     const double xi_i = xi.vals()[miss_cyc->subj_idx];
 
-    // either -1 or the index in W of the first day in the cycle.  If -1, then
-    // this signals that the cycle was not a pregnancy cycle.
+    // either the value of `NON_PREG_CYC` or the index in `W` of the first day
+    // in the cycle
     int curr_preg_idx = miss_cyc->preg_idx;
 
     // if we don't have missing intercourse data for the day before the fertile
@@ -142,8 +144,11 @@ const int* XGen::sample_cycle(const XMissCyc* miss_cyc,
     // `curr_miss_day` need not be the first day in the fertile window, but if
     // not then the intercourse data for the previous day is known and hence
     // this conditional is still valid.
-    if (m_miss_day[miss_cyc->beg_idx].prev == SEX_MISS) {
+    if (check_if_prev_sex_miss(miss_cyc->beg_idx)) {
+
 	prev_day_sex = sample_day_before_fw_sex();
+	m_miss_day[miss_cyc->beg_idx].prev = prev_day_sex - SEX_IMPUTE_SHIFT;
+
     }
 
     // each iteration samples `X_{ijk_r}` for the day corresponding to
@@ -153,34 +158,36 @@ const int* XGen::sample_cycle(const XMissCyc* miss_cyc,
 
 	const int curr_day_idx = m_miss_day[r].idx;
 
-	// case: W_{ijk_r} > 0, so intercourse must have occured on this day
-	if ((curr_preg_idx >= 0) && w_vals[curr_preg_idx++]) {
-	    m_vals[curr_day_idx] = prev_day_sex = 1;
-	    continue;
-	}
-
-	// else: W_{ijk_r} == 0, need to sample intercourse
-
 	// case: sex in the previous day was not missing, so the value of
 	// `prev_day_sex` is given by the known value rather than whatever
 	// value was previous sampled (i.e. the previous missing day was 2
 	// or more days ago).
-	if (m_miss_day[r].prev != SEX_MISS) {
+	if (! check_if_prev_sex_miss(r)) {
 	    prev_day_sex = m_miss_day[r].prev;
 	}
+	// case: sex in the previous day was missing, so update it with the
+	// latest sample, using the imputed sex coding shift
+	else {
+	    m_miss_day[r].prev = prev_day_sex - SEX_IMPUTE_SHIFT;
+	}
 
-	// calculate `P(X_{ijk_r} = 1 | X_{ij{k_r-1}})`
-	prior_prob_yes = calc_prior_prob(utau, r, prev_day_sex);
+	// case: W_{ijk_r} > 0, so intercourse must have occured on this day
+	if ((curr_preg_idx != NON_PREG_CYC) && w_vals[curr_preg_idx++]) {
+	    m_vals[curr_day_idx] = prev_day_sex = SEX_YES;
+	}
+	// case: W_{ijk_r} == 0, so we need to sample intercourse
+	else {
+	    // calculate `P(X_{ijk_r} = 1 | X_{ij{k_r-1}})`
+	    prior_prob_yes = calc_prior_prob(utau, r, prev_day_sex);
 
-	// calculate `P(W_{ijk_r} = 0 | X_{ijk_r} = 1)`
-	posterior_prob_yes = calc_posterior_prob(ubeta, xi_i, curr_day_idx);
+	    // calculate `P(W_{ijk_r} = 0 | X_{ijk_r} = 1)`
+	    posterior_prob_yes = calc_posterior_prob(ubeta, xi_i, curr_day_idx);
 
-	// sample `X_{ijk_r}`
-	m_vals[curr_day_idx] = prev_day_sex = sample_x_ijk(prior_prob_yes,
-							   posterior_prob_yes);
+	    // sample `X_{ijk_r}`
+	    m_vals[curr_day_idx] = prev_day_sex = sample_x_ijk(prior_prob_yes,
+							       posterior_prob_yes);
+	}
     }
-
-    return w_vals;
 }
 
 
@@ -230,6 +237,18 @@ inline int XGen::sample_day_before_fw_sex() const {
     return (R::unif_rand() < m_cohort_sex_prob) ? 1 : 0;
 }
 
+
+
+
+// previous day intercourse is coded as 0 and 1 for days in which intercourse
+// was observed.  When they are imputed, the value of 0 or 1 that is imputed is
+// stored by shifting it by `SEX_IMPUTE_SHIFT` so that it can be distinguished
+// from non-imputed values.  Thus if the value is negative it was imputed (and
+// hence was missing), otherwise it was not imputed.
+
+inline bool XGen::check_if_prev_sex_miss(int miss_day_idx) const {
+    return (m_miss_day[miss_day_idx].prev < 0);
+}
 
 
 

@@ -52,20 +52,30 @@ get_cov_col_miss_info <- function(expanded_df, dsp_model, use_na) {
         # design matrix variable is comprised
         curr_var_composition_nm <- var_orig_nm[ as.logical(var_composition_mat[, k]) ]
         cov_miss_list[[k]]$composition_nm <- curr_var_composition_nm
+        if (length(curr_var_composition_nm) > 1L) {
+            stop("the current version of this program does not support ",
+                 "interaction terms that contain missing data (terms: ",
+                 paste(curr_var_composition_nm, collapse = ", "), ")",
+                 call. = FALSE)
+        }
 
-        # case: not a categorical variable
-        if (! all(curr_var_composition_nm %in% categ_nm)) {
+        # case: not a categorical variable.  Note that we are able to assume
+        # that `curr_var_composition_nm` is a length-1 vector due to the `stop`
+        # command above.
+        if (! (curr_var_composition_nm %in% categ_nm)) {
             cov_miss_list[[k]]$categ <- FALSE
+            cov_miss_list[[k]]$n_categs <- 1L
+            cov_miss_list[[k]]$empirical_probs <- vector("numeric", 0L)
         }
         # case: a categorical variable.  Find out if it is also a reference cell
-        # coding and calculate the empirical class distribution.
+        # coding and calculate the empirical class distribution
         else {
             cov_miss_list[[k]]$categ <- TRUE
-            cov_miss_list[[k]]$all_cells <- ifelse(all(rowSums(curr_data) == 1L), TRUE, FALSE)
 
             # the number of categories is equal to the number of columns and then
             # possibly plus 1 if the variable uses reference cell coding
-            curr_n_categs <- length(curr_idx) + !cov_miss_list[[k]]$all_cells
+            ref_cell_indicator <- ifelse(any(rowSums(curr_data) != 1), 1L, 0L)
+            curr_n_categs <- length(curr_idx) + ref_cell_indicator
 
             # calculate the empirical class distributions
             curr_empirical_probs <- vector("numeric", curr_n_categs)
@@ -73,7 +83,10 @@ get_cov_col_miss_info <- function(expanded_df, dsp_model, use_na) {
                 curr_empirical_probs[j] <- mean(expanded_df[, curr_idx[j]], na.rm = TRUE)
             }
             curr_empirical_probs[curr_n_categs] <- 1 - sum(curr_empirical_probs)
+
+            # store results for later use
             cov_miss_list[[k]]$empirical_probs <- curr_empirical_probs
+            cov_miss_list[[k]]$n_categs <- curr_n_categs
         }
     }
 
@@ -88,7 +101,9 @@ get_cov_row_miss_info <- function(comb_dat, var_nm, U, cov_col_miss_info) {
 
     # return without doing any work if there is no missing data
     if (length(cov_col_miss_info) == 0L) {
-        return(vector("list", 0L))
+        return(list(cov_row_miss_list = vector("list", 0L),
+                    cov_miss_w_idx    = vector("numeric", 0L),
+                    cov_miss_x_idx    = vector("numeric", 0L)))
     }
 
     # TODO: let's use and store these in the model object creation section and
@@ -132,23 +147,20 @@ get_cov_row_miss_info <- function(comb_dat, var_nm, U, cov_col_miss_info) {
     for (i in seq_along(cov_col_miss_info)) {
 
         curr_col_info <- cov_col_miss_info[[i]]
-
-        curr_nm <- curr_col_info$composition_nm
-        if (length(curr_nm) > 1L) {
-            stop("the current version of this program does not support ",
-                 "interaction terms that contain missing data", call. = FALSE)
-        }
+        curr_composition_nm <- curr_col_info$composition_nm
 
         # the blocks of data are determined by whether the variable is from the
-        # baseline, cycle-specific, or day-specific data
-        if (curr_nm %in% var_nm$all_base) {
+        # baseline, cycle-specific, or day-specific data.  Note that we may
+        # assume that `curr_composition_nm` is a length-1 vector.
+        if (curr_composition_nm %in% var_nm$all_base) {
             block_idx_list <- subj_idx_list
-        } else if (curr_nm %in% var_nm$all_cyc) {
+        } else if (curr_composition_nm %in% var_nm$all_cyc) {
             block_idx_list <- cyc_idx_list
         } else {
             block_idx_list <- day_idx_list
         }
 
+        # TODO: pass in `id_map` from elsewhere?
         cov_row_miss_list[[i]] <- get_miss_block_info(U,
                                                       curr_col_info,
                                                       block_idx_list,
@@ -156,12 +168,11 @@ get_cov_row_miss_info <- function(comb_dat, var_nm, U, cov_col_miss_info) {
                                                       map_to_sex_idx,
                                                       sex_miss_bool,
                                                       get_id_map(comb_dat[[var_nm$id]]))
-        # TODO: pass in `id_map` from elsewhere?
     }
 
     list(cov_row_miss_list    = cov_row_miss_list,
-         cov_miss_w_idx       = preg_idx[row_miss_bool],
-         cov_miss_x_idx       = sex_miss_idx[row_miss_bool])
+         cov_miss_w_idx       = preg_idx[row_miss_bool] - 1L,
+         cov_miss_x_idx       = sex_miss_idx[row_miss_bool] - 1L)
 }
 
 
@@ -238,20 +249,20 @@ get_u_miss_info <- function(cov_col_miss_info, cov_row_miss_info) {
     for (i in seq_along(u_miss_info_list)) {
 
         curr_col_info <- cov_col_miss_info[[i]]
-        curr_row_miss_info <- cov_row_miss_info$cov_row_miss_list[[i]]
+        curr_row_info <- cov_row_miss_info$cov_row_miss_list[[i]]
 
         # the maximum number of missing for an observation in the expanded data,
         # and the maximum number of missing intercourse days for a an
         # observation in the expanded data
-        max_n_days_miss <- sapply(curr_row_miss_info, function(x) x["n_days"]) %>% max
-        max_n_sex_days_miss <- sapply(curr_row_miss_info, function(x) x["n_sex_days"]) %>% max
-
-        # the number of categories for the current variable
-        n_categs <- length(curr_col_info$empirical_probs)
+        max_n_days_miss <- sapply(curr_row_info, function(x) x["n_days"]) %>% max
+        max_n_sex_days_miss <- sapply(curr_row_info, function(x) x["n_sex_days"]) %>% max
 
         # if there is a reference category then we make it one past the last
         # column.  If not then just set the value to -1 as a flag.
-        ref_col <- ifelse(curr_col_info$all_cells, -1, col_end)
+        n_categs <- curr_col_info$n_categs
+        col_start <- curr_col_info$idx[1L] - 1L
+        col_end <- col_start + n_categs
+        ref_col <- ifelse(n_categs == length(curr_col_info$idx), -1L, col_end - 1L)
 
         # format missing variable information for use by the sampler
         var_info <- c(col_start           = col_start,
@@ -262,10 +273,43 @@ get_u_miss_info <- function(cov_col_miss_info, cov_row_miss_info) {
                       max_n_sex_days_miss = max_n_sex_days_miss)
 
         # bundle the missing covariate information needed for the sampler
-        u_miss_info_list[[i]] <- list(var_info      = var_info,
-                                     u_prior_probs  = cov_row_miss_info$empirical_probs[[i]],
-                                     var_block_list = cov_row_miss_info[[i]])
+        u_miss_info_list[[i]] <- list(var_info       = var_info,
+                                      u_prior_probs  = curr_col_info$empirical_probs,
+                                      var_block_list = curr_row_info)
     }
 
     u_miss_info_list
+}
+
+
+
+
+get_u_miss_filled_in <- function(U, cov_col_miss_info) {
+
+    u_miss_filled_in <- U
+
+    # each iteration fills in values for the missing observation for the
+    # variable corresponding to `curr_col_info`
+    for (curr_col_info in cov_col_miss_info) {
+
+        curr_idx <- curr_col_info$idx
+        curr_miss_obs_idx <- which( is.na( U[, curr_idx[1L]] ) )
+
+        # case: continuous variable.  Fill in missing observations with the
+        # empirical column mean
+        if (! curr_col_info$categ) {
+            curr_col_mean <- mean(u_miss_filled_in[ , curr_idx[1L]], na.rm = TRUE)
+            u_miss_filled_in[curr_miss_obs_idx, curr_idx[1L]] <- curr_col_mean
+        }
+        # case: categorical variable.  Initialize the missing observations to
+        # the first category.
+        else {
+            u_miss_filled_in[curr_miss_obs_idx, curr_idx[1L]] <- 1
+            for (k in curr_idx[-1L]) {
+                u_miss_filled_in[curr_miss_obs_idx, curr_idx[1L]] <- 0
+            }
+        }
+    }
+
+    u_miss_filled_in
 }

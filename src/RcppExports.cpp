@@ -6,13 +6,13 @@
 using namespace Rcpp;
 
 // dsp_
-Rcpp::List dsp_(Rcpp::NumericMatrix U_rcpp, Rcpp::IntegerVector X_rcpp, Rcpp::List w_day_blocks, Rcpp::IntegerVector w_to_days_idx, Rcpp::IntegerVector w_cyc_to_subj_idx, Rcpp::List subj_day_blocks, Rcpp::IntegerVector day_to_subj_idx, Rcpp::List gamma_specs, Rcpp::NumericVector phi_specs, Rcpp::List x_miss_cyc, Rcpp::List x_miss_day, Rcpp::NumericVector utau_rcpp, Rcpp::List tau_coefs, Rcpp::List u_miss_info, Rcpp::IntegerVector u_miss_type, Rcpp::IntegerVector u_preg_map, Rcpp::IntegerVector u_sex_map, int fw_len, int n_burn, int n_samp);
-RcppExport SEXP _dspBayes_dsp_(SEXP U_rcppSEXP, SEXP X_rcppSEXP, SEXP w_day_blocksSEXP, SEXP w_to_days_idxSEXP, SEXP w_cyc_to_subj_idxSEXP, SEXP subj_day_blocksSEXP, SEXP day_to_subj_idxSEXP, SEXP gamma_specsSEXP, SEXP phi_specsSEXP, SEXP x_miss_cycSEXP, SEXP x_miss_daySEXP, SEXP utau_rcppSEXP, SEXP tau_coefsSEXP, SEXP u_miss_infoSEXP, SEXP u_miss_typeSEXP, SEXP u_preg_mapSEXP, SEXP u_sex_mapSEXP, SEXP fw_lenSEXP, SEXP n_burnSEXP, SEXP n_sampSEXP) {
+Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp, Rcpp::IntegerVector x_rcpp, Rcpp::List w_day_blocks, Rcpp::IntegerVector w_to_days_idx, Rcpp::IntegerVector w_cyc_to_subj_idx, Rcpp::List subj_day_blocks, Rcpp::IntegerVector day_to_subj_idx, Rcpp::List gamma_specs, Rcpp::NumericVector phi_specs, Rcpp::List x_miss_cyc, Rcpp::List x_miss_day, Rcpp::NumericVector utau_rcpp, Rcpp::List tau_coefs, Rcpp::List u_miss_info, Rcpp::IntegerVector u_miss_type, Rcpp::IntegerVector u_preg_map, Rcpp::IntegerVector u_sex_map, int fw_len, int n_burn, int n_samp);
+RcppExport SEXP _dspBayes_dsp_(SEXP u_rcppSEXP, SEXP x_rcppSEXP, SEXP w_day_blocksSEXP, SEXP w_to_days_idxSEXP, SEXP w_cyc_to_subj_idxSEXP, SEXP subj_day_blocksSEXP, SEXP day_to_subj_idxSEXP, SEXP gamma_specsSEXP, SEXP phi_specsSEXP, SEXP x_miss_cycSEXP, SEXP x_miss_daySEXP, SEXP utau_rcppSEXP, SEXP tau_coefsSEXP, SEXP u_miss_infoSEXP, SEXP u_miss_typeSEXP, SEXP u_preg_mapSEXP, SEXP u_sex_mapSEXP, SEXP fw_lenSEXP, SEXP n_burnSEXP, SEXP n_sampSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type U_rcpp(U_rcppSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type X_rcpp(X_rcppSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type u_rcpp(u_rcppSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type x_rcpp(x_rcppSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type w_day_blocks(w_day_blocksSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type w_to_days_idx(w_to_days_idxSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type w_cyc_to_subj_idx(w_cyc_to_subj_idxSEXP);
@@ -31,7 +31,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type fw_len(fw_lenSEXP);
     Rcpp::traits::input_parameter< int >::type n_burn(n_burnSEXP);
     Rcpp::traits::input_parameter< int >::type n_samp(n_sampSEXP);
-    rcpp_result_gen = Rcpp::wrap(dsp_(U_rcpp, X_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, x_miss_cyc, x_miss_day, utau_rcpp, tau_coefs, u_miss_info, u_miss_type, u_preg_map, u_sex_map, fw_len, n_burn, n_samp));
+    rcpp_result_gen = Rcpp::wrap(dsp_(u_rcpp, x_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, x_miss_cyc, x_miss_day, utau_rcpp, tau_coefs, u_miss_info, u_miss_type, u_preg_map, u_sex_map, fw_len, n_burn, n_samp));
     return rcpp_result_gen;
 END_RCPP
 }

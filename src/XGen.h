@@ -28,7 +28,7 @@ public:
 
     // tracks the indices of the missing values in X as well as whether
     // intercourse occured on the previous day
-    const XMissDay* m_miss_day;
+    XMissDay* m_miss_day;
 
     // global probability used to sample missing values of intercourse for the
     // day before the fertile window
@@ -51,11 +51,11 @@ public:
 		const UProdBeta& ubeta,
 		const UProdTau& utau);
 
-    const int* sample_cycle(const XMissCyc* miss_cyc,
-			    const int* W,
-			    const XiGen& xi,
-			    const UProdBeta& ubeta,
-			    const UProdTau& utau);
+    void sample_cycle(const XMissCyc* miss_cyc,
+		      const int* W,
+		      const XiGen& xi,
+		      const UProdBeta& ubeta,
+		      const UProdTau& utau);
 
     double calc_prior_prob(const UProdTau& utau,
 			   const int miss_day_idx,
@@ -69,6 +69,7 @@ public:
 			    const double posterior_prob_yes);
 
     int sample_day_before_fw_sex() const;
+    bool check_if_prev_sex_miss(int miss_day_idx) const;
 
     int* vals() { return m_vals; }
     const int* vals() const { return m_vals; }

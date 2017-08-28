@@ -7,8 +7,8 @@
 #include "XGen.h"
 #include "XiGen.h"
 
-#define U_MISS_CATEG   0
-#define U_MISS_CONTIN  1
+#define U_MISS_CONTIN  0
+#define U_MISS_CATEG   1
 
 using Rcpp::as;
 
