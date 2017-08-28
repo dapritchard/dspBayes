@@ -3,15 +3,12 @@
 #include "GammaGen.h"
 #include "global_vars.h"
 
-using std::log;
-using std::exp;
 using R::lgammafn_sign;
 
 
 
 
 GammaCateg::GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs) :
-    // initialization list
     GammaGen(U, gamma_specs),
     m_bnd_l_is_zero(m_bnd_l == 0),
     m_bnd_u_is_inf(m_bnd_u == R_PosInf),

@@ -106,6 +106,11 @@ void XGenTest::test_sample() {
 
 
 
+
+// TODO: test imputed previous day sex recording
+
+
+
 // // TODO: test a single cycle?
 // void XGenTest::test_sample_cycle() {
 

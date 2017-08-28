@@ -257,12 +257,13 @@ get_u_miss_info <- function(cov_col_miss_info, cov_row_miss_info) {
         max_n_days_miss <- sapply(curr_row_info, function(x) x["n_days"]) %>% max
         max_n_sex_days_miss <- sapply(curr_row_info, function(x) x["n_sex_days"]) %>% max
 
-        # if there is a reference category then we make it one past the last
-        # column.  If not then just set the value to -1 as a flag.
+        # if there is a reference category then we make the last category.  If
+        # not then we make it one past the last category, which has the effect
+        # of causing it to be ignored.
         n_categs <- curr_col_info$n_categs
         col_start <- curr_col_info$idx[1L] - 1L
         col_end <- col_start + n_categs
-        ref_col <- ifelse(n_categs == length(curr_col_info$idx), -1L, col_end - 1L)
+        ref_col <- ifelse(n_categs == length(curr_col_info$idx), col_end, col_end - 1L)
 
         # format missing variable information for use by the sampler
         var_info <- c(col_start           = col_start,

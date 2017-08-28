@@ -21,7 +21,8 @@ public:
     UGenVar** m_vars;
     int m_n_vars;
 
-    UGen(Rcpp::List& miss_info,
+    UGen(Rcpp::NumericMatrix& u_rcpp,
+	 Rcpp::List& miss_info,
 	 Rcpp::IntegerVector& miss_type,
 	 Rcpp::IntegerVector& preg_map,
 	 Rcpp::IntegerVector& sex_map);

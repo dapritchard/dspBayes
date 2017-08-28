@@ -15,7 +15,8 @@ using Rcpp::as;
 
 
 
-UGen::UGen(Rcpp::List& miss_info,
+UGen::UGen(Rcpp::NumericMatrix& u_rcpp,
+	   Rcpp::List& miss_info,
 	   Rcpp::IntegerVector& miss_type,
 	   Rcpp::IntegerVector& preg_map,
 	   Rcpp::IntegerVector& sex_map) :
@@ -28,11 +29,18 @@ UGen::UGen(Rcpp::List& miss_info,
 
 	if (miss_type[i] == U_MISS_CATEG) {
 
-	    Rcpp::IntegerVector var_info     ( as<Rcpp::IntegerVector>(miss_info["var_info"])      );
-	    Rcpp::NumericVector u_prior_probs( as<Rcpp::NumericVector>(miss_info["u_prior_probs"]) );
-	    Rcpp::List var_block_list        ( as<Rcpp::List>(miss_info["var_block_list"])         );
+	    Rcpp::List curr_var(miss_info[i]);
 
-	    m_vars[i] = new UGenVarCateg(var_info, u_prior_probs, var_block_list, preg_map, sex_map);
+	    Rcpp::IntegerVector var_info     ( as<Rcpp::IntegerVector>(curr_var["var_info"])      );
+	    Rcpp::NumericVector u_prior_probs( as<Rcpp::NumericVector>(curr_var["u_prior_probs"]) );
+	    Rcpp::List var_block_list        ( as<Rcpp::List>(curr_var["var_block_list"])         );
+
+	    m_vars[i] = new UGenVarCateg(u_rcpp,
+					 var_info,
+					 u_prior_probs,
+					 var_block_list,
+					 preg_map,
+					 sex_map);
 	}
 	else {
 	    // TODO: have to construct continuous version still

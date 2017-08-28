@@ -17,13 +17,18 @@ class UGenVar {
 
 public:
 
-    const int* m_w_idx;
-    const int* m_x_idx;
+    double* const m_u_var_col;
+    const int m_n_days;
 
-    UGenVar() {}
+    const int* const m_w_idx;
+    const int* const m_x_idx;
 
-    UGenVar(Rcpp::IntegerVector& preg_map,
-	    Rcpp::IntegerVector& sex_map);
+    UGenVar();
+
+    UGenVar(Rcpp::NumericMatrix& u_rcpp,
+	    Rcpp::IntegerVector& preg_map,
+	    Rcpp::IntegerVector& sex_map,
+	    int u_col);
 
     virtual void sample(const WGen& W,
 			const XiGen& xi,
@@ -57,7 +62,8 @@ public:
 
     UGenVarCateg(Rcpp::List& var_info_list);
 
-    UGenVarCateg(Rcpp::IntegerVector& var_info,
+    UGenVarCateg(Rcpp::NumericMatrix& u_rcpp,
+		 Rcpp::IntegerVector& var_info,
 		 Rcpp::NumericVector& u_prior_probs,
 		 Rcpp::List& var_block_list,
 		 Rcpp::IntegerVector& preg_map,
@@ -87,6 +93,8 @@ public:
 
     int sample_covariate(const double* posterior_w_probs,
 			 const double* posterior_x_probs) const;
+
+    void update_u(const UMissBlock* const miss_block);
 
     static void update_ubeta(UProdBeta& ubeta,
 			     const int u_categ,

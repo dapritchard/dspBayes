@@ -12,28 +12,16 @@
 
 #define IN_NON_PREG_CYC  -1
 
-// using Rcpp::as;
 
 
 
-
-// UGenVarCateg::UGenVarCateg(Rcpp::List& var_info_list) :
-//     UGenVarCateg::UGenVarCateg(as<Rcpp::IntegerVector>(var_info_list["var_info"]),
-// 			       as<Rcpp::NumericVector>(var_info_list["u_prior_probs"]),
-// 			       as<Rcpp::List>(var_info_list["var_block_list"]),
-// 			       as<Rcpp::IntegerVector>(var_info_list["preg_map"]),
-// 			       as<Rcpp::IntegerVector>(var_info_list["sex_map"])) {
-// }
-
-
-
-
-UGenVarCateg::UGenVarCateg(Rcpp::IntegerVector& var_info,
+UGenVarCateg::UGenVarCateg(Rcpp::NumericMatrix& u_rcpp,
+			   Rcpp::IntegerVector& var_info,
 			   Rcpp::NumericVector& u_prior_probs,
 			   Rcpp::List& var_block_list,
 			   Rcpp::IntegerVector& preg_map,
 			   Rcpp::IntegerVector& sex_map) :
-    UGenVar(preg_map, sex_map),
+    UGenVar(u_rcpp, preg_map, sex_map, var_info["col_start"]),
     m_col_start(var_info["col_start"]),
     m_col_end(var_info["col_end"]),
     m_ref_col(var_info["ref_col"]),
@@ -132,18 +120,25 @@ void UGenVarCateg::sample(const WGen& W,
 
 	// sample the new category for the missing covariate
 	int u_categ = sample_covariate(posterior_w_probs, posterior_x_ptr);
+	int u_col = u_categ + m_col_start;
 
-	// update `ubeta` and `utau` to reflect the newly sampled category for
-	// the missing covariate
-	update_ubeta(ubeta, u_categ, alt_exp_ubeta_vals, curr_block);
-	if (curr_block->n_sex_days > 0) {
-	    update_utau(utau, u_categ, alt_utau_vals, curr_block);
+	// case: we've sampled a different category for the current missing
+	// covariate, so we have to update the corresponding data
+	if (u_col != curr_block->u_col) {
+
+	    // update covariate
+	    curr_block->u_col = u_col;
+
+	    // update U
+	    update_u(curr_block);
+
+	    // update `ubeta` and `utau` to reflect the newly sampled category for
+	    // the missing covariate
+	    update_ubeta(ubeta, u_categ, alt_exp_ubeta_vals, curr_block);
+	    if (curr_block->n_sex_days > 0) {
+		update_utau(utau, u_categ, alt_utau_vals, curr_block);
+	    }
 	}
-
-	// update the missing covariate with the newly sampled category
-	curr_block->u_col = u_categ + m_col_start;
-
-	// TODO: update U with the new data
     }
 }
 
@@ -167,6 +162,8 @@ void UGenVarCateg::sample(const WGen& W,
 //     // update ubeta
 
 //     // update utau
+
+//     // update U
 
 //     // -------------------------------
 
@@ -356,6 +353,8 @@ int UGenVarCateg::sample_covariate(const double* posterior_w_probs,
 	bin_rhs += unnormalized_probs[++j];
     }
 
+
+
     return j;
 }
 
@@ -400,4 +399,31 @@ void UGenVarCateg::update_utau(UProdTau& utau,
     std::copy(updated_utau_vals,
 	      updated_utau_vals + block_n_sex_days,
 	      block_utau_vals);
+}
+
+
+
+
+void UGenVarCateg::update_u(const UMissBlock* const miss_block) {
+
+    // tracks the start of the `j`-th column in U
+    double* curr_u_col = m_u_var_col;
+
+    // each iteration updates the `j`-th column in U
+    for (int j = m_col_start; j < m_ref_col; ++j) {
+
+	// takes a value of 1 if the current sample of the covariate corresponds
+	// to the `j`-th column in the data, and a value of 0 otherwise
+	double col_val = (j == miss_block->u_col) ? 1.0 : 0.0;
+
+	// update the observations in the `j`-th column that are affected by the
+	// current missing covariate
+	int block_end_idx = miss_block->beg_day_idx + miss_block->n_days;
+	for (int i = miss_block->beg_day_idx; i < block_end_idx; ++i) {
+	    curr_u_col[i] = col_val;
+	}
+
+	// move the pointer to the next column
+	curr_u_col += m_n_days;
+    }
 }
