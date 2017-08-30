@@ -20,7 +20,6 @@ merge_dsp_data <- function(baseline,
                            var_nm,
                            fw_incl,
                            fw_day_before,
-                           use_na,
                            min_days_req) {
 
     # # conditionally create some variables that track where baseline- and

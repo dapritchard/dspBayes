@@ -42,10 +42,11 @@ get_cov_col_miss_info <- function(expanded_df, dsp_model, use_na) {
         # because if any are missing then the whole row is missing.
         curr_var_nm <- explan_var_nm[k]
         curr_idx <- which(map_expand_to_orig == k)
-        curr_data <- expanded_df[, curr_idx, drop = FALSE]
-        if (! any(is.na(curr_data[, 1L]))) {
+        row_miss_bool <- is.na(expanded_df[, curr_idx[1L]])
+        if (sum(row_miss_bool) == 0L) {
             next
         }
+        curr_data <- expanded_df[! row_miss_bool, curr_idx, drop = FALSE]
         cov_miss_list[[k]]$idx <- curr_idx
 
         # the names of the variables in the original data from which the current
@@ -64,8 +65,8 @@ get_cov_col_miss_info <- function(expanded_df, dsp_model, use_na) {
         # command above.
         if (! (curr_var_composition_nm %in% categ_nm)) {
             cov_miss_list[[k]]$categ <- FALSE
-            cov_miss_list[[k]]$n_categs <- 1L
             cov_miss_list[[k]]$empirical_probs <- vector("numeric", 0L)
+            cov_miss_list[[k]]$n_categs <- 1L
         }
         # case: a categorical variable.  Find out if it is also a reference cell
         # coding and calculate the empirical class distribution
@@ -74,7 +75,7 @@ get_cov_col_miss_info <- function(expanded_df, dsp_model, use_na) {
 
             # the number of categories is equal to the number of columns and then
             # possibly plus 1 if the variable uses reference cell coding
-            ref_cell_indicator <- ifelse(any(rowSums(curr_data) != 1), 1L, 0L)
+            ref_cell_indicator <- ifelse(any(rowSums(curr_data, na.rm = TRUE) != 1), 1L, 0L)
             curr_n_categs <- length(curr_idx) + ref_cell_indicator
 
             # calculate the empirical class distributions
@@ -170,9 +171,10 @@ get_cov_row_miss_info <- function(comb_dat, var_nm, U, cov_col_miss_info) {
                                                       get_id_map(comb_dat[[var_nm$id]]))
     }
 
+    # collect sampler objects and return
     list(cov_row_miss_list    = cov_row_miss_list,
          cov_miss_w_idx       = preg_idx[row_miss_bool] - 1L,
-         cov_miss_x_idx       = sex_miss_idx[row_miss_bool] - 1L)
+         cov_miss_x_idx       = sex_miss_idx[cov_and_sex_miss_bool] - 1L)
 }
 
 
@@ -307,7 +309,7 @@ get_u_miss_filled_in <- function(U, cov_col_miss_info) {
         else {
             u_miss_filled_in[curr_miss_obs_idx, curr_idx[1L]] <- 1
             for (k in curr_idx[-1L]) {
-                u_miss_filled_in[curr_miss_obs_idx, curr_idx[1L]] <- 0
+                u_miss_filled_in[curr_miss_obs_idx, k] <- 0
             }
         }
     }

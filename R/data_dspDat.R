@@ -258,7 +258,6 @@ dspDat <- function(dsp_model,
                                var_nm,
                                fw_incl,
                                fw_day_before,
-                               use_na,
                                req_min_days)
 
     # conditionally remove any cycles from `comb_dat` that have either missing data
@@ -276,7 +275,8 @@ dspDat <- function(dsp_model,
     # Observations with a missing value for intercourse remain in the data.
     sex_only_dat <- remove_days_no_sex(comb_dat, var_nm)
 
-    #### TODO check if data is collinear or constant within outcome ####
+    #### TODO check if data is collinear or constant within outcome or covariate ####
+    #### is all missing ####
 
     dsp_data <- derive_model_obj(sex_only_dat, var_nm, fw_incl, dsp_model, use_na, tau_fit)
 

@@ -266,6 +266,8 @@ UTestFactory.o : UTestFactory.h XiGen.h WGen.h PhiGen.h UProdBeta.h
 
 UTestPhiGen.o : PhiGen.h UTestPhiGen.h XiGen.h
 
+UTestUGenVarCateg.o : CoefGen.h UGenVar.h UProdBeta.h UProdTau.h WGen.h XGen.h XiGen.h
+
 UTestXGen.o : UTestXGen.h WGen.h XiGen.h UProdBeta.h UTestFactory.h
 
 UTestXiGen.o : UTestXiGen.h XiGen.h WGen.h PhiGen.h UProdBeta.h
