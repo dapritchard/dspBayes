@@ -5,39 +5,42 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
         w_ctr <- 0L
         for (miss_cyc in x_miss_cyc_list) {
 
-            w_ctr <- sample_cycle(miss_cyc, W, xi, ubeta, utau, w_ctr)
+            sample_cycle(miss_cyc, W, xi, ubeta, utau)
         }
     }
 
 
-    sample_cycle <- function(miss_cyc, W, xi, ubeta, utau, w_ctr) {
+    sample_cycle <- function(miss_cyc, W, xi, ubeta, utau) {
 
         miss_day <- x_miss_day_list[[miss_cyc["beg_idx"] + 1L]]
         xi_i <- xi[miss_cyc["subj_idx"] + 1L]
 
-        if (miss_day["prev"] == SEX_MISS) {
+        if (miss_day["prev"] < 0L) {
             prev_day_sex <- sample_day_before_fw_sex()
         }
 
         cycle_miss_day_idx <- seq(miss_cyc["beg_idx"] + 1L,
                                   miss_cyc["beg_idx"] + miss_cyc["n_days"],
                                   1L)
+        w_idx <- miss_cyc["preg_idx"]
 
         for (curr_miss_day_idx in cycle_miss_day_idx) {
 
             miss_day <- x_miss_day_list[[curr_miss_day_idx]]
             curr_day_idx <- miss_day["idx"] + 1L
 
-            if (miss_cyc["preg"] == 1L) {
-                w_ctr <- w_ctr + 1L
+            # if (miss_cyc["preg_idx"] != -1L) {
+            if (w_idx != -1L) {
 
-                if (W[w_ctr] > 0L) {
+                w_idx <- w_idx + 1L
+
+                if (W[w_idx] > 0L) {
                     X[curr_day_idx] <<- prev_day_sex <- 1L
                     next
                 }
             }
 
-            if (miss_day["prev"] != 2L) {
+            if (miss_day["prev"] >= 0L) {
                 prev_day_sex <- miss_day["prev"]
             }
 
@@ -47,8 +50,6 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
             X[curr_day_idx] <<- prev_day_sex <- sample_x_ijk(prior_prob_yes,
                                                              posterior_prob_yes)
         }
-
-        w_ctr
     }
 
 
