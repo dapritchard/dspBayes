@@ -11,13 +11,15 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
     #### TODO check if data is collinear or constant within outcome ####
 
     intercourse_data <- get_intercourse_data(comb_dat, var_nm, fw_incl)
-    utau <- get_utau(U, tau_fit, intercourse_data, use_na)
 
     cov_col_miss_info <- get_cov_col_miss_info(U, dsp_model, use_na)
     cov_row_miss_info <- get_cov_row_miss_info(comb_dat, var_nm, U, cov_col_miss_info)
     u_miss_info <- get_u_miss_info(cov_col_miss_info, cov_row_miss_info)
     u_miss_type <- get_var_categ_status(cov_col_miss_info)
     u_miss_filled_in <- get_u_miss_filled_in(U, cov_col_miss_info)
+
+    # note that we have to perform this after `U` has missing values filled in
+    utau <- get_utau(u_miss_filled_in, tau_fit, intercourse_data, use_na)
 
     list(w_day_blocks      = w_day_blocks,
          w_to_days_idx     = w_to_days_idx,

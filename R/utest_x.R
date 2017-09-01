@@ -19,17 +19,16 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
             prev_day_sex <- sample_day_before_fw_sex()
         }
 
+        w_idx <- miss_cyc["preg_idx"]
         cycle_miss_day_idx <- seq(miss_cyc["beg_idx"] + 1L,
                                   miss_cyc["beg_idx"] + miss_cyc["n_days"],
                                   1L)
-        w_idx <- miss_cyc["preg_idx"]
 
         for (curr_miss_day_idx in cycle_miss_day_idx) {
 
             miss_day <- x_miss_day_list[[curr_miss_day_idx]]
             curr_day_idx <- miss_day["idx"] + 1L
 
-            # if (miss_cyc["preg_idx"] != -1L) {
             if (w_idx != -1L) {
 
                 w_idx <- w_idx + 1L
@@ -72,9 +71,9 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
 
         unnormalized_prob_no <- 1 - prior_prob_yes
         unnormalized_prob_yes <- prior_prob_yes * posterior_prob_yes
-        prob_yes <- unnormalized_prob_yes / (unnormalized_prob_no + unnormalized_prob_yes)
+        prob_no <- unnormalized_prob_no / (unnormalized_prob_no + unnormalized_prob_yes)
 
-        rbinom(1L, 1L, prob_yes)
+        as.integer(runif(1) > prob_no)
     }
 
 

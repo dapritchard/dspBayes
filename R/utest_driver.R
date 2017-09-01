@@ -45,6 +45,10 @@ utest_cpp <- function(dsp_data,
     gam_cat_seed <- 902L
     out_utest_gamma_categ <- utest_gamma_categ(dsp_data, W, xi, ubeta, gam_cat_seed)
 
+    # U categorical testing data
+    u_cat_seed <- 1687L
+    out_utest_u_categ <- utest_u_categ(dsp_data)
+
     # collect seeds
     seed_vals <- c(gamma_categ = gam_cat_seed,
                    phi         = phi_seed,
@@ -60,6 +64,7 @@ utest_cpp <- function(dsp_data,
                       input_xi                   = xi,
                       target_data_gamma_categ    = out_utest_gamma_categ$target_data,
                       target_data_phi            = out_utest_phi$target_data,
+                      target_data_u_categ        = out_utest_u_categ$target_data_u,
                       target_samples_gamma_categ = out_utest_gamma_categ$target_samples,
                       target_samples_phi         = out_utest_phi$target_samples,
                       target_samples_w           = target_samples_w,
@@ -69,8 +74,8 @@ utest_cpp <- function(dsp_data,
                       epsilon                    = 1e-12)
 
     # pass testing data to C++ testing driver
-    utest_cpp_(U                 = dsp_data$U,
-               X_rcpp            = dsp_data$intercourse$X,
+    utest_cpp_(u_rcpp            = dsp_data$U,
+               x_rcpp            = dsp_data$intercourse$X,
                w_day_blocks      = dsp_data$w_day_blocks,
                w_to_days_idx     = dsp_data$w_to_days_idx,
                w_cyc_to_subj_idx = dsp_data$w_cyc_to_subj_idx,
@@ -82,6 +87,10 @@ utest_cpp <- function(dsp_data,
                x_miss_day        = dsp_data$intercourse$miss_day,
                utau_rcpp         = dsp_data$utau,
                tau_coefs         = dsp_data$tau_fit,
+               u_miss_info       = dsp_data$u_miss_info,
+               u_miss_type       = dsp_data$u_miss_type,
+               u_preg_map        = dsp_data$cov_miss_w_idx,
+               u_sex_map         = dsp_data$cov_miss_x_idx,
                fw_len            = 5,
                n_burn            = 0,
                n_samp            = n_samp,

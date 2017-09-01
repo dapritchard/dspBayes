@@ -29,12 +29,36 @@ public:
 
 private:
 
-    /* XGen* X; */
-    /* WGen* W; */
-    /* XiGen* xi; */
-    /* UProdBeta* ubeta; */
-    /* UProdTau* utau; */
-    /* Rcpp::IntegerVector* x_rcpp_copy; */
+    UGenVarCateg* u_var;
+    // XGen* X;
+    // WGen* W;
+    // XiGen* xi;
+    // UProdBeta* ubeta;
+    // UProdTau* utau;
+    // Rcpp::IntegerVector* x_rcpp_copy;
+
+    // testing data
+    int var_idx;
+    Rcpp::NumericMatrix u_rcpp;
+    int n_days;
+    Rcpp::IntegerVector w_idx;
+    Rcpp::IntegerVector x_idx;
+    int col_start;
+    int col_end;
+    int ref_col;
+    int n_categs;
+    int max_n_days_miss;
+    int max_n_sex_days_miss;
+    Rcpp::NumericVector u_prior_probs;
+    // `miss_block` data?
+
+    // targets
+    Rcpp::NumericVector target_w_probs;
+    Rcpp::NumericVector target_x_probs;
+    Rcpp::IntegerVector target_sample_covs;
+    Rcpp::IntegerVector target_u_update;
+    Rcpp::IntegerVector target_ubeta_update;
+    Rcpp::IntegerVector target_utau_update;
 
     /* // testing data */
     /* Rcpp::IntegerVector X_rcpp; */

@@ -3,6 +3,7 @@
 
 #include "Rcpp.h"
 #include "GammaGen.h"
+#include "UGenVar.h"
 #include "XiGen.h"
 #include "WGen.h"
 #include "PhiGen.h"
@@ -18,19 +19,23 @@ public:
     UTestFactory() {}
 
     // constructor.  Copy data to class members.
-    UTestFactory(Rcpp::NumericMatrix U,
-		 Rcpp::IntegerVector X_rcpp,
-		 Rcpp::List w_day_blocks,
+    UTestFactory(Rcpp::NumericMatrix u_rcpp,
+		 Rcpp::IntegerVector x_rcpp,
+		 Rcpp::List          w_day_blocks,
 		 Rcpp::IntegerVector w_to_days_idx,
 		 Rcpp::IntegerVector w_cyc_to_subj_idx,
-		 Rcpp::List subj_day_blocks,
+		 Rcpp::List          subj_day_blocks,
 		 Rcpp::IntegerVector day_to_subj_idx,
-		 Rcpp::List gamma_specs,
+		 Rcpp::List          gamma_specs,
 		 Rcpp::NumericVector phi_specs,
-		 Rcpp::List x_miss_cyc,
-		 Rcpp::List x_miss_day,
+		 Rcpp::List          x_miss_cyc,
+		 Rcpp::List          x_miss_day,
 		 Rcpp::NumericVector utau_rcpp,
-		 Rcpp::List tau_coefs,
+		 Rcpp::List          tau_coefs,
+		 Rcpp::List          u_miss_info,
+		 Rcpp::IntegerVector u_miss_type,
+		 Rcpp::IntegerVector u_preg_map,
+		 Rcpp::IntegerVector u_sex_map,
 		 int fw_len,
 		 int n_burn,
 		 int n_samp,
@@ -50,39 +55,46 @@ public:
     PhiGen* phi_no_rec();
     XGen* X();
     int** X_temp();
+    UGenVarCateg* u_categ();
     XGen::XMissDay** XMissDay();
     static bool eq_dbl(double a, double b);
 
     // usual input
-    Rcpp::NumericMatrix U;
-    Rcpp::IntegerVector X_rcpp;
-    Rcpp::List preg_cyc;
+    Rcpp::NumericMatrix u_rcpp;
+    Rcpp::IntegerVector x_rcpp;
+    Rcpp::List          preg_cyc;
     Rcpp::IntegerVector w_to_days_idx;
     Rcpp::IntegerVector w_cyc_to_subj_idx;
-    Rcpp::List subj_day_blocks;
+    Rcpp::List          subj_day_blocks;
     Rcpp::IntegerVector day_to_subj_idx;
-    Rcpp::List gamma_specs;
+    Rcpp::List          gamma_specs;
     Rcpp::NumericVector phi_specs;
-    Rcpp::List x_miss_cyc;
-    Rcpp::List x_miss_day;
+    Rcpp::List          x_miss_cyc;
+    Rcpp::List          x_miss_day;
     Rcpp::NumericVector utau_rcpp;
-    Rcpp::List tau_coefs;
+    Rcpp::List          tau_coefs;
+    Rcpp::List          u_miss_info;
+    Rcpp::IntegerVector u_miss_type;
+    Rcpp::IntegerVector u_preg_map;
+    Rcpp::IntegerVector u_sex_map;
     int fw_len;
     int n_burn;
     int n_samp;
 
     // testing data
-    Rcpp::List input_gamma_specs;
+    Rcpp::List          input_gamma_specs;
+    // Rcpp::List          input_u;
     Rcpp::NumericVector input_ubeta;
     Rcpp::NumericVector input_w;
     Rcpp::NumericVector input_x;
     Rcpp::NumericVector input_xi;
     Rcpp::NumericVector target_data_gamma_categ;
     Rcpp::NumericVector target_data_phi;
-    Rcpp::List target_samples_gamma_categ;
+    Rcpp::IntegerVector target_data_u_categ;
+    Rcpp::List          target_samples_gamma_categ;
     Rcpp::NumericVector target_samples_phi;
     Rcpp::NumericVector target_samples_w;
-    Rcpp::List target_samples_x;
+    Rcpp::List          target_samples_x;
     Rcpp::NumericVector target_samples_xi;
 
     // global testing objects

@@ -20,7 +20,7 @@ extern UTestFactory g_ut_factory;
 
 
 XGenTest::XGenTest() :
-    X_rcpp(g_ut_factory.X_rcpp),
+    x_rcpp(g_ut_factory.x_rcpp),
     miss_cyc_rcpp(g_ut_factory.x_miss_cyc),
     miss_day_rcpp(g_ut_factory.x_miss_day),
     cohort_sex_prob(g_ut_factory.tau_coefs["cohort_sex_prob"]),
@@ -51,7 +51,7 @@ void XGenTest::setUp() {
     utau  = g_ut_factory.utau();
 
     // copy X data so that tests don't cause persistent changes
-    x_rcpp_copy = new Rcpp::IntegerVector(X_rcpp.begin(), X_rcpp.end());
+    x_rcpp_copy = new Rcpp::IntegerVector(x_rcpp.begin(), x_rcpp.end());
     X = new XGen(*x_rcpp_copy, miss_cyc_rcpp, miss_day_rcpp, cohort_sex_prob, sex_coef);
 
 }
@@ -76,7 +76,7 @@ void XGenTest::test_constructor() {
     PregCyc* miss_cyc = PregCyc::list_to_arr(miss_cyc_rcpp);
     XGen::XMissDay* miss_day = XGen::XMissDay::list_to_arr(miss_day_rcpp);
 
-    CPPUNIT_ASSERT(Rcpp::is_true(Rcpp::all(X_rcpp == X->m_x_rcpp)));
+    CPPUNIT_ASSERT(Rcpp::is_true(Rcpp::all(x_rcpp == X->m_x_rcpp)));
     CPPUNIT_ASSERT_EQUAL(X->m_vals, X->m_x_rcpp.begin());
     // TODO: test m_miss_cyc
     CPPUNIT_ASSERT_EQUAL((int) miss_cyc_rcpp.size(), X->m_n_miss_cyc);

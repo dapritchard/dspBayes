@@ -14,39 +14,37 @@
 
 // using Rcpp::IntegerVector;
 // using Rcpp::NumericVector;
-// using Rcpp::as;
+using Rcpp::as;
 
 extern UTestFactory g_ut_factory;
 
 
+UGenVarCategTest::UGenVarCategTest() :
+    var_idx(g_ut_factory.target_data_u_categ["var_idx"]),
+    u_rcpp(g_ut_factory.u_rcpp),
+    n_days(g_ut_factory.target_data_u_categ["n_days"]),
+    w_idx(g_ut_factory.u_preg_map),
+    x_idx(g_ut_factory.u_sex_map),
+    col_start(g_ut_factory.target_data_u_categ["col_start"]),
+    col_end(g_ut_factory.target_data_u_categ["col_end"]),
+    ref_col(g_ut_factory.target_data_u_categ["ref_col"]),
+    n_categs(g_ut_factory.target_data_u_categ["n_categs"]),
+    max_n_days_miss(g_ut_factory.target_data_u_categ["max_n_days_miss"]),
+    max_n_sex_days_miss(g_ut_factory.target_data_u_categ["max_n_sex_days_miss"]),
+    u_prior_probs(as<Rcpp::NumericVector>(as<Rcpp::List>(g_ut_factory.u_miss_info[var_idx])["u_prior_probs"]))
 
+    //     seed_val(g_ut_factory.seed_vals["X"]),
+    //     epsilon(UTestFactory::epsilon),
 
-// UGenVarCategTest::UGenVarCategTest() :
-//     X_rcpp(g_ut_factory.X_rcpp),
-//     miss_cyc_rcpp(g_ut_factory.x_miss_cyc),
-//     miss_day_rcpp(g_ut_factory.x_miss_day),
-//     cohort_sex_prob(g_ut_factory.tau_coefs["cohort_sex_prob"]),
-//     sex_coef(g_ut_factory.tau_coefs["sex_coef"]),
-//     miss_day_idx((int) g_ut_factory.input_x["miss_day_idx"]),
-//     day_idx((int) g_ut_factory.input_x["day_idx"]),
-//     prior_prob_yes(g_ut_factory.input_x["prior_prob"]),
-//     posterior_prob_yes(g_ut_factory.input_x["posterior_prob"]),
-//     xi_i(g_ut_factory.input_x["xi_i"]),
-//     seed_val(g_ut_factory.seed_vals["X"]),
-//     epsilon(UTestFactory::epsilon),
-//     target_x_samples(as<IntegerVector>(g_ut_factory.target_samples_x["x_samples"])),
-//     target_x_ijk_samples(as<IntegerVector>(g_ut_factory.target_samples_x["x_ijk_samples"])),
-//     target_day_before_samples(as<IntegerVector>(g_ut_factory.target_samples_x["day_before_samples"])),
-//     target_prior_prob_no_prev(g_ut_factory.target_samples_x["prior_prob_no_prev"]),
-//     target_prior_prob_yes_prev(g_ut_factory.target_samples_x["prior_prob_yes_prev"]),
-//     target_posterior_prob(g_ut_factory.target_samples_x["posterior_prob"]) {
-// }
+    // then targets here
+{}
 
 
 
 
 void UGenVarCategTest::setUp() {
 
+    u_var = g_ut_factory.u_categ();
     // W     = g_ut_factory.W();
     // xi    = g_ut_factory.xi_no_rec();
     // ubeta = g_ut_factory.ubeta();
@@ -75,18 +73,21 @@ void UGenVarCategTest::tearDown() {
 
 void UGenVarCategTest::test_constructor() {
 
-    // PregCyc* miss_cyc = PregCyc::list_to_arr(miss_cyc_rcpp);
-    // XGen::XMissDay* miss_day = XGen::XMissDay::list_to_arr(miss_day_rcpp);
+    // // parent class
+    // CPPUNIT_ASSERT(std::equal(u_rcpp.begin() + ((int) u_rcpp.nrow() * col_start),
+    // 			      u_rcpp.begin() + ((int) u_rcpp.nrow() * ref_col),
+    // 			      u_var->m_u_var_col));
+    // CPPUNIT_ASSERT_EQUAL(n_days, u_var->m_n_days);
+    // CPPUNIT_ASSERT(std::equal(w_idx.begin(), w_idx.end(), u_var->m_w_idx));
+    // CPPUNIT_ASSERT(std::equal(x_idx.begin(), x_idx.end(), u_var->m_x_idx));
 
-    // CPPUNIT_ASSERT(Rcpp::is_true(Rcpp::all(X_rcpp == X->m_x_rcpp)));
-    // CPPUNIT_ASSERT_EQUAL(X->m_vals, X->m_x_rcpp.begin());
-    // // TODO: test m_miss_cyc
-    // CPPUNIT_ASSERT_EQUAL((int) miss_cyc_rcpp.size(), X->m_n_miss_cyc);
-    // // TODO: test m_miss_day
-    // CPPUNIT_ASSERT_EQUAL(cohort_sex_prob, X->m_cohort_sex_prob);
-    // CPPUNIT_ASSERT_EQUAL(sex_coef, X->m_sex_coef);
-
-    // delete[] miss_cyc;
-    // delete[] miss_day;
-
+    // // child class
+    // CPPUNIT_ASSERT_EQUAL(col_start, u_var->m_col_start);
+    // CPPUNIT_ASSERT_EQUAL(col_end, u_var->m_col_end);
+    // CPPUNIT_ASSERT_EQUAL(ref_col, u_var->m_ref_col);
+    // CPPUNIT_ASSERT_EQUAL(n_categs, u_var->m_n_categs);
+    // CPPUNIT_ASSERT_EQUAL(max_n_days_miss, u_var->m_max_n_days_miss);
+    // CPPUNIT_ASSERT_EQUAL(max_n_sex_days_miss, u_var->m_max_n_sex_days_miss);
+    // CPPUNIT_ASSERT(std::equal(u_prior_probs.begin(), u_prior_probs.end(), u_var->m_u_prior_probs));
+    // // TODO: test `m_miss_block`?
 }

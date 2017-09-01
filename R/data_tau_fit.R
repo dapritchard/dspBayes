@@ -25,6 +25,7 @@ get_tau_fit <- function(comb_dat, var_nm, dsp_model, use_na) {
     sex_outcome_fit <- glm(sex_model, family = "binomial", data = comb_dat)
     tau_coefs <- coef(sex_outcome_fit)
     # TODO: check if fit is the same as for geeglm? should be using this?
+    # TODO: we have to think about what to do if most or all vars have at least 1 missing
 
     # overall proportion of intercourse in the cohort
     cohort_sex_prob <- mean(comb_dat[[var_nm$sex]], na.rm = TRUE)

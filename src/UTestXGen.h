@@ -47,7 +47,7 @@ class XGenTest : public CppUnit::TestFixture {
     Rcpp::IntegerVector* x_rcpp_copy;
 
     // testing data
-    Rcpp::IntegerVector X_rcpp;
+    Rcpp::IntegerVector x_rcpp;
     Rcpp::List miss_cyc_rcpp;
     Rcpp::List miss_day_rcpp;
     double cohort_sex_prob;

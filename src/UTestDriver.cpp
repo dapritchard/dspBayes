@@ -1,4 +1,5 @@
 #include "Rcpp.h"
+#include "UGenVar.h"
 #include "CoefGen.h"
 #include "PhiGen.h"
 #include "WGen.h"
@@ -8,6 +9,7 @@
 #include "UTestFactory.h"
 #include "UTestGammaCateg.h"
 #include "UTestPhiGen.h"
+#include "UTestUGenVarCateg.h"
 #include "UTestWGen.h"
 #include "UTestXGen.h"
 #include "UTestXiGen.h"
@@ -28,19 +30,23 @@ UTestFactory g_ut_factory;
 
 
 // [[Rcpp::export]]
-int utest_cpp_(Rcpp::NumericMatrix U,
-	       Rcpp::IntegerVector X_rcpp,
-	       Rcpp::List w_day_blocks,
+int utest_cpp_(Rcpp::NumericMatrix u_rcpp,
+	       Rcpp::IntegerVector x_rcpp,
+	       Rcpp::List          w_day_blocks,
 	       Rcpp::IntegerVector w_to_days_idx,
 	       Rcpp::IntegerVector w_cyc_to_subj_idx,
-	       Rcpp::List subj_day_blocks,
+	       Rcpp::List          subj_day_blocks,
 	       Rcpp::IntegerVector day_to_subj_idx,
-	       Rcpp::List gamma_specs,
+	       Rcpp::List          gamma_specs,
 	       Rcpp::NumericVector phi_specs,
-	       Rcpp::List x_miss_cyc,
-	       Rcpp::List x_miss_day,
+	       Rcpp::List          x_miss_cyc,
+	       Rcpp::List          x_miss_day,
 	       Rcpp::NumericVector utau_rcpp,
-	       Rcpp::List tau_coefs,
+	       Rcpp::List          tau_coefs,
+	       Rcpp::List          u_miss_info,
+	       Rcpp::IntegerVector u_miss_type,
+	       Rcpp::IntegerVector u_preg_map,
+	       Rcpp::IntegerVector u_sex_map,
 	       int fw_len,
 	       int n_burn,
 	       int n_samp,
@@ -51,8 +57,8 @@ int utest_cpp_(Rcpp::NumericMatrix U,
     g_record_status = true;
 
     UTestFactory::epsilon = Rcpp::as<double>(test_data["epsilon"]);
-    g_ut_factory = UTestFactory(U,
-    				X_rcpp,
+    g_ut_factory = UTestFactory(u_rcpp,
+    				x_rcpp,
     				w_day_blocks,
     				w_to_days_idx,
     				w_cyc_to_subj_idx,
@@ -64,6 +70,10 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 				x_miss_day,
 				utau_rcpp,
 				tau_coefs,
+				u_miss_info,
+				u_miss_type,
+				u_preg_map,
+				u_sex_map,
     				fw_len,
     				n_burn,
     				n_samp,
@@ -74,6 +84,7 @@ int utest_cpp_(Rcpp::NumericMatrix U,
     CppUnit::TextUi::TestRunner runner;
     runner.addTest(GammaCategTest::suite());
     runner.addTest(PhiGenTest::suite());
+    runner.addTest(UGenVarCategTest::suite());
     runner.addTest(WGenTest::suite());
     runner.addTest(XGenTest::suite());
     runner.addTest(XiGenTest::suite());
