@@ -61,6 +61,7 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix u_rcpp,
     n_samp(n_samp),
     // testing data
     input_gamma_specs(as<Rcpp::List>(test_data["input_gamma_specs"])),
+    input_u_categ(as<Rcpp::List>(test_data["input_u_categ"])),
     input_ubeta(as<NumericVector>(test_data["input_ubeta"])),
     input_w(as<IntegerVector>(test_data["input_w"])),
     input_x(as<NumericVector>(test_data["input_x"])),
@@ -69,6 +70,7 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix u_rcpp,
     target_data_phi(as<NumericVector>(test_data["target_data_phi"])),
     target_data_u_categ(as<IntegerVector>(test_data["target_data_u_categ"])),
     target_samples_gamma_categ(as<Rcpp::List>(test_data["target_samples_gamma_categ"])),
+    target_samples_u_categ(as<Rcpp::List>(test_data["target_samples_u_categ"])),
     target_samples_phi(as<NumericVector>(test_data["target_samples_phi"])),
     target_samples_w(as<NumericVector>(test_data["target_samples_w"])),
     target_samples_x(as<Rcpp::List>(test_data["target_samples_x"])),
@@ -177,7 +179,7 @@ int** UTestFactory::X_temp() {
 UGenVarCateg* UTestFactory::u_categ() {
 
     // arbitrarily choose the first variable
-    Rcpp::List curr_var(u_miss_info[1]);
+    Rcpp::List curr_var(u_miss_info[target_data_u_categ["var_idx"]]);
 
     Rcpp::IntegerVector var_info     ( as<Rcpp::IntegerVector>(curr_var["var_info"])      );
     Rcpp::NumericVector u_prior_probs( as<Rcpp::NumericVector>(curr_var["u_prior_probs"]) );

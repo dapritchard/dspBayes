@@ -46,27 +46,30 @@ utest_cpp <- function(dsp_data,
     out_utest_gamma_categ <- utest_gamma_categ(dsp_data, W, xi, ubeta, gam_cat_seed)
 
     # U categorical testing data
-    u_cat_seed <- 1687L
-    out_utest_u_categ <- utest_u_categ(dsp_data)
+    u_categ_seed <- 1687L
+    out_utest_u_categ <- utest_u_categ(dsp_data, u_categ_seed)
 
     # collect seeds
     seed_vals <- c(gamma_categ = gam_cat_seed,
                    phi         = phi_seed,
+                   u_categ     = u_categ_seed,
                    W           = w_seed,
                    X           = x_seed,
                    xi          = xi_seed)
 
     # collect testing objects
     test_data <- list(input_gamma_specs          = out_utest_gamma_categ$input_specs,
+                      input_u_categ              = out_utest_u_categ$input,
                       input_ubeta                = ubeta,
                       input_w                    = W,
                       input_x                    = out_utest_x$test_data,
                       input_xi                   = xi,
                       target_data_gamma_categ    = out_utest_gamma_categ$target_data,
                       target_data_phi            = out_utest_phi$target_data,
-                      target_data_u_categ        = out_utest_u_categ$target_data_u,
+                      target_data_u_categ        = out_utest_u_categ$data,
                       target_samples_gamma_categ = out_utest_gamma_categ$target_samples,
                       target_samples_phi         = out_utest_phi$target_samples,
+                      target_samples_u_categ     = out_utest_u_categ$samples,
                       target_samples_w           = target_samples_w,
                       target_samples_x           = out_utest_x$target_output,
                       target_samples_xi          = target_samples_xi,

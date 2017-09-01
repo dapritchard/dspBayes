@@ -83,7 +83,7 @@ public:
 
     // testing data
     Rcpp::List          input_gamma_specs;
-    // Rcpp::List          input_u;
+    Rcpp::List          input_u_categ;
     Rcpp::NumericVector input_ubeta;
     Rcpp::NumericVector input_w;
     Rcpp::NumericVector input_x;
@@ -92,6 +92,7 @@ public:
     Rcpp::NumericVector target_data_phi;
     Rcpp::IntegerVector target_data_u_categ;
     Rcpp::List          target_samples_gamma_categ;
+    Rcpp::List          target_samples_u_categ;
     Rcpp::NumericVector target_samples_phi;
     Rcpp::NumericVector target_samples_w;
     Rcpp::List          target_samples_x;

@@ -353,8 +353,6 @@ int UGenVarCateg::sample_covariate(const double* posterior_w_probs,
 	bin_rhs += unnormalized_probs[++j];
     }
 
-
-
     return j;
 }
 
