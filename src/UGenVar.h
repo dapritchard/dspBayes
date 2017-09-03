@@ -24,6 +24,7 @@ public:
     const int* const m_x_idx;
 
     UGenVar();
+    virtual ~UGenVar() {}
 
     UGenVar(Rcpp::NumericMatrix& u_rcpp,
 	    Rcpp::IntegerVector& preg_map,

@@ -22,21 +22,25 @@ public:
 
     void test_constructor();
     void test_sample_covariate();
+    void test_calc_posterior_w();
+    void test_calc_posterior_x();
 
     CPPUNIT_TEST_SUITE(UGenVarCategTest);
     CPPUNIT_TEST(test_constructor);
     CPPUNIT_TEST(test_sample_covariate);
+    // CPPUNIT_TEST(test_calc_posterior_w);
+    CPPUNIT_TEST(test_calc_posterior_x);
     CPPUNIT_TEST_SUITE_END();
 
 
 private:
 
     UGenVarCateg* u_var;
-    // XGen* X;
+    XGen* X;
     // WGen* W;
     // XiGen* xi;
     // UProdBeta* ubeta;
-    // UProdTau* utau;
+    UProdTau* utau;
     // Rcpp::IntegerVector* x_rcpp_copy;
 
     // testing data
@@ -52,17 +56,18 @@ private:
     int max_n_days_miss;
     int max_n_sex_days_miss;
     Rcpp::NumericVector u_prior_probs;
-    Rcpp::NumericVector posterior_w_probs;
-    Rcpp::NumericVector posterior_x_probs;
-    // `miss_block` data?
+    Rcpp::NumericVector input_w_probs;
+    Rcpp::NumericVector input_x_probs;
+    int input_block_idx;
+    // TODO: `miss_block` data?
 
     // targets
-    // Rcpp::NumericVector target_w_probs;
-    // Rcpp::NumericVector target_x_probs;
+    Rcpp::NumericVector target_w_probs;
+    Rcpp::NumericVector target_x_probs;
     Rcpp::IntegerVector target_sample_covs;
     // Rcpp::IntegerVector target_u_update;
     // Rcpp::IntegerVector target_ubeta_update;
-    // Rcpp::IntegerVector target_utau_update;
+    Rcpp::IntegerVector target_alt_utau_vals;
 
     int seed_val;
     double epsilon;

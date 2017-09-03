@@ -32,9 +32,12 @@ UGenVarCategTest::UGenVarCategTest() :
     max_n_days_miss(g_ut_factory.target_data_u_categ["max_n_days_miss"]),
     max_n_sex_days_miss(g_ut_factory.target_data_u_categ["max_n_sex_days_miss"]),
     u_prior_probs(as<Rcpp::NumericVector>(as<Rcpp::List>(g_ut_factory.u_miss_info[var_idx])["u_prior_probs"])),
-    posterior_w_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_w_probs"])),
-    posterior_x_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_x_probs"])),
+    input_w_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_w_probs"])),
+    input_x_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_x_probs"])),
+    input_block_idx(g_ut_factory.target_data_u_categ["block_idx"]),
+    target_x_probs(as<Rcpp::IntegerVector>(g_ut_factory.target_samples_u_categ["posterior_x"])),
     target_sample_covs(as<Rcpp::IntegerVector>(g_ut_factory.target_samples_u_categ["sample_covs"])),
+    target_alt_utau_vals(as<Rcpp::NumericVector>(g_ut_factory.target_samples_u_categ["alt_utau_vals"])),
     seed_val(g_ut_factory.seed_vals["u_categ"]),
     epsilon(UTestFactory::epsilon)
 {}
@@ -52,7 +55,8 @@ void UGenVarCategTest::setUp() {
     // W     = g_ut_factory.W();
     // xi    = g_ut_factory.xi_no_rec();
     // ubeta = g_ut_factory.ubeta();
-    // utau  = g_ut_factory.utau();
+    utau  = g_ut_factory.utau();
+    X     = g_ut_factory.X();
 
     // // copy X data so that tests don't cause persistent changes
     // x_rcpp_copy = new Rcpp::IntegerVector(X_rcpp.begin(), X_rcpp.end());
@@ -64,11 +68,12 @@ void UGenVarCategTest::setUp() {
 
 
 void UGenVarCategTest::tearDown() {
-    // delete X;
+    delete u_var;
+    delete X;
     // delete W;
     // delete xi;
     // delete ubeta;
-    // delete utau;
+    delete utau;
     // delete x_rcpp_copy;
 }
 
@@ -76,7 +81,7 @@ void UGenVarCategTest::tearDown() {
 
 
 void UGenVarCategTest::test_constructor() {
-    //
+
     // parent class
     CPPUNIT_ASSERT(std::equal(u_rcpp.begin() + ((int) u_rcpp.nrow() * col_start),
     			      u_rcpp.begin() + ((int) u_rcpp.nrow() * ref_col),
@@ -99,6 +104,29 @@ void UGenVarCategTest::test_constructor() {
 
 
 
+void UGenVarCategTest::test_calc_posterior_x() {
+
+    double posterior_x_probs[u_var->m_n_categs];
+    double alt_utau_vals[u_var->m_max_n_sex_days_miss];
+
+    u_var->calc_posterior_x(posterior_x_probs,
+    			    alt_utau_vals,
+    			    *X,
+    			    *utau,
+    			    u_var->m_miss_block + input_block_idx);
+
+    CPPUNIT_ASSERT(std::equal(target_x_probs.begin(),
+    			      target_x_probs.end(),
+    			      posterior_x_probs));
+
+    CPPUNIT_ASSERT(std::equal(target_alt_utau_vals.begin(),
+    			      target_alt_utau_vals.end(),
+    			      alt_utau_vals));
+}
+
+
+
+
 void UGenVarCategTest::test_sample_covariate() {
 
     // register seed function
@@ -108,7 +136,7 @@ void UGenVarCategTest::test_sample_covariate() {
 
     for (int i = 0; i < target_sample_covs.size(); ++i) {
     	CPPUNIT_ASSERT_EQUAL(target_sample_covs[i],
-    			     u_var->sample_covariate(posterior_w_probs.begin(),
-    						     posterior_x_probs.begin()));
+    			     u_var->sample_covariate(input_w_probs.begin(),
+    						     input_x_probs.begin()));
     }
 }
