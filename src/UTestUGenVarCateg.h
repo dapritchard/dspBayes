@@ -67,7 +67,7 @@ private:
     Rcpp::IntegerVector target_sample_covs;
     // Rcpp::IntegerVector target_u_update;
     // Rcpp::IntegerVector target_ubeta_update;
-    Rcpp::IntegerVector target_alt_utau_vals;
+    Rcpp::NumericVector target_alt_utau_vals;
 
     int seed_val;
     double epsilon;

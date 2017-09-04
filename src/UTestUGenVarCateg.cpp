@@ -35,7 +35,7 @@ UGenVarCategTest::UGenVarCategTest() :
     input_w_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_w_probs"])),
     input_x_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_x_probs"])),
     input_block_idx(g_ut_factory.target_data_u_categ["block_idx"]),
-    target_x_probs(as<Rcpp::IntegerVector>(g_ut_factory.target_samples_u_categ["posterior_x"])),
+    target_x_probs(as<Rcpp::NumericVector>(g_ut_factory.target_samples_u_categ["posterior_x"])),
     target_sample_covs(as<Rcpp::IntegerVector>(g_ut_factory.target_samples_u_categ["sample_covs"])),
     target_alt_utau_vals(as<Rcpp::NumericVector>(g_ut_factory.target_samples_u_categ["alt_utau_vals"])),
     seed_val(g_ut_factory.seed_vals["u_categ"]),
@@ -115,13 +115,15 @@ void UGenVarCategTest::test_calc_posterior_x() {
     			    *utau,
     			    u_var->m_miss_block + input_block_idx);
 
-    CPPUNIT_ASSERT(std::equal(target_x_probs.begin(),
-    			      target_x_probs.end(),
-    			      posterior_x_probs));
-
     CPPUNIT_ASSERT(std::equal(target_alt_utau_vals.begin(),
     			      target_alt_utau_vals.end(),
-    			      alt_utau_vals));
+    			      alt_utau_vals,
+			      UTestFactory::eq_dbl));
+
+    CPPUNIT_ASSERT(std::equal(target_x_probs.begin(),
+    			      target_x_probs.end(),
+    			      posterior_x_probs,
+			      UTestFactory::eq_dbl));
 }
 
 

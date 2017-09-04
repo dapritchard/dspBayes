@@ -277,7 +277,7 @@ void UGenVarCateg::calc_posterior_x(double* posterior_x_probs,
     const double* utau_vals = utau.vals();
 
     // each iteration calculates `P(X | U)` corresponding to a value of 1 for
-    // the dummy coding in the j-th variable for the observations of `X` that
+    // the j-th variable in the design matrix for the observations of `X` that
     // are affected by the missing covariate
     for (int j = m_col_start; j < m_col_end; ++j) {
 
@@ -292,28 +292,33 @@ void UGenVarCateg::calc_posterior_x(double* posterior_x_probs,
 	    0.0 :
 	    tau_coefs[j];
 	const double tau_diff = (block_u_col == m_ref_col) ?
-	    tau_j:
+	    tau_j :
 	    tau_j - tau_coefs[block_u_col];
 
-	// each iteration calculated the value of `-log P(X_ijk | U_ijk)` and
-	// adds the value to `neg_log_probs_sum` for `ijk` one of the values of
-	// `X` affected by the missing covariate
+	// each iteration calculates the value of `-log P(X_ijk | U_ijk)` and
+	// adds the value to `neg_log_probs_sum` where index `ijk` corresponds
+	// to one of the values of `X` affected by the missing covariate.  As a
+	// side-effect, the values for `alt_utau_vals` are filled in for the
+	// category current choice of category.
 	for (int r = 0; r < block_n_sex_days; ++r) {
 
 	    const int curr_x_day_idx = m_x_idx[block_beg_sex_idx + r];
 	    const int curr_day_idx   = x_miss_day[curr_x_day_idx].idx;
 	    const int curr_sex_prev  = x_miss_day[curr_x_day_idx].prev;
 
-	    // a value of <= 0 corresponds to no sex on the previous day, and >=
-	    // 1 corresponds to yes sex on the previous day
+	    // a value of 0 or -2 corresponds to "no sex" and "inputed no sex"
+	    // on the previous day, otherwise we have (possibly imputed) "yes
+	    // sex".  Note that we do not include the previous day sex
+	    // coefficient in `alt_utau_vals` because `utau` does not include
+	    // this coefficient.
 	    *alt_utau_vals = utau_vals[curr_x_day_idx] + tau_diff;
-	    const double curr_utau_val = (curr_sex_prev <= 0) ?
+	    const double curr_utau_val = ((curr_sex_prev == 0) || (curr_sex_prev == -2)) ?
 		*alt_utau_vals++ :
 		*alt_utau_vals++ + sex_coef;
 
 	    // add `-log P(X_ijk | U_ijk)` to the running total, where `P(X_ijk
 	    // | U_ijk)` follows a logistic regression model
-	    neg_log_probs_sum += ((curr_day_idx != IN_NON_PREG_CYC) && x_vals[curr_day_idx]) ?
+	    neg_log_probs_sum += x_vals[curr_day_idx] ?
 		log(1 + exp(- curr_utau_val)) :
 		log(1 + exp(curr_utau_val));
 	}
