@@ -67,6 +67,23 @@ UGenVarCateg::UMissBlock* UGenVarCateg::UMissBlock::list_to_arr(Rcpp::List& bloc
 
 
 
+
+//     // calc p(W | ubeta) perms
+
+//     // calc p(X | utau) perms
+
+//     // calc p(U) perms
+
+//     // sample missing covariate
+
+//     // update miss_block
+
+//     // update ubeta
+
+//     // update utau
+
+//     // update U
+
 void UGenVarCateg::sample(const WGen& W,
 			  const XiGen& xi,
 			  const CoefGen& coefs,
@@ -88,8 +105,8 @@ void UGenVarCateg::sample(const WGen& W,
     // possible categories of the missing covariate and over the values of `U`
     // affected by the covariate.  The storage is reused over all of the missing
     // observations, so we set the size to be the maximum needed for each.
-    double alt_exp_ubeta_vals[m_max_n_days_miss];
-    double alt_utau_vals[m_max_n_sex_days_miss];
+    double alt_exp_ubeta_vals[m_max_n_days_miss * m_n_categs];
+    double alt_utau_vals[m_max_n_sex_days_miss * m_n_categs];
 
     // each iteration samples a new values for the missing covariate
     // corresponding to `curr_block`, and updates the observations in `ubeta`
@@ -105,25 +122,28 @@ void UGenVarCateg::sample(const WGen& W,
 	// `posterior_w_probs`
 	calc_posterior_w(posterior_w_probs, alt_exp_ubeta_vals, W, xi, coefs, ubeta, curr_block);
 
-	// calculate the posterior probabilities for `X` for each of the
-	// possible categories of the missing covariate and store in
+	// case: there are no missing in `X` for the observations affected by
+	// the covariate, so simply set the posterior probabilities each to 1
+	if (curr_block->n_sex_days == 0) {
+	    posterior_x_ptr = all_ones;
+	}
+	// case: there are missing in `X` for the observations affected by the
+	// covariate, so calculate the posterior probabilities for `X` for each
+	// of the possible categories of the missing covariate and store in
 	// `posterior_x_probs`
-	if (curr_block->n_sex_days > 0) {
+	else {
 	    calc_posterior_x(posterior_x_probs, alt_utau_vals, X, utau, curr_block);
 	    posterior_x_ptr = posterior_x_probs;
 	}
-	// case: there are no missing in `X` for the observations affected by
-	// the covariate, so simply set the posterior probabilities each to 1
-	else {
-	    posterior_x_ptr = all_ones;
-	}
 
-	// sample the new category for the missing covariate
+	// sample the new category for the missing covariate.  `u_col` is the
+	// column in the design matrix corresponding to the chosen category.
 	int u_categ = sample_covariate(posterior_w_probs, posterior_x_ptr);
-	int u_col = u_categ + m_col_start;
+	int u_col   = u_categ + m_col_start;
 
 	// case: we've sampled a different category for the current missing
-	// covariate, so we have to update the corresponding data
+	// covariate, so we have to update `curr_block`, `U`, `ubeta`, and
+	// `utau`.  Otherwise, no further action is needed.
 	if (u_col != curr_block->u_col) {
 
 	    // update covariate
@@ -145,39 +165,6 @@ void UGenVarCateg::sample(const WGen& W,
 
 
 
-// void UGen::sample_block() {
-
-//     TODO: check that there are any missing in X
-
-//     // calc p(W | ubeta) perms
-
-//     // calc p(X | utau) perms
-
-//     // calc p(U) perms
-
-//     // sample missing covariate
-
-//     // update miss_block
-
-//     // update ubeta
-
-//     // update utau
-
-//     // update U
-
-//     // -------------------------------
-
-//     double* posterior_w_probs[m_n_categs];
-//     double* posterior_x_probs[m_n_categs];
-
-//     calc_posterior_w_probs(posterior_w_probs, W, xi, coefs, ubeta, miss_block);
-
-
-// }
-
-
-
-
 void UGenVarCateg::calc_posterior_w(double* posterior_w_probs,
 				    double* alt_exp_ubeta_vals,
 				    const WGen& W,
@@ -186,13 +173,11 @@ void UGenVarCateg::calc_posterior_w(double* posterior_w_probs,
 				    const UProdBeta& ubeta,
 				    const UMissBlock* const miss_block) const {
 
-    // const int block_beg_day_idx = miss_block->beg_day_idx;
-    // const int block_beg_w_idx   = miss_block->beg_w_idx;
-    const int block_n_days      = miss_block->n_days;
-    const int block_u_col       = miss_block->u_col;
+    const int block_n_days = miss_block->n_days;
+    const int block_u_col  = miss_block->u_col;
 
     const double* block_exp_ubeta_vals = ubeta.exp_vals() + miss_block->beg_day_idx;
-    const int* block_w_idx           = m_w_idx + miss_block->beg_w_idx;
+    const int* block_w_idx             = m_w_idx + miss_block->beg_w_idx;
 
     const double* beta_coefs = coefs.vals();
     const int* w_vals        = W.vals();
@@ -230,9 +215,10 @@ void UGenVarCateg::calc_posterior_w(double* posterior_w_probs,
 	    exp_beta_diff = exp(beta_j - beta_star);
 	}
 
-	// each iteration calculated the value of `log p(W_ijk | U, data)` and
+	// each iteration calculates the value of `log p(W_ijk | U, data)` and
 	// adds the value to `log_dpois_sum` for `ijk` one of the values of `W`
 	// affected by the missing covariate
+	log_dpois_sum = 0.0;
 	for (int r = 0 ; r < block_n_days; ++r) {
 
 	    *alt_exp_ubeta_vals = block_exp_ubeta_vals[r] * exp_beta_diff;
@@ -248,6 +234,7 @@ void UGenVarCateg::calc_posterior_w(double* posterior_w_probs,
 	    log_dpois_sum += (curr_w_idx == IN_NON_PREG_CYC) ?
 		-curr_mean_val :
 		R::dpois(w_vals[curr_w_idx], curr_mean_val, 1);
+	    // TODO: normalizing constant `1 / x!` cancels out, just calculate lambda^x e^{-lambda}
 	}
 
 	// exponentiate to recover the posterior probability, and store the
@@ -391,17 +378,19 @@ void UGenVarCateg::update_ubeta(UProdBeta& ubeta,
 void UGenVarCateg::update_utau(UProdTau& utau,
 			       const int u_categ,
 			       const double* alt_utau_vals,
-			       const UMissBlock* const miss_block) {
+			       const UMissBlock* const miss_block) const {
 
     const int block_beg_sex_idx = miss_block->beg_sex_idx;
     const int block_n_sex_days  = miss_block->n_sex_days;
 
-    double* block_utau_vals         = utau.vals() + block_beg_sex_idx;
+    const int* block_x_idx = m_x_idx + block_beg_sex_idx;
+    double* utau_vals      = utau.vals();
+
     const double* updated_utau_vals = alt_utau_vals + (u_categ * block_n_sex_days);
 
-    std::copy(updated_utau_vals,
-	      updated_utau_vals + block_n_sex_days,
-	      block_utau_vals);
+    for (int i = 0; i < block_n_sex_days; ++i) {
+	utau_vals[ block_x_idx[i] ] = updated_utau_vals[i];
+    }
 }
 
 
@@ -414,6 +403,8 @@ void UGenVarCateg::update_u(const UMissBlock* const miss_block) {
 
     // each iteration updates the `j`-th column in U
     for (int j = m_col_start; j < m_ref_col; ++j) {
+
+	// TODO: this is doing unnecessary work on columns that don't need to be changed
 
 	// takes a value of 1 if the current sample of the covariate corresponds
 	// to the `j`-th column in the data, and a value of 0 otherwise

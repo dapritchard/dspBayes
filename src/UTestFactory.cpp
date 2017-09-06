@@ -1,6 +1,7 @@
 #include <algorithm>
 #include "Rcpp.h"
 
+#include "CoefGen.h"
 #include "UTestFactory.h"
 #include "UGenVar.h"
 #include "XGen.h"
@@ -60,6 +61,7 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix u_rcpp,
     n_burn(n_burn),
     n_samp(n_samp),
     // testing data
+    input_beta_coefs(as<NumericVector>(test_data["input_beta_coefs"])),
     input_gamma_specs(as<Rcpp::List>(test_data["input_gamma_specs"])),
     input_u_categ(as<Rcpp::List>(test_data["input_u_categ"])),
     input_ubeta(as<NumericVector>(test_data["input_ubeta"])),
@@ -176,17 +178,24 @@ int** UTestFactory::X_temp() {
 }
 
 
-UGenVarCateg* UTestFactory::u_categ() {
+UGenVarCateg* UTestFactory::u_categ(Rcpp::NumericMatrix* u_rcpp_copy) {
 
-    // arbitrarily choose the first variable
     Rcpp::List curr_var(u_miss_info[target_data_u_categ["var_idx"]]);
 
     Rcpp::IntegerVector var_info     ( as<Rcpp::IntegerVector>(curr_var["var_info"])      );
     Rcpp::NumericVector u_prior_probs( as<Rcpp::NumericVector>(curr_var["u_prior_probs"]) );
     Rcpp::List var_block_list        ( as<Rcpp::List>(curr_var["var_block_list"])         );
 
+    return new UGenVarCateg(*u_rcpp_copy, var_info, u_prior_probs, var_block_list, u_preg_map, u_sex_map);
+}
 
-    return new UGenVarCateg(u_rcpp, var_info, u_prior_probs, var_block_list, u_preg_map, u_sex_map);
+
+CoefGen* UTestFactory::coefs() {
+
+    CoefGen* coefs = new CoefGen(u_rcpp, gamma_specs, n_samp);
+    std::copy(input_beta_coefs.begin(), input_beta_coefs.end(), coefs->m_vals);
+
+    return coefs;
 }
 
 

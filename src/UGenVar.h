@@ -102,10 +102,10 @@ public:
 			     const double* alt_exp_ubeta_vals,
 			     const UMissBlock* const miss_block);
 
-    static void update_utau(UProdTau& utau,
-			    const int u_categ,
-			    const double* alt_utau_vals,
-			    const UMissBlock* const miss_block);
+    void update_utau(UProdTau& utau,
+		     const int u_categ,
+		     const double* alt_utau_vals,
+		     const UMissBlock* const miss_block) const;
 };
 
 

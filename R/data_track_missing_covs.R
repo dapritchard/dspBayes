@@ -81,6 +81,9 @@ get_cov_col_miss_info <- function(expanded_df, dsp_model, use_na) {
             # calculate the empirical class distributions
             curr_empirical_probs <- vector("numeric", curr_n_categs)
             for (j in 1:(curr_n_categs - 1L)) {
+                # TODO: wrong!!! need to calculate from the original data,
+                # i.e. before the the datasets were merged.  This is only a
+                # problem for baseline data, right?
                 curr_empirical_probs[j] <- mean(expanded_df[, curr_idx[j]], na.rm = TRUE)
             }
             curr_empirical_probs[curr_n_categs] <- 1 - sum(curr_empirical_probs)

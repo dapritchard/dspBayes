@@ -35,9 +35,15 @@ UGenVarCategTest::UGenVarCategTest() :
     input_w_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_w_probs"])),
     input_x_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_x_probs"])),
     input_block_idx(g_ut_factory.target_data_u_categ["block_idx"]),
+    target_w_probs(as<Rcpp::NumericVector>(g_ut_factory.target_samples_u_categ["posterior_w"])),
     target_x_probs(as<Rcpp::NumericVector>(g_ut_factory.target_samples_u_categ["posterior_x"])),
     target_sample_covs(as<Rcpp::IntegerVector>(g_ut_factory.target_samples_u_categ["sample_covs"])),
+    target_alt_exp_ubeta_vals(as<Rcpp::NumericVector>(g_ut_factory.target_samples_u_categ["alt_exp_ubeta_vals"])),
     target_alt_utau_vals(as<Rcpp::NumericVector>(g_ut_factory.target_samples_u_categ["alt_utau_vals"])),
+    target_categ_update(as<Rcpp::IntegerVector>(g_ut_factory.target_samples_u_categ["categ_update"])),
+    target_ubeta_update(as<Rcpp::NumericVector>(g_ut_factory.target_samples_u_categ["ubeta_update"])),
+    target_utau_update(as<Rcpp::NumericVector>(g_ut_factory.target_samples_u_categ["utau_update"])),
+    target_u_update(as<Rcpp::NumericMatrix>(g_ut_factory.target_samples_u_categ["u_update"])),
     seed_val(g_ut_factory.seed_vals["u_categ"]),
     epsilon(UTestFactory::epsilon)
 {}
@@ -47,34 +53,39 @@ UGenVarCategTest::UGenVarCategTest() :
 
 void UGenVarCategTest::setUp() {
 
-    u_var = g_ut_factory.u_categ();
-
-
-
-
-    // W     = g_ut_factory.W();
-    // xi    = g_ut_factory.xi_no_rec();
-    // ubeta = g_ut_factory.ubeta();
+    W     = g_ut_factory.W();
+    xi    = g_ut_factory.xi_no_rec();
+    coefs = g_ut_factory.coefs();
+    ubeta = g_ut_factory.ubeta();
     utau  = g_ut_factory.utau();
     X     = g_ut_factory.X();
 
-    // // copy X data so that tests don't cause persistent changes
-    // x_rcpp_copy = new Rcpp::IntegerVector(X_rcpp.begin(), X_rcpp.end());
-    // X = new XGen(*x_rcpp_copy, miss_cyc_rcpp, miss_day_rcpp, cohort_sex_prob, sex_coef);
+    // so changes to underlying data in `u_var` aren't persistent
+    u_rcpp_copy = new Rcpp::NumericMatrix;
+    *u_rcpp_copy = clone(u_rcpp);
+    u_var = g_ut_factory.u_categ(u_rcpp_copy);
 
+    // so changes to underlying data in `utau` aren't persistent
+    utau_vals_copy = new double[utau->m_vals_rcpp.size()];
+    std::copy(utau->m_vals_rcpp.begin(), utau->m_vals_rcpp.end(), utau_vals_copy);
+    utau->m_vals = utau_vals_copy;
 }
 
 
 
 
 void UGenVarCategTest::tearDown() {
+
     delete u_var;
-    delete X;
-    // delete W;
-    // delete xi;
-    // delete ubeta;
+    delete W;
+    delete xi;
+    delete coefs;
+    delete ubeta;
     delete utau;
-    // delete x_rcpp_copy;
+    delete X;
+
+    delete u_rcpp_copy;
+    delete[] utau_vals_copy;
 }
 
 
@@ -104,10 +115,76 @@ void UGenVarCategTest::test_constructor() {
 
 
 
+void UGenVarCategTest::test_sample() {
+
+    // register seed function
+    Rcpp::Environment base("package:base");
+    Rcpp::Function set_seed = base["set.seed"];
+    set_seed(seed_val);
+
+    // sample missing covariate values
+    u_var->sample(*W, *xi, *coefs, *X, *ubeta, *utau);
+
+    // check sampled covariate
+    for (int i = 0; i < target_categ_update.size(); ++i) {
+	CPPUNIT_ASSERT_EQUAL(target_categ_update[i], u_var->m_miss_block[i].u_col);
+    }
+
+    // check `U * beta` update
+    CPPUNIT_ASSERT(std::equal(target_ubeta_update.begin(),
+    			      target_ubeta_update.end(),
+    			      ubeta->vals(),
+    			      UTestFactory::eq_dbl));
+
+    // TODO: test exp(ubeta) ?
+
+    // check `U * tau` update
+    CPPUNIT_ASSERT(std::equal(target_utau_update.begin(),
+    			      target_utau_update.end(),
+    			      utau->vals(),
+    			      UTestFactory::eq_dbl));
+
+    // check `U` update
+    CPPUNIT_ASSERT(std::equal(target_u_update.begin(),
+    			      target_u_update.end(),
+    			      u_var->m_u_var_col,
+    			      UTestFactory::eq_dbl));
+}
+
+
+
+
+void UGenVarCategTest::test_calc_posterior_w() {
+
+    double posterior_w_probs[u_var->m_n_categs];
+    double alt_exp_ubeta_vals[u_var->m_max_n_days_miss * u_var->m_n_categs];
+
+    u_var->calc_posterior_w(posterior_w_probs,
+    			    alt_exp_ubeta_vals,
+    			    *W,
+    			    *xi,
+    			    *coefs,
+    			    *ubeta,
+    			    u_var->m_miss_block + input_block_idx);
+
+    CPPUNIT_ASSERT(std::equal(target_alt_exp_ubeta_vals.begin(),
+    			      target_alt_exp_ubeta_vals.end(),
+    			      alt_exp_ubeta_vals,
+    			      UTestFactory::eq_dbl));
+
+    CPPUNIT_ASSERT(std::equal(target_w_probs.begin(),
+    			      target_w_probs.end(),
+    			      posterior_w_probs,
+    			      UTestFactory::eq_dbl));
+}
+
+
+
+
 void UGenVarCategTest::test_calc_posterior_x() {
 
     double posterior_x_probs[u_var->m_n_categs];
-    double alt_utau_vals[u_var->m_max_n_sex_days_miss];
+    double alt_utau_vals[u_var->m_max_n_sex_days_miss * u_var->m_n_categs];
 
     u_var->calc_posterior_x(posterior_x_probs,
     			    alt_utau_vals,
@@ -142,3 +219,28 @@ void UGenVarCategTest::test_sample_covariate() {
     						     input_x_probs.begin()));
     }
 }
+
+
+
+
+// void UGenVarCategTest::test_update_ubeta() {
+
+//     // construct target `exp(U * beta)`
+//     Rcpp::NumericVector target_exp_ubeta_vals( exp(target_ubeta_vals) );
+
+//     // set the data to the last category and update `ubeta`
+//     u_var->update_ubeta(*ubeta,
+// 			n_categs - 1,
+// 			input_uprod_vals.begin(),
+// 			u_var->m_miss_block + input_block_idx);
+
+//     CPPUNIT_ASSERT(std::equal(target_ubeta_vals.begin(),
+//     			      target_ubeta_vals.end(),
+//     			      ubeta->m_vals,
+// 			      UTestFactory::eq_dbl));
+
+//     CPPUNIT_ASSERT(std::equal(target_exp_ubeta_vals.begin(),
+//     			      target_exp_ubeta_vals.end(),
+//     			      ubeta->m_exp_vals,
+// 			      UTestFactory::eq_dbl));
+// }

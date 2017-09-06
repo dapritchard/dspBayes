@@ -2,6 +2,8 @@
 #define DSP_BAYES_UTEST_FACTORY_H
 
 #include "Rcpp.h"
+
+#include "CoefGen.h"
 #include "GammaGen.h"
 #include "UGenVar.h"
 #include "XiGen.h"
@@ -55,7 +57,8 @@ public:
     PhiGen* phi_no_rec();
     XGen* X();
     int** X_temp();
-    UGenVarCateg* u_categ();
+    UGenVarCateg* u_categ(Rcpp::NumericMatrix* u_rcpp_copy);
+    CoefGen* coefs();
     XGen::XMissDay** XMissDay();
     static bool eq_dbl(double a, double b);
 
@@ -82,6 +85,7 @@ public:
     int n_samp;
 
     // testing data
+    Rcpp::NumericVector input_beta_coefs;
     Rcpp::List          input_gamma_specs;
     Rcpp::List          input_u_categ;
     Rcpp::NumericVector input_ubeta;

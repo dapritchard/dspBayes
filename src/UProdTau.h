@@ -6,7 +6,7 @@
 
 class UProdTau {
 
- public:
+public:
 
     Rcpp::NumericVector& m_vals_rcpp;
     Rcpp::NumericVector::iterator m_vals;

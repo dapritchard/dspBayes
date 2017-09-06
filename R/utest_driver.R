@@ -13,6 +13,10 @@ utest_cpp <- function(dsp_data,
     gamma_hyper_list <- get_gamma_specs(dsp_data)
     phi_specs <- get_phi_specs()
 
+    # sample beta coefs
+    set.seed(beta_coefs_seed <- 2345L)
+    beta_coefs <- rnorm(length(gamma_hyper_list), 0, 0.25)
+
     # sample women-specific fecundability multiplier
     set.seed(100L)
     xi <- rgamma(length(dsp_data$subj_day_blocks), 1, 1)
@@ -23,7 +27,8 @@ utest_cpp <- function(dsp_data,
 
     # sample U * beta
     set.seed(102L)
-    ubeta <- rnorm(length(dsp_data$intercourse$X))
+    ubeta <- dsp_data$U %*% as.matrix(beta_coefs) %>% drop
+    # ubeta <- rnorm(length(dsp_data$intercourse$X))
 
     # phi testing data
     phi_seed <- 99L
@@ -47,10 +52,11 @@ utest_cpp <- function(dsp_data,
 
     # U categorical testing data
     u_categ_seed <- 1687L
-    out_utest_u_categ <- utest_u_categ(dsp_data, u_categ_seed)
+    out_utest_u_categ <- utest_u_categ(dsp_data, W, xi, beta_coefs, u_categ_seed)
 
     # collect seeds
-    seed_vals <- c(gamma_categ = gam_cat_seed,
+    seed_vals <- c(beta_coefs  = beta_coefs_seed,
+                   gamma_categ = gam_cat_seed,
                    phi         = phi_seed,
                    u_categ     = u_categ_seed,
                    W           = w_seed,
@@ -58,7 +64,8 @@ utest_cpp <- function(dsp_data,
                    xi          = xi_seed)
 
     # collect testing objects
-    test_data <- list(input_gamma_specs          = out_utest_gamma_categ$input_specs,
+    test_data <- list(input_beta_coefs           = beta_coefs,
+                      input_gamma_specs          = out_utest_gamma_categ$input_specs,
                       input_u_categ              = out_utest_u_categ$input,
                       input_ubeta                = ubeta,
                       input_w                    = W,
