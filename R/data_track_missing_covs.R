@@ -248,6 +248,7 @@ get_miss_block_info <- function(U,
 get_u_miss_info <- function(cov_col_miss_info, cov_row_miss_info) {
 
     u_miss_info_list <- vector("list", length(cov_col_miss_info))
+    names(u_miss_info_list) <- names(cov_col_miss_info)
 
     # each iteration collects the missing covariate information needed for the
     # sampler for the i-th covariate

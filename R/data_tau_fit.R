@@ -41,7 +41,7 @@ get_tau_fit <- function(comb_dat, var_nm, dsp_model, use_na) {
 get_utau <- function(U, tau_fit, intercourse_data, use_na) {
 
     # case: we're not imputing missing for sex, so return some empty data
-    if (! ((use_na == "sex") || (use_na == "all"))) {
+    if (((use_na != "sex") && (use_na != "all")) || (length(intercourse_data$miss_day) == 0L)) {
         return(numeric(0L))
     }
 
@@ -53,7 +53,7 @@ get_utau <- function(U, tau_fit, intercourse_data, use_na) {
              'U:  ', colnames(U), '\ntau_fit:  ', names(tau_fit$u_coefs))
     }
 
-    miss_idx <- sapply(intercourse_data$miss_day, function(x) x["idx"] + 1L)
     tau <- matrix(tau_fit$u_coefs, ncol = 1L)
+    miss_idx <- sapply(intercourse_data$miss_day, function(x) x["idx"] + 1L)
     drop(U[miss_idx, , drop = FALSE] %*% tau)
 }
