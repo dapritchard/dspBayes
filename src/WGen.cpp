@@ -10,13 +10,14 @@ WGen::WGen(Rcpp::List& preg_cyc,
 	   Rcpp::IntegerVector& w_to_days_idx,
 	   Rcpp::IntegerVector& w_cyc_to_subj_idx,
 	   int fw_len) :
-    // initialization list
-    m_vals(new int[w_to_days_idx.size()]),
+    // subtract 1 from number of days and storage of values b/c we've included
+    // an extra value as a sentinal for loops
+    m_vals(new int[w_to_days_idx.size() - 1]),
     m_sums(new int[preg_cyc.size()]),
     m_days_idx(w_to_days_idx),
     m_subj_idx(w_cyc_to_subj_idx),
     m_preg_cyc(PregCyc::list_to_arr(preg_cyc)),
-    m_n_preg_days(w_to_days_idx.size()),
+    m_n_preg_days(w_to_days_idx.size() - 1),
     m_n_preg_cyc(preg_cyc.size()),
     m_fw_len(fw_len) {
 }

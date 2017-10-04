@@ -2,28 +2,38 @@
 
 #include "GammaGen.h"
 #include "global_vars.h"
+#include "ProposalFcns.h"
 #include "WGen.h"
 #include "XiGen.h"
 #include "UProdBeta.h"
 
 
 
-GammaContMH::GammaContMH() :
 
-{
-
-
+GammaContMH::GammaContMH(const Rcpp::NumericMatrix& U,
+			 const Rcpp::NumericVector& gamma_specs) :
+    GammaGen(U, gamma_specs),
+    m_log_norm_const(log_dgamma_trunc_norm_const()),
+    m_log_p_over_1_minus_p(m_hyp_p / (1 - m_hyp_p)),
+    m_log_1_minus_p_over_p(1 / m_log_p_over_1_minus_p),
+    m_mh_p(gamma_specs["mh_p"]),
+    m_mh_log_p(log(m_mh_log_p)),
+    m_mh_log_1_minus_p(log(1 - m_mh_p)),
+    m_mh_delta(gamma_specs["mh_delta"]),
+    m_mh_accept_ctr(0),
+    m_proposal_fcn(ProposalFcns::unif),
+    m_log_proposal_den(ProposalFcns::log_den_unif) {
 }
 
 
 
 
-double GammaContMH::sample(const WGen& W, const XiGen& xi, const int* X) {
+double GammaContMH::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X) {
 
-    double proposal_beta = samp_proposal_beta();
+    double proposal_beta = sample_proposal_beta();
     double proposal_gam  = exp(proposal_beta);
 
-    double log_r = get_log_r(proposal_gam);
+    double log_r = get_log_r(W, xi, ubeta, proposal_beta, proposal_gam);
 
     if ((log_r >= 0) || (log(R::unif_rand()) < log_r)) {
 	m_beta_val = proposal_beta;
@@ -39,7 +49,7 @@ double GammaContMH::sample(const WGen& W, const XiGen& xi, const int* X) {
 
 inline double GammaContMH::sample_proposal_beta() const {
 
-    return (R::unif_rand() < m_mh_prob_samp_1) ?
+    return (R::unif_rand() < m_mh_p) ?
 	0.0 :
 	m_proposal_fcn(m_beta_val, m_mh_delta);
 }
@@ -66,7 +76,7 @@ inline double GammaContMH::get_log_r(const WGen& W,
     // // the value of `beta_h* - beta_h^(s)`
     // double beta_diff = log(proposal_gam / m_gam_val);
 
-    return (get_w_log_lik(W, xi, ubeta, beta_diff)
+    return (get_w_log_lik(W, xi, ubeta, proposal_beta)
 	    + get_gam_log_lik(proposal_beta, proposal_gam)
 	    + get_proposal_log_lik(proposal_beta));
 }
@@ -79,19 +89,22 @@ inline double GammaContMH::get_log_r(const WGen& W,
 double GammaContMH::get_w_log_lik(const WGen& W,
 				  const XiGen& xi,
 				  const UProdBeta& ubeta,
-				  double beta_diff) {
+				  double proposal_beta) const {
 
     const int* w_vals            = W.vals();
-    const bool is_preg_day       = W.is_preg_day();
+    const int* w_days_idx        = W.days_idx();
     const double* xi_vals        = xi.vals();
+    const double* ubeta_vals     = ubeta.vals();
     const double* ubeta_exp_vals = ubeta.exp_vals();
+
+    double beta_diff = proposal_beta - m_beta_val;
 
     // tracks the running total of the log-likelihood
     double sum_log_lik = 0;
 
     // each iteration adds the i-th value of the loglikelihood to the running
     // value of `sum_log_lik`
-    for (int i = 0; i < n_days; ++i) {
+    for (int i = 0; i < m_n_days; ++i) {
 
 	// TODO: don't need this snippet below?
 
@@ -104,9 +117,10 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 	//     term1 = 0.0;
 	// }
 
-
+	double term1, term2;
 
 	// map the current day to the i-th subject to obtain `xi_i`
+	// TODO: change from global variable?
 	double xi_i = xi_vals[d2s[i]];
 
 	// calculate
@@ -118,10 +132,15 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 	//         = w_{ijk} * u{ijkh} * (beta_h* - beta_h^(s))
 	//
 	// which is one of the terms in `p(W | proposal) / p(W | current)`.
-
-	double term1 = (is_preg_day[i]) ?
-	    w_vals++ * m_Uh[i] * beta_diff :
-	    0.0;
+	//
+	if (*w_days_idx == i) {
+	    term1 = *w_vals * m_Uh[i] * beta_diff;
+	    ++w_vals;
+	    ++w_days_idx;
+	}
+	else {
+	    term1 = 0.0;
+	}
 
 	// // calculate
 	// //
@@ -134,17 +153,19 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 	// //         = -xi_i * (exp{ u_ijkh * (beta_h* - beta_h^(s)) } - 1) * exp(u_{ijk}^T beta^(s))
 	// //
 	// // which is one of the terms in `p(W | proposal) / p(W | current)`.
-
+	// //
 	// double term2 = -xi_i * (exp(m_Uh[i] * beta_diff) - 1) * ubeta_exp_vals[i];
 
 	// calculate `-xi_i * [exp(U * beta*) - exp(U * beta)]`, which is one of
 	// the terms in `p(W | proposal) / p(W | current)`.
-	double term2 = -xi_i * (exp(ubeta_vals[i] + (m_Uh[i] * beta_diff)) - ubeta_exp_vals[i]);
+	term2 = -xi_i * (exp(ubeta_vals[i] + (m_Uh[i] * beta_diff)) - ubeta_exp_vals[i]);
 
 	// add the portion of the log-likelihood from the current day to the
 	// running total
 	sum_log_lik += term1 + term2;
     }
+
+    return sum_log_lik;
 }
 
 
@@ -172,7 +193,7 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 //
 //      log Gamma(x; a, b) = log(norm_const) + ((a - 1) * x) - (b * x)
 //
-// plus one extra term for the log of the `p_h / (1 - p_h)` term or vice versa.
+// plus one extra term for the log of the `p_h / (1 - p_h)` term or its inverse.
 // The expression below for the last term is given by
 //
 //         Gamma(x*; a, b)
@@ -189,23 +210,23 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 //
 //                  = beta_h* - beta_h
 
-double GammaContMH::get_gam_log_lik(double proposal_beta, double proposal_gam) {
+double GammaContMH::get_gam_log_lik(double proposal_beta, double proposal_gam) const {
 
     double gam_log_lik;
 
-    if ((proposal_gam = 1.0) && (m_gam_val == 1.0)) {
+    if ((proposal_gam == 1.0) && (m_gam_val == 1.0)) {
 	gam_log_lik = 0.0;
     }
     else if ((proposal_gam == 1.0) && (m_gam_val != 1.0)) {
-	gam_log_lik = (m_log_ph_over_1_minus_ph
+	gam_log_lik = (m_log_p_over_1_minus_p
 		       - m_log_norm_const
 		       - ((m_hyp_a - 1) * m_beta_val)
 		       + (m_hyp_b * m_gam_val));
     }
     else if ((proposal_gam != 1.0) && (m_gam_val == 1.0)) {
-	gam_log_lik = (m_log_1_minus_ph_over_ph
+	gam_log_lik = (m_log_1_minus_p_over_p
 		       + m_log_norm_const
-		       + ((m_hyp_a - 1) * log(proposal_gam))
+		       + ((m_hyp_a - 1) * proposal_beta)
 		       - (m_hyp_b * proposal_gam));
     }
     else {
@@ -220,19 +241,83 @@ double GammaContMH::get_gam_log_lik(double proposal_beta, double proposal_gam) {
 
 
 
-inline double GammaContMH::get_proposal_log_lik(double proposal_beta) const {
+double GammaContMH::get_proposal_log_lik(double proposal_beta) const {
 
-    // calc `J(beta^(s) | beta*)` where `J` is the density function of the
-    // proposal distribution
-    double log_numer = (m_beta_val == 1) ?
-	m_mh_log_prob_samp_1 :
-	m_mh_log_1_minus_prob_samp_1 + m_log_proposal_den(m_beta_val, proposal_beta, m_mh_delta);
+    // case: both proposal and current sampled 0 or both sampled from the
+    // continuous part of the distribution.  In either case the ratio is 1 (the
+    // latter case is b/c the proposal distributions are symmetric).
+    if (((proposal_beta != 0.0) && (m_beta_val != 0.0))
+	|| ((proposal_beta == 0.0) && (m_beta_val == 0.0))) {
+	return 1.0;
+    }
 
-    // calc `J(beta* | beta^(s))` where `J` is the density function of the
-    // proposal distribution
-    double log_denom = (proposal_beta  == 1) ?
-	m_mh_log_prob_samp_1 :
-	m_mh_log_1_minus_prob_samp_1 + m_log_proposal_den(proposal_beta, m_beta_val, m_mh_delta);
+    // case: proposal is 0 and current is continuous.  This gives us (for `J`
+    // the proposal distribution)
+    //
+    //         (1 - pi) * J(beta^(s) | beta*)
+    //     log ------------------------------
+    //                     pi
+    //
+    else if (proposal_beta == 0.0) {
 
-    return log_numer - log_denom;
+	double log_dgamma_curr = m_log_proposal_den(m_beta_val, proposal_beta, m_mh_delta);
+
+	return m_mh_log_1_minus_p + log_dgamma_curr - m_mh_log_p;
+    }
+
+    // case: proposal is continuous and current is 0.  This gives us (for `J`
+    // the proposal distribution)
+    //
+    //                      pi
+    //     log ------------------------------
+    //         (1 - pi) * J(beta* | beta^(s))
+    //
+    else {
+
+	double log_dgamma_proposal = m_log_proposal_den(proposal_beta, m_beta_val, m_mh_delta);
+
+	return m_mh_log_p - m_mh_log_1_minus_p - log_dgamma_proposal;
+    }
+
+
+//     // calc `J(beta^(s) | beta*)` where `J` is the density function of the
+//     // proposal distribution
+//     double log_numer = (m_beta_val == 0.0) ?
+// 	m_mh_log_prob_samp_1 :
+// 	m_mh_log_1_minus_prob_samp_1 + m_log_proposal_den(m_beta_val, proposal_beta, m_mh_delta);
+
+//     // calc `J(beta* | beta^(s))` where `J` is the density function of the
+//     // proposal distribution
+//     double log_denom = (proposal_beta == 0.0) ?
+// 	m_mh_log_prob_samp_1 :
+// 	m_mh_log_1_minus_prob_samp_1 + m_log_proposal_den(proposal_beta, m_beta_val, m_mh_delta);
+
+//     return log_numer - log_denom;
+// }
+
+}
+
+
+
+
+// calculates the log norming constant for a possibly truncated Gamma(a, b)
+// distribution, given by
+//
+//                           1                        b^a
+//     log  -------------------------------------  ----------
+//          int_{bnd_l}^{bnd_u} Gamma(x; a, b) dx  gammafn(a)
+
+double GammaContMH::log_dgamma_trunc_norm_const() const {
+
+    // if the upper bound is infinity then F(infinity) = 1
+    double F_upp = (m_bnd_u == R_PosInf) ?
+	1.0 :
+	R::pgamma(m_bnd_u, m_hyp_a, 1.0 / m_hyp_b, 1, 0);
+
+    // if the lower bound  is 0 then F(0) = 0
+    double F_low = (m_bnd_l == 0.0) ?
+	0.0 :
+	R::pgamma(m_bnd_l, m_hyp_a, 1.0 / m_hyp_b, 1, 0);
+
+    return (m_hyp_a * log(m_hyp_b)) - R::lgammafn_sign(m_hyp_a, NULL) - log(F_upp - F_low);
 }

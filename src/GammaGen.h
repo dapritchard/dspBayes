@@ -91,12 +91,19 @@ class GammaContMH : public GammaGen {
 
 public:
 
-    // TODO: describe these vars
+    // precomputed values:
+    //
+    //   * m_log_norm_const:  log truncation const times the gamma dist const
+    //
+    //   * m_log_p_over_1_minus_p:  log(p_h / (1 - p_h))
+    //
+    //   * m_log_1_minus_p_over_ph:  log((1 - p_h) / p_h)
+    //
     const double m_log_norm_const;
-    const double m_log_ph_over_1_minus_ph;
-    const double m_log_1_minus_ph_over_ph;
+    const double m_log_p_over_1_minus_p;
+    const double m_log_1_minus_p_over_p;
 
-    // Metropolis-Hastings variables
+    // Metropolis-Hastings variables:
     //
     //   * m_mh_prob_samp_1:  P(select 1 as the proposal gamma)
     //
@@ -107,29 +114,33 @@ public:
     //   * m_mh_delta:  tuning parameter passed to proposal generating fcn
     //
     //   * m_mh_accept_ctr: number of times the proposal value was accepted
-
-    const double m_mh_prob_samp_1;
-    const double m_mh_log_prob_samp_1;
-    const double m_mh_log_1_minus_prob_samp_1;
+    //
+    const double m_mh_p;
+    const double m_mh_log_p;
+    const double m_mh_log_1_minus_p;
     const double m_mh_delta;
     int m_mh_accept_ctr;
 
-    const static double (*m_proposal_fcn)(double val, double delta);
-    const static double (*m_proposal_den)(double val, double cond, double delta);
+    // the continuous part of the proposal distribution and the corresponding
+    // density function
+    double (*m_proposal_fcn)(double cond, double delta);
+    double (*m_log_proposal_den)(double val, double cond, double delta);
 
-    double sample(const WGen& W, const XiGen& xi, const int* X);
+    GammaContMH(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
+    double sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X);
     double sample_proposal_beta() const;
-    static double get_log_r(const WGen& W,
-			    const XiGen& xi,
-			    const UProdBeta& ubeta,
-			    double proposal_beta,
-			    double proposal_gam);
+    double get_log_r(const WGen& W,
+		     const XiGen& xi,
+		     const UProdBeta& ubeta,
+		     double proposal_beta,
+		     double proposal_gam);
     double get_w_log_lik(const WGen& W,
 			 const XiGen& xi,
 			 const UProdBeta& ubeta,
-			 double beta_diff);
-    double get_gam_log_lik(double proposal_beta, double proposal_gam);
+			 double proposal_beta) const;
+    double get_gam_log_lik(double proposal_beta, double proposal_gam) const;
     double get_proposal_log_lik(double proposal_beta) const;
+    double log_dgamma_trunc_norm_const() const;
 };
 
 

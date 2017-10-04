@@ -35,14 +35,6 @@ public:
     // days in the day-specific data
     const PregCyc* m_preg_cyc;
 
-    // `is_preg_day` is a array with size given by the number of days in the
-    // data such that the i-th element is true if the i-th day has a random
-    // value for `W_ijk` (i.e a pregnancy occurred during the cycle and sex
-    // status for that day was either "yes" or "missing")
-    // TODO: make const
-    // TODO: add to constructor
-    const bool* is_preg_day;
-
     // the number of days for which intercourse occured during a cycle that
     // resulted in a pregnancy.  This value provides the amount of storage that
     // is associated with `m_vals` and `m_days_idx`.

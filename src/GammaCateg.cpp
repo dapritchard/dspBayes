@@ -1,5 +1,6 @@
-#include <cmath>  // log, exp
 #include "Rcpp.h"
+
+// TODO: missing header files
 #include "GammaGen.h"
 #include "global_vars.h"
 
@@ -13,7 +14,7 @@ using R::lgammafn_sign;
 GammaCateg::GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs) :
     // initialization list
     GammaGen(U, gamma_specs),
-    m_bnd_l_is_zero(m_bnd_l == 0),
+    m_bnd_l_is_zero(m_bnd_l == 0.0),
     m_bnd_u_is_inf(m_bnd_u == R_PosInf),
     m_is_trunc(!m_bnd_l_is_zero || !m_bnd_u_is_inf),
     m_incl_one(m_hyp_p != 0.0),
@@ -77,16 +78,16 @@ double GammaCateg::sample_gamma(double a_tilde, double b_tilde, double p_tilde) 
 	    // calculate `F(m_bnd_l; a_tilde, b_tilde)` and `F(m_bnd_u; a_tilde,
 	    // b_tilde)`
 	    unif_bnd_l = m_bnd_l_is_zero ?
-		0 :
-		R::pgamma(m_bnd_l, a_tilde, 1 / b_tilde, 1, 0);
+		0.0 :
+		R::pgamma(m_bnd_l, a_tilde, 1.0 / b_tilde, 1, 0);
 	    unif_bnd_u = m_bnd_u_is_inf ?
-		1 :
-		R::pgamma(m_bnd_u, a_tilde, 1 / b_tilde, 1, 0);
+		1.0 :
+		R::pgamma(m_bnd_u, a_tilde, 1.0 / b_tilde, 1, 0);
 
 	    // sample a uniform r.v. and return the `unif_rv`-th quantile from
 	    // the gamma distribution
 	    unif_rv = R::runif(unif_bnd_l, unif_bnd_u);
-	    return R::qgamma(unif_rv, a_tilde, 1 / b_tilde, 1, 0);
+	    return R::qgamma(unif_rv, a_tilde, 1.0 / b_tilde, 1, 0);
 	}
     }
 }
@@ -250,13 +251,13 @@ double GammaCateg::log_dgamma_trunc_const(double a, double b) {
 
     // if the upper bound is infinity then F(infinity) = 1
     F_upp = (m_bnd_u_is_inf) ?
-	1 :
-	R::pgamma(m_bnd_u, a, 1 / b, 1, 0);
+	1.0 :
+	R::pgamma(m_bnd_u, a, 1.0 / b, 1, 0);
 
     // if the lower bound  is 0 then F(0) = 0
     F_low = (m_bnd_l_is_zero) ?
-	0 :
-	R::pgamma(m_bnd_l, a, 1 / b, 1, 0);
+	0.0 :
+	R::pgamma(m_bnd_l, a, 1.0 / b, 1, 0);
 
     return log(F_upp - F_low);
 }
