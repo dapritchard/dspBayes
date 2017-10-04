@@ -7,6 +7,7 @@
 #include "cppunit/ui/text/TestRunner.h"
 #include "UTestFactory.h"
 #include "UTestGammaCateg.h"
+#include "UTestGammaContMH.h"
 #include "UTestPhiGen.h"
 #include "UTestWGen.h"
 #include "UTestXGen.h"
@@ -73,6 +74,7 @@ int utest_cpp_(Rcpp::NumericMatrix U,
 
     CppUnit::TextUi::TestRunner runner;
     runner.addTest(GammaCategTest::suite());
+    runner.addTest(GammaContMHTest::suite());
     runner.addTest(PhiGenTest::suite());
     runner.addTest(WGenTest::suite());
     runner.addTest(XGenTest::suite());

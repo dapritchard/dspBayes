@@ -255,9 +255,14 @@ XGen.o : XGen.h UProdBeta.h UProdTau.h
 
 utests : override CPPFLAGS += $(cpp_incl_loc)
 
-UTestDriver.o : UTestPhiGen.h
+UTestDriver.o : UTestFactory.h UTestGammaCateg.h UTestGammaContMH.h UTestPhiGen.h \
+                UTestPhiGen.h UTestWGen.h UTestXGen.h UTestWGen.h
 
 UTestFactory.o : UTestFactory.h XiGen.h WGen.h PhiGen.h UProdBeta.h
+
+# TODO: UTestGammaCateg.o?
+
+UTestGammaContMH.o : UTestGammaContMH.h
 
 UTestPhiGen.o : PhiGen.h UTestPhiGen.h XiGen.h
 
