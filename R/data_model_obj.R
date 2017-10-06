@@ -108,7 +108,7 @@ get_w_day_blocks <- function(comb_dat, var_nm) {
 # `comb_dat[[var_nm$preg]]`, although these would be removed anyway.
 
 get_w_to_days_idx <- function(comb_dat, var_nm) {
-    comb_dat[[var_nm$preg]] %>% map_vec_to_bool %>% which %>% c(., 0L) %>% `-`(., -1L)
+    comb_dat[[var_nm$preg]] %>% map_vec_to_bool %>% which %>% c(., 0L) %>% `-`(., 1L)
 }
 
 

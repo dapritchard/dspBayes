@@ -37,7 +37,6 @@ public:
     virtual double sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) = 0;
 
     static GammaGen** create_arr(const Rcpp::NumericMatrix& U, const Rcpp::List& gamma_specs);
-
 };
 
 
@@ -91,13 +90,13 @@ class GammaContMH : public GammaGen {
 
 public:
 
-    // precomputed values:
+    // precomputed calculations:
     //
-    //   * m_log_norm_const:  log truncation const times the gamma dist const
+    //   m_log_norm_const:  log truncation const times the gamma dist const
     //
-    //   * m_log_p_over_1_minus_p:  log(p_h / (1 - p_h))
+    //   m_log_p_over_1_minus_p:  log(p_h / (1 - p_h))
     //
-    //   * m_log_1_minus_p_over_ph:  log((1 - p_h) / p_h)
+    //   m_log_1_minus_p_over_ph:  log((1 - p_h) / p_h)
     //
     const double m_log_norm_const;
     const double m_log_p_over_1_minus_p;
@@ -105,15 +104,15 @@ public:
 
     // Metropolis-Hastings variables:
     //
-    //   * m_mh_prob_samp_1:  P(select 1 as the proposal gamma)
+    //   m_mh_prob_samp_1:  P(select 1 as the proposal gamma)
     //
-    //   * m_mh_log_prob_samp_1:  log(m_mh_prob_samp_1)
+    //   m_mh_log_prob_samp_1:  log(m_mh_prob_samp_1)
     //
-    //   * m_mh_log_1_minus_prob_samp_1:  log(1 - m_mh_prob_samp_1)
+    //   m_mh_log_1_minus_prob_samp_1:  log(1 - m_mh_prob_samp_1)
     //
-    //   * m_mh_delta:  tuning parameter passed to proposal generating fcn
+    //   m_mh_delta:  tuning parameter passed to proposal generating fcn
     //
-    //   * m_mh_accept_ctr: number of times the proposal value was accepted
+    //   m_mh_accept_ctr: number of times the proposal value was accepted
     //
     const double m_mh_p;
     const double m_mh_log_p;

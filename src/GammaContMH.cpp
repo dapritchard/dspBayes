@@ -24,6 +24,7 @@ GammaContMH::GammaContMH(const Rcpp::NumericMatrix& U,
     m_proposal_fcn(ProposalFcns::unif),
     m_log_proposal_den(ProposalFcns::log_den_unif) {
 }
+// TODO: provide a way to choose the proposal functions
 
 
 
@@ -73,9 +74,6 @@ inline double GammaContMH::get_log_r(const WGen& W,
 				     double proposal_beta,
 				     double proposal_gam) {
 
-    // // the value of `beta_h* - beta_h^(s)`
-    // double beta_diff = log(proposal_gam / m_gam_val);
-
     return (get_w_log_lik(W, xi, ubeta, proposal_beta)
 	    + get_gam_log_lik(proposal_beta, proposal_gam)
 	    + get_proposal_log_lik(proposal_beta));
@@ -97,6 +95,7 @@ double GammaContMH::get_w_log_lik(const WGen& W,
     const double* ubeta_vals     = ubeta.vals();
     const double* ubeta_exp_vals = ubeta.exp_vals();
 
+    // the value of `beta_h* - beta_h^(s)`
     double beta_diff = proposal_beta - m_beta_val;
 
     // tracks the running total of the log-likelihood
@@ -105,17 +104,6 @@ double GammaContMH::get_w_log_lik(const WGen& W,
     // each iteration adds the i-th value of the loglikelihood to the running
     // value of `sum_log_lik`
     for (int i = 0; i < m_n_days; ++i) {
-
-	// TODO: don't need this snippet below?
-
-	// // case:
-	// if ((preg_day_idx < w_n_preg_days) && (w_days_idx[preg_day_idx] == i)) {
-	//     term1 = w_vals[preg_day_idx++];
-	// }
-	// // case:
-	// else {
-	//     term1 = 0.0;
-	// }
 
 	double term1, term2;
 
@@ -133,6 +121,10 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 	//
 	// which is one of the terms in `p(W | proposal) / p(W | current)`.
 	//
+	// IMPORTANT: note that `w_days_idx` has a sentinal value appended to
+	// the end of the array so that we need not worry about reading past the
+	// end of the data
+
 	if (*w_days_idx == i) {
 	    term1 = *w_vals * m_Uh[i] * beta_diff;
 	    ++w_vals;
@@ -141,20 +133,6 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 	else {
 	    term1 = 0.0;
 	}
-
-	// // calculate
-	// //
-	// //           exp{ -xi_i * exp(u_{ijk}^T beta*) }
-	// //     log --------------------------------------
-	// //         exp{ -xi_i * exp(u_{ijk}^T beta^(s)) }
-	// //
-	// //         = -xi_i * [ exp(u_{ijk}^T beta*) - exp(u_{ijk}^T beta^(s)) ]
-	// //
-	// //         = -xi_i * (exp{ u_ijkh * (beta_h* - beta_h^(s)) } - 1) * exp(u_{ijk}^T beta^(s))
-	// //
-	// // which is one of the terms in `p(W | proposal) / p(W | current)`.
-	// //
-	// double term2 = -xi_i * (exp(m_Uh[i] * beta_diff) - 1) * ubeta_exp_vals[i];
 
 	// calculate `-xi_i * [exp(U * beta*) - exp(U * beta)]`, which is one of
 	// the terms in `p(W | proposal) / p(W | current)`.
@@ -248,6 +226,7 @@ double GammaContMH::get_proposal_log_lik(double proposal_beta) const {
     // latter case is b/c the proposal distributions are symmetric).
     if (((proposal_beta != 0.0) && (m_beta_val != 0.0))
 	|| ((proposal_beta == 0.0) && (m_beta_val == 0.0))) {
+
 	return 1.0;
     }
 
@@ -278,23 +257,6 @@ double GammaContMH::get_proposal_log_lik(double proposal_beta) const {
 
 	return m_mh_log_p - m_mh_log_1_minus_p - log_dgamma_proposal;
     }
-
-
-//     // calc `J(beta^(s) | beta*)` where `J` is the density function of the
-//     // proposal distribution
-//     double log_numer = (m_beta_val == 0.0) ?
-// 	m_mh_log_prob_samp_1 :
-// 	m_mh_log_1_minus_prob_samp_1 + m_log_proposal_den(m_beta_val, proposal_beta, m_mh_delta);
-
-//     // calc `J(beta* | beta^(s))` where `J` is the density function of the
-//     // proposal distribution
-//     double log_denom = (proposal_beta == 0.0) ?
-// 	m_mh_log_prob_samp_1 :
-// 	m_mh_log_1_minus_prob_samp_1 + m_log_proposal_den(proposal_beta, m_beta_val, m_mh_delta);
-
-//     return log_numer - log_denom;
-// }
-
 }
 
 
@@ -321,3 +283,17 @@ double GammaContMH::log_dgamma_trunc_norm_const() const {
 
     return (m_hyp_a * log(m_hyp_b)) - R::lgammafn_sign(m_hyp_a, NULL) - log(F_upp - F_low);
 }
+
+
+
+
+// double (*(*get_proposal_fcn)(double cond, double delta))(int proposal_code) {
+
+//     // initialize the appropriate subclass of `GammaGen`, as specified by
+//     // `curr_gamma_specs`
+//     switch((int) proposal_code) {
+//     case UNIF:
+// 	// TODO
+// 	break;
+//     }
+// }

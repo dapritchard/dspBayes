@@ -9,6 +9,11 @@ utest_cpp <- function(dsp_data,
                       trackProg  = "percent",
                       progQuants = seq(0.1, 1.0, 0.1)) {
 
+    # we've added a sentinal value to the end of `w_to_day_idx`, so we need to
+    # remove it before performing the testing routines
+    w_to_days_idx_old <- dsp_data$w_to_days_idx
+    dsp_data$w_to_days_idx <- w_to_days_idx_old[-length(w_to_days_idx_old)]
+
     # stub functions for gamma and phi specs
     gamma_hyper_list <- get_gamma_specs(dsp_data)
     phi_specs <- get_phi_specs()
@@ -72,7 +77,7 @@ utest_cpp <- function(dsp_data,
     utest_cpp_(U                 = dsp_data$U,
                X_rcpp            = dsp_data$intercourse$X,
                w_day_blocks      = dsp_data$w_day_blocks,
-               w_to_days_idx     = dsp_data$w_to_days_idx,
+               w_to_days_idx     = w_to_days_idx_old,
                w_cyc_to_subj_idx = dsp_data$w_cyc_to_subj_idx,
                subj_day_blocks   = dsp_data$subj_day_blocks,
                day_to_subj_idx   = dsp_data$day_to_subj_idx,
