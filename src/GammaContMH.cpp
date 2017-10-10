@@ -14,10 +14,10 @@ GammaContMH::GammaContMH(const Rcpp::NumericMatrix& U,
 			 const Rcpp::NumericVector& gamma_specs) :
     GammaGen(U, gamma_specs),
     m_log_norm_const(log_dgamma_trunc_norm_const()),
-    m_log_p_over_1_minus_p(m_hyp_p / (1 - m_hyp_p)),
-    m_log_1_minus_p_over_p(1 / m_log_p_over_1_minus_p),
+    m_log_p_over_1_minus_p(log(m_hyp_p / (1 - m_hyp_p))),
+    m_log_1_minus_p_over_p(-m_log_p_over_1_minus_p),
     m_mh_p(gamma_specs["mh_p"]),
-    m_mh_log_p(log(m_mh_log_p)),
+    m_mh_log_p(log(m_mh_p)),
     m_mh_log_1_minus_p(log(1 - m_mh_p)),
     m_mh_delta(gamma_specs["mh_delta"]),
     m_mh_accept_ctr(0),
@@ -61,9 +61,9 @@ inline double GammaContMH::sample_proposal_beta() const {
 // Calculate log gamma acceptance ratio r.  The acceptance ratio for gamma_h is
 // given by:
 //
-//            p(W | gamma*, xi, data) * p(gamma_h*)
-//         -------------------------------------------
-//         p(W | gamma^(s), xi, data) * p(gamma_h^(s))
+//            p(W | gamma*, xi, data) * p(gamma_h*) / J(beta* | beta^(s))
+//         -----------------------------------------------------------------
+//         p(W | gamma^(s), xi, data) * p(gamma_h^(s)) / J(beta^(s) | beta*)
 //
 // where gamma* denotes the gamma vector with the h-th term replaced by the
 // proposal value and similarly for gamma^(s).
@@ -108,7 +108,6 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 	double term1, term2;
 
 	// map the current day to the i-th subject to obtain `xi_i`
-	// TODO: change from global variable?
 	double xi_i = xi_vals[d2s[i]];
 
 	// calculate
@@ -122,8 +121,8 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 	// which is one of the terms in `p(W | proposal) / p(W | current)`.
 	//
 	// IMPORTANT: note that `w_days_idx` has a sentinal value appended to
-	// the end of the array so that we need not worry about reading past the
-	// end of the data
+	// the end of the data so that we need not worry about reading past the
+	// end of the array
 
 	if (*w_days_idx == i) {
 	    term1 = *w_vals * m_Uh[i] * beta_diff;
@@ -169,7 +168,7 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 //
 // The expressions below for the middle two cases are due to the equality
 //
-//      log Gamma(x; a, b) = log(norm_const) + ((a - 1) * x) - (b * x)
+//      log Gamma(x; a, b) = log(norm_const) + ((a - 1) * log(x)) - (b * x)
 //
 // plus one extra term for the log of the `p_h / (1 - p_h)` term or its inverse.
 // The expression below for the last term is given by
@@ -223,11 +222,12 @@ double GammaContMH::get_proposal_log_lik(double proposal_beta) const {
 
     // case: both proposal and current sampled 0 or both sampled from the
     // continuous part of the distribution.  In either case the ratio is 1 (the
-    // latter case is b/c the proposal distributions are symmetric).
+    // latter case is b/c the proposal distributions are symmetric) so that the
+    // log is 0.
     if (((proposal_beta != 0.0) && (m_beta_val != 0.0))
 	|| ((proposal_beta == 0.0) && (m_beta_val == 0.0))) {
 
-	return 1.0;
+	return 0.0;
     }
 
     // case: proposal is 0 and current is continuous.  This gives us (for `J`
