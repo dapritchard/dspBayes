@@ -39,7 +39,10 @@ public:
     void test_sample_proposal_beta_from_cont();
     void test_get_log_r();
     void test_get_w_log_lik();
-    void test_get_gam_log_lik();
+    void test_get_gam_log_lik_10_10();
+    void test_get_gam_log_lik_10_12();
+    void test_get_gam_log_lik_12_10();
+    void test_get_gam_log_lik_12_12();
     void test_get_proposal_log_lik_prop0_curr0();
     void test_get_proposal_log_lik_prop0_curr2();
     void test_get_proposal_log_lik_prop2_curr0();
@@ -60,7 +63,10 @@ public:
     CPPUNIT_TEST(test_sample_proposal_beta_from_cont);
     CPPUNIT_TEST(test_get_log_r);
     CPPUNIT_TEST(test_get_w_log_lik);
-    CPPUNIT_TEST(test_get_gam_log_lik);
+    CPPUNIT_TEST(test_get_gam_log_lik_10_10);
+    CPPUNIT_TEST(test_get_gam_log_lik_10_12);
+    CPPUNIT_TEST(test_get_gam_log_lik_12_10);
+    CPPUNIT_TEST(test_get_gam_log_lik_12_12);
     CPPUNIT_TEST(test_get_proposal_log_lik_prop0_curr0);
     CPPUNIT_TEST(test_get_proposal_log_lik_prop0_curr2);
     CPPUNIT_TEST(test_get_proposal_log_lik_prop2_curr0);
@@ -75,6 +81,7 @@ private:
     FromScratchW* w_obj;
     FromScratchXi* xi_obj;
     FromScratchUbeta* ubeta_obj;
+    int* X;
     Rcpp::NumericMatrix m_Uh;
     int old_d2s[9];
     int new_d2s[9];

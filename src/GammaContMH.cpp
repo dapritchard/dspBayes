@@ -31,12 +31,20 @@ GammaContMH::GammaContMH(const Rcpp::NumericMatrix& U,
 
 double GammaContMH::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X) {
 
-    double proposal_beta = sample_proposal_beta();
-    double proposal_gam  = exp(proposal_beta);
+    const double proposal_beta = sample_proposal_beta();
+    const double proposal_gam  = exp(proposal_beta);
 
-    double log_r = get_log_r(W, xi, ubeta, proposal_beta, proposal_gam);
+    // calculate the log acceptance ratio
+    const double log_r = get_log_r(W, xi, ubeta, X, proposal_beta, proposal_gam);
 
+    // accept proposal value `min(r, 1)-th` of the time
     if ((log_r >= 0) || (log(R::unif_rand()) < log_r)) {
+
+	// update `U * beta` and `exp(U * beta)` based upon accepting the
+	// proposal value
+	ubeta.update(m_Uh, proposal_beta, m_beta_val);
+
+	// update member variables to based upon accepting the proposal value
 	m_beta_val = proposal_beta;
 	m_gam_val = proposal_gam;
 	++m_mh_accept_ctr;
@@ -71,10 +79,11 @@ inline double GammaContMH::sample_proposal_beta() const {
 inline double GammaContMH::get_log_r(const WGen& W,
 				     const XiGen& xi,
 				     const UProdBeta& ubeta,
+				     const int* X,
 				     double proposal_beta,
 				     double proposal_gam) {
 
-    return (get_w_log_lik(W, xi, ubeta, proposal_beta)
+    return (get_w_log_lik(W, xi, ubeta, X, proposal_beta)
 	    + get_gam_log_lik(proposal_beta, proposal_gam)
 	    + get_proposal_log_lik(proposal_beta));
 }
@@ -87,6 +96,7 @@ inline double GammaContMH::get_log_r(const WGen& W,
 double GammaContMH::get_w_log_lik(const WGen& W,
 				  const XiGen& xi,
 				  const UProdBeta& ubeta,
+				  const int* X,
 				  double proposal_beta) const {
 
     const int* w_vals            = W.vals();
@@ -104,6 +114,12 @@ double GammaContMH::get_w_log_lik(const WGen& W,
     // each iteration adds the i-th value of the loglikelihood to the running
     // value of `sum_log_lik`
     for (int i = 0; i < m_n_days; ++i) {
+
+	// if intercourse did not occur on this day then `W` is non-random and
+	// the log ratio is 0
+	if (! X[i]) {
+	    continue;
+	}
 
 	double term1, term2;
 
@@ -218,10 +234,12 @@ double GammaContMH::get_gam_log_lik(double proposal_beta, double proposal_gam) c
 
 
 
+// calculate J(beta^(s) | beta*) / J(beta* | beta^(s)).
+
 double GammaContMH::get_proposal_log_lik(double proposal_beta) const {
 
     // case: both proposal and current sampled 0 or both sampled from the
-    // continuous part of the distribution.  In either case the ratio is 1 (the
+    // continuous part of the distribution.  In either case the ratio is J(beta^(s) | beta*)1 (the
     // latter case is b/c the proposal distributions are symmetric) so that the
     // log is 0.
     if (((proposal_beta != 0.0) && (m_beta_val != 0.0))
@@ -276,7 +294,7 @@ double GammaContMH::log_dgamma_trunc_norm_const() const {
 	1.0 :
 	R::pgamma(m_bnd_u, m_hyp_a, 1.0 / m_hyp_b, 1, 0);
 
-    // if the lower bound  is 0 then F(0) = 0
+    // if the lower bound is 0 then F(0) = 0
     double F_low = (m_bnd_l == 0.0) ?
 	0.0 :
 	R::pgamma(m_bnd_l, m_hyp_a, 1.0 / m_hyp_b, 1, 0);

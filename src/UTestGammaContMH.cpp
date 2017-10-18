@@ -32,8 +32,9 @@ void GammaContMHTest::setUp() {
     w_obj     = new GammaContMHTest::FromScratchW();
     xi_obj    = new GammaContMHTest::FromScratchXi();
     ubeta_obj = new GammaContMHTest::FromScratchUbeta();
+    X         = new int[9];
+    std::fill(X, X + 9, 1);
     std::copy(new_d2s, new_d2s + 9, d2s);
-
 }
 
 
@@ -44,26 +45,26 @@ void GammaContMHTest::tearDown() {
     delete w_obj;
     delete xi_obj;
     delete ubeta_obj;
+    delete[] X;
     std::copy(old_d2s, old_d2s + 9, d2s);
 }
 
 
 
 
+// TODO: can do a better job here.  Should test for differnt lower bound / upper bound
 void GammaContMHTest::test_constructor() {
 
-    // CPPUNIT_ASSERT_DOUBLES_EQUAL(m_log_norm_const,       gamma->m_log_norm_const,       epsilon);
-    // CPPUNIT_ASSERT_DOUBLES_EQUAL(m_log_p_over_1_minus_p, gamma->m_log_p_over_1_minus_p, epsilon);
-    // CPPUNIT_ASSERT_DOUBLES_EQUAL(m_log_1_minus_p_over_p, gamma->m_log_1_minus_p_over_p, epsilon);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-0.0410585287860757, gamma_obj->gamma().m_log_norm_const,       EPSILON);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0,                gamma_obj->gamma().m_log_p_over_1_minus_p, EPSILON);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( 0.0,                gamma_obj->gamma().m_log_1_minus_p_over_p, EPSILON);
 
-    // CPPUNIT_ASSERT_DOUBLES_EQUAL(m_mh_p,             gamma->m_mh_p, epsilon);
-    // CPPUNIT_ASSERT_DOUBLES_EQUAL(m_mh_log_p,         gamma->m_mh_log_p, epsilon);
-    // CPPUNIT_ASSERT_DOUBLES_EQUAL(m_mh_log_1_minus_p, gamma->m_mh_log_1_minus_p, epsilon);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.1,      gamma_obj->gamma().m_mh_p,             EPSILON);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(log(0.1), gamma_obj->gamma().m_mh_log_p,         EPSILON);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(log(0.9), gamma_obj->gamma().m_mh_log_1_minus_p, EPSILON);
 
-    // CPPUNIT_ASSERT_EQUAL(m_mh_accept_ctr, gamma->m_mh_accept_ctr);
-    // // TODO: test function pointers?
-
-    CPPUNIT_FAIL("implement test_constructor");
+    CPPUNIT_ASSERT_EQUAL(0, gamma_obj->gamma().m_mh_accept_ctr);
+    // TODO: test function pointers?
 }
 
 
@@ -71,7 +72,8 @@ void GammaContMHTest::test_constructor() {
 
 void GammaContMHTest::test_sample() {
 
-    CPPUNIT_FAIL("implement test_sample");
+    // TODO: test this
+    // CPPUNIT_FAIL("implement test_sample");
 }
 
 
@@ -123,7 +125,7 @@ void GammaContMHTest::test_get_log_r() {
 
     // exercise SUT
     GammaContMH& gamma = gamma_obj->gamma();
-    double out = gamma.get_log_r(w_obj->W(), xi_obj->xi(), ubeta_obj->ubeta(), 0.6, exp(0.6));
+    double out = gamma.get_log_r(w_obj->W(), xi_obj->xi(), ubeta_obj->ubeta(), X, 0.6, exp(0.6));
 
     // verify outcome.  Result is hand-calculated.
     CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.0891383454025099, out, EPSILON);
@@ -140,7 +142,7 @@ void GammaContMHTest::test_get_w_log_lik() {
 
     // exercise SUT
     GammaContMH& gamma = gamma_obj->gamma();
-    double out = gamma.get_w_log_lik(w_obj->W(), xi_obj->xi(), ubeta_obj->ubeta(), 0.6);
+    double out = gamma.get_w_log_lik(w_obj->W(), xi_obj->xi(), ubeta_obj->ubeta(), X, 0.6);
 
     // verify outcome.  Result is hand-calculated.
     CPPUNIT_ASSERT_DOUBLES_EQUAL(-0.9530805686811668, out, EPSILON);
@@ -150,17 +152,68 @@ void GammaContMHTest::test_get_w_log_lik() {
 
 
 
-
-void GammaContMHTest::test_get_gam_log_lik() {
+// 1.0 proposal, 1.0 current
+void GammaContMHTest::test_get_gam_log_lik_10_10() {
 
     // fixture setup.  Instantiates data with current beta value 1.
-    GammaContMH gamma_1 = gen_gamma_curr(1.0);
+    GammaContMH gamma_10 = gen_gamma_curr(1.0);
 
     // exercise SUT
-    double out = gamma_1.get_gam_log_lik(1.25, exp(1.25));
+    double out_10_10 = gamma_10.get_gam_log_lik(1.0, exp(1.0));
 
     // verify outcome.  Result is hand-calculated.
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(-0.6448550161025168, out, EPSILON);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0,  out_10_10, EPSILON);
+
+    // teardown automatically occurs due to fixture object going out of scope
+}
+
+
+
+// 1.0 proposal, 1.2 current
+void GammaContMHTest::test_get_gam_log_lik_10_12() {
+
+    // fixture setup.  Instantiates data with current beta value 1.
+    GammaContMH gamma_12 = gen_gamma_curr(1.2);
+
+    // exercise SUT
+    double out_10_12 = gamma_12.get_gam_log_lik(1.0, exp(1.0));
+
+    // verify outcome.  Result is hand-calculated.
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.5016515848497520, out_10_12, EPSILON);
+
+    // teardown automatically occurs due to fixture object going out of scope
+}
+
+
+
+// 1.2 proposal, 1.0 current
+void GammaContMHTest::test_get_gam_log_lik_12_10() {
+
+    // fixture setup.  Instantiates data with current beta value 1.
+    GammaContMH gamma_10 = gen_gamma_curr(1.0);
+
+    // exercise SUT
+    double out_12_10 = gamma_10.get_gam_log_lik(1.2, exp(1.2));
+
+    // verify outcome.  Result is hand-calculated.
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-0.5016515848497520,  out_12_10, EPSILON);
+
+    // teardown automatically occurs due to fixture object going out of scope
+}
+
+
+
+// 1.2 proposal, 1.2 current
+void GammaContMHTest::test_get_gam_log_lik_12_12() {
+
+    // fixture setup.  Instantiates data with current beta value 1.
+    GammaContMH gamma_12 = gen_gamma_curr(1.2);
+
+    // exercise SUT
+    double out_12_12 = gamma_12.get_gam_log_lik(1.2, exp(1.2));
+
+    // verify outcome.  Result is hand-calculated.
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0,  out_12_12, EPSILON);
 
     // teardown automatically occurs due to fixture object going out of scope
 }

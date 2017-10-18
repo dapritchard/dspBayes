@@ -48,7 +48,23 @@ void UProdBeta::add_uh_prod_beta_h(const double* U_h, double beta_h) {
 
 
 
-void UProdBeta::update_exp(int* X) {
+// update `U * beta` and `exp(U * beta)` based upon an updated value of
+// `beta_h`
+void UProdBeta::update(const double* U_h, double beta_h_new, double beta_h_curr) {
+
+    const double beta_h_diff = beta_h_new - beta_h_curr;
+
+    for (int i = 0; i < m_n_days; i++) {
+	m_vals[i] += U_h[i] * beta_h_diff;
+	m_exp_vals[i] = exp(m_vals[i]);
+    }
+}
+
+
+
+
+// update `exp(U * beta)` based upon updated `U * beta`
+void UProdBeta::update_exp() {
     for (int i = 0; i < m_n_days; i++) {
 	m_exp_vals[i] = std::exp(m_vals[i]);
     }

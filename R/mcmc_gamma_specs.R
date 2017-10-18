@@ -10,6 +10,7 @@ get_gamma_specs <- function(dsp_data) {
                                    hyp_p    = 0.5,
                                    bnd_l    = 0,
                                    bnd_u    = Inf,
+                                   mh_p     = 0.1,
                                    mh_delta = 0.1)
     }
 

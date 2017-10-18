@@ -131,11 +131,13 @@ public:
     double get_log_r(const WGen& W,
 		     const XiGen& xi,
 		     const UProdBeta& ubeta,
+		     const int* X,
 		     double proposal_beta,
 		     double proposal_gam);
     double get_w_log_lik(const WGen& W,
 			 const XiGen& xi,
 			 const UProdBeta& ubeta,
+			 const int* X,
 			 double proposal_beta) const;
     double get_gam_log_lik(double proposal_beta, double proposal_gam) const;
     double get_proposal_log_lik(double proposal_beta) const;
