@@ -86,9 +86,9 @@ int utest_cpp_(Rcpp::NumericMatrix u_rcpp,
     runner.addTest(GammaCategTest::suite());
     runner.addTest(GammaContMHTest::suite());
     runner.addTest(PhiGenTest::suite());
-    runner.addTest(UGenVarCategTest::suite());
+    if (u_miss_info.size() > 0) { runner.addTest(UGenVarCategTest::suite()); }
     runner.addTest(WGenTest::suite());
-    // runner.addTest(XGenTest::suite());
+    if (x_miss_cyc.size() > 0) { runner.addTest(XGenTest::suite()); }
     runner.addTest(XiGenTest::suite());
 
     // run() returns true if successful, false otherwise

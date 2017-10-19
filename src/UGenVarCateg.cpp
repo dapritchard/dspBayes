@@ -96,10 +96,10 @@ void UGenVarCateg::sample(const WGen& W,
     double log_condit_w_probs[m_n_categs];
     double log_condit_x_probs[m_n_categs];
 
-    // if there are no missing values for `X` then the just set the conditional
-    // probabilities to be all 1
-    double all_ones[m_n_categs];
-    std::fill(all_ones, all_ones + m_n_categs, 1.0);
+    // if there are no missing values for `X` then the just set the log
+    // conditional probabilities to be all 0
+    double all_zeroes[m_n_categs];
+    std::fill(all_zeroes, all_zeroes + m_n_categs, 0.0);
 
     // storage for values of `exp(U * beta)` and for `U * tau` for each of the
     // possible categories of the missing covariate and over the values of `U`
@@ -125,7 +125,7 @@ void UGenVarCateg::sample(const WGen& W,
 	// case: there are no missing in `X` for the observations affected by
 	// the covariate, so simply set the conditional probabilities each to 1
 	if (curr_block->n_sex_days == 0) {
-	    condit_x_ptr = all_ones;
+	    condit_x_ptr = all_zeroes;
 	}
 	// case: there are missing in `X` for the observations affected by the
 	// covariate, so calculate the conditional probabilities for `X` for
@@ -327,7 +327,7 @@ int UGenVarCateg::sample_covariate(const double* log_condit_w_probs,
     // each iteration calculates the unnormalized value of `log p(U = j | W, X)`
     // for the j-th covariate category, and tracks the maximum value over all
     // the `j`
-    max_val = log_condit_x_probs[0] + log_condit_w_probs[0] + m_log_u_prior_probs[0];
+    max_val = unnorm_log_probs[0] = log_condit_x_probs[0] + log_condit_w_probs[0] + m_log_u_prior_probs[0];
     for (int j = 1; j < m_n_categs; ++j) {
 
 	unnorm_log_probs[j] = (log_condit_x_probs[j]

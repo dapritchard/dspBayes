@@ -88,6 +88,10 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
 
     calc_alt_exp_ubeta_list <- function(ubeta, beta_coefs, miss_block, var_info) {
 
+        # if (length(miss_block) == 0L) {
+        #     return(lapply(seq_len(var_info["n_categs"]), function(x) numeric(0L)))
+        # }
+
         block_day_idx <- seq(miss_block["beg_day_idx"] + 1L,
                              miss_block["beg_day_idx"] + miss_block["n_days"],
                              1L)
@@ -108,6 +112,10 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
 
 
     calc_posterior_w <- function(W, xi, alt_exp_ubeta_list, miss_block, cov_miss_w_idx) {
+
+        # if (length(miss_block) == 0L) {
+        #     return(lapply(seq_len(var_info["n_categs"]), function(x) numeric(0L)))
+        # }
 
         xi_i <- xi[miss_block["subj_idx"] + 1L]
 
@@ -138,6 +146,10 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
 
 
     calc_alt_utau_list <- function(utau, tau_coefs, sex_coef, miss_block, cov_miss_x_idx, var_info) {
+
+        if (miss_block["n_sex_days"] == 0L) {
+            return(lapply(seq_len(var_info["n_categs"]), function(x) numeric(0L)))
+        }
 
         block_ptr_idx <- seq(miss_block["beg_sex_idx"] + 1L,
                              miss_block["beg_sex_idx"] + miss_block["n_sex_days"],
@@ -223,11 +235,14 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
 
 
     # pick a categorical variable to test
-    if (! any(dsp_data$u_miss_type == 1L)) {
-        stop("need to figure out how to handle no missing categorical vars in testing")
-    }
-    else {
+    if (any(dsp_data$u_miss_type == 1L)) {
         var_idx <- which(dsp_data$u_miss_type == 1L) %>% head(., 1L) %>% unname
+    }
+    # if there's no missing U then exit early
+    else {
+        return(list(input   = list(),
+                    data    = integer(0L),
+                    samples = list()))
     }
 
     # bind variables to global U data
@@ -241,7 +256,7 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
 
     # bind variables to variable-specific data
     var_info       <- dsp_data$u_miss_info[[var_idx]]$var_info
-    u_prior_probs  <- dsp_data$u_miss_info[[var_idx]]$u_prior_probs
+    u_prior_probs  <- dsp_data$u_miss_info[[var_idx]]$log_u_prior_probs %>% exp
     var_block_list <- dsp_data$u_miss_info[[var_idx]]$var_block_list
 
     # choose a block with some missing intercourse data, if possible, to use for
@@ -249,6 +264,9 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
     # TODO: can we look for one with a pregnancy cycle also?
     beg_sex_idx <- sapply(var_block_list, function(x) x["beg_sex_idx"])
     block_idx <- which(beg_sex_idx >= 0L) %>% head(., 1L) %>% unname
+    if (length(block_idx) == 0L) {
+        block_idx <- 1L
+    }
     miss_block <- var_block_list[[ block_idx ]]
 
     target_data <- c(var_info, c(var_idx   = var_idx - 1L,
@@ -258,11 +276,11 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
     # calculate P(W | U)
     ubeta <- dsp_data$U %*% as.matrix(beta_coefs) %>% drop
     alt_exp_ubeta_list <- calc_alt_exp_ubeta_list(ubeta, beta_coefs, miss_block, var_info)
-    target_posterior_w <- calc_posterior_w(W, xi, alt_exp_ubeta_list, miss_block, u_preg_map)
+    target_posterior_w <- calc_posterior_w(W, xi, alt_exp_ubeta_list, miss_block, u_preg_map) %>% log
 
     # calculate P(X | U)
     alt_utau_list <- calc_alt_utau_list(utau, tau_coefs, sex_coef, miss_block, u_sex_map, var_info)
-    target_posterior_x <- calc_posterior_x(X, x_miss_day, alt_utau_list, miss_block, u_sex_map)
+    target_posterior_x <- calc_posterior_x(X, x_miss_day, alt_utau_list, miss_block, u_sex_map) %>% log
 
     # a clumsy way to contruct full conditional likelihood values for the W and
     # X.  Note that these need not sum to 1, although they do here.
@@ -293,8 +311,8 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
                          u_preg_map,
                          u_sex_map)
 
-    input <- list(posterior_w_probs = input_posterior_w_probs,
-                  posterior_x_probs = input_posterior_x_probs)
+    input <- list(posterior_w_probs = log(input_posterior_w_probs),
+                  posterior_x_probs = log(input_posterior_x_probs))
 
     target_samples <- list(posterior_w        = target_posterior_w,
                            posterior_x        = target_posterior_x,

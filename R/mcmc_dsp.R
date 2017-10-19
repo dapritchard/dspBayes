@@ -13,6 +13,8 @@ dsp <- function(dsp_data,
     gamma_hyper_list <- get_gamma_specs(dsp_data)
     phi_specs <- get_phi_specs()
 
+    # TODO: need to insert a way to add priors for UGen
+
     # start timer
     start_time <- proc.time()
 
