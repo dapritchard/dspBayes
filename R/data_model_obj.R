@@ -105,14 +105,16 @@ get_w_day_blocks <- function(comb_dat, var_nm) {
 
 
 # calculates the (0-based) day-specific indices for the days in which a
-# pregnancy occured during the corresponding cycle
+# pregnancy occured during the corresponding cycle and adds a sentinal value at
+# the end of the vector used to signal when there are no more days occuring in a
+# pregnancy cycle
 #
 # PRE: `comb_dat` is a data frame with one of the columns having the name given
-# by `var_nm$preg`.  Missing in `comb_dat[[var_nm$preg]]` are treated as not a
-# pregnancy.
+# by `var_nm$preg`.  It is assumed that there is no missing in
+# `comb_dat[[var_nm$preg]]`, although these would be removed anyway.
 
 get_w_to_days_idx <- function(comb_dat, var_nm) {
-    comb_dat[[var_nm$preg]] %>% map_vec_to_bool %>% which %>% `-`(., 1L)
+    comb_dat[[var_nm$preg]] %>% map_vec_to_bool %>% which %>% c(., 0L) %>% `-`(., 1L)
 }
 
 
@@ -454,6 +456,8 @@ get_id_map <- function(id) {
 
 # TODO: redo this back to -1 and 2 scoring
 
+# TODO: I don't think these docs are current?
+
 # converts the `daily$sex_yester` data to an integer vector of the same length
 # as the data, where the elements take values -2L, -1L, 0L, and 1L, and which
 # correspond to
@@ -469,7 +473,6 @@ get_id_map <- function(id) {
 # cycle day with name as given by `var_nm$fw`.  `fw_incl` is a vector with the
 # values of the fertile window days, in the order that they occur.
 
-# get_sex_yester_coding <- function(daily, var_nm, fw_incl) {
 get_sex_yester_coding <- function(daily, var_nm) {
 
     # case: no "sex yesterday" data in `daily`, i.e. we are not imputing missing

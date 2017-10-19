@@ -128,7 +128,7 @@ PhiGen* UTestFactory::phi_no_rec() {
 UProdBeta* UTestFactory::ubeta() {
     UProdBeta* ubeta = new UProdBeta(n_days);
     std::copy(input_ubeta.begin(), input_ubeta.end(), ubeta->m_vals);
-    ubeta->update_exp(x_rcpp.begin());
+    ubeta->update_exp();
     return ubeta;
 }
 

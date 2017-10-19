@@ -74,7 +74,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     	// update the regression coefficients gamma and psi, and update the
     	// resulting values of the `U * beta`
     	coefs.sample(W, xi, ubeta, X.vals());
-    	ubeta.update_exp(X.vals());  // <--- TODO: let's put this inside sample()
+	ubeta.update_exp();  // <--- TODO: let's put this inside sample()
 
     	// update phi, the variance parameter for xi
     	phi.sample(xi);

@@ -15,7 +15,7 @@ extern UTestFactory g_ut_factory;
 
 WGenTest::WGenTest() :
     target_samples(g_ut_factory.target_samples_w),
-    n_preg_days(g_ut_factory.w_to_days_idx.size()),
+    n_preg_days(g_ut_factory.w_to_days_idx.size() - 1),
     n_preg_cyc(g_ut_factory.preg_cyc.size()),
     seed_val(as<double>(g_ut_factory.seed_vals["W"])),
     epsilon(UTestFactory::epsilon) {

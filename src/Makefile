@@ -226,6 +226,8 @@ Dsp.o : CoefGen.h PhiGen.h WGen.h XiGen.h
 
 GammaCateg.o : GammaGen.h global_vars.h
 
+GammaContMH.o : GammaGen.h global_vars.h WGen.h XiGen.h UProdBeta.h
+
 GammaGen.o : GammaGen.h
 
 PhiGen.o : PhiGen.h ProposalFcns.h XiGen.h
@@ -260,9 +262,14 @@ XGen.o : XGen.h UProdBeta.h UProdTau.h
 
 utests : override CPPFLAGS += $(cpp_incl_loc)
 
-UTestDriver.o : UTestPhiGen.h UTestUGenVarCateg.h  # TODO: needs updated
+UTestDriver.o : UTestFactory.h UTestGammaCateg.h UTestGammaContMH.h UTestPhiGen.h \
+                UTestPhiGen.h UTestWGen.h UTestXGen.h UTestWGen.h
 
 UTestFactory.o : UTestFactory.h XiGen.h WGen.h PhiGen.h UProdBeta.h
+
+# TODO: UTestGammaCateg.o?
+
+UTestGammaContMH.o : UTestGammaContMH.h
 
 UTestPhiGen.o : PhiGen.h UTestPhiGen.h XiGen.h
 

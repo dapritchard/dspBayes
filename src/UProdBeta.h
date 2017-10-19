@@ -14,14 +14,14 @@ public:
     ~UProdBeta();
 
     void add_uh_prod_beta_h(const double* U_h, double beta_h);
+    void update(const double* U_h, double beta_h_new, double beta_h_curr);  // TODO: write utest
+    void update_exp();
 
     double* vals() { return m_vals; }
     const double* vals() const { return m_vals; }
     double* exp_vals() { return m_exp_vals; }
     const double* exp_vals() const {return m_exp_vals; }
     int n_days() { return m_n_days; }
-
-    void update_exp(int* X);
 };
 
 

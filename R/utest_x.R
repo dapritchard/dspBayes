@@ -96,7 +96,11 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
     # arbitrary choices of missing day, prior / posterior probabilities, and
     # xi_i
     test_data_miss_day_idx <- 1L
-    test_data_miss_day <- x_miss_day_list[[test_data_miss_day_idx]]
+    if (length(x_miss_day_list) > 0L) {
+        test_data_miss_day <- x_miss_day_list[[test_data_miss_day_idx]]
+    } else {
+        test_data_miss_day <- numeric(0)
+    }
     test_data_nonmiss_day_idx <- unname(test_data_miss_day["idx"] + 1L)
     test_data_prior_prob <- 0.5
     test_data_posterior_prob <- 0.9
@@ -107,8 +111,12 @@ utest_x <- function(dsp_data, W, xi, ubeta, utau, seed_val) {
     sample(W, xi, ubeta, utau)
 
     # calculate prior probabilities for `X_ijk`
-    target_prior_prob_no_prev <- calc_prior_prob(utau, test_data_miss_day_idx, 0L)
-    target_prior_prob_yes_prev <- calc_prior_prob(utau, test_data_miss_day_idx, 1L)
+    if (length(x_miss_day_list) > 0L) {
+        target_prior_prob_no_prev <- calc_prior_prob(utau, test_data_miss_day_idx, 0L)
+        target_prior_prob_yes_prev <- calc_prior_prob(utau, test_data_miss_day_idx, 1L)
+    } else {
+        target_prior_prob_no_prev <- target_prior_prob_yes_prev <- numeric(0)
+    }
 
     # calculate posterior probabilities for `X_ijk`
     target_posterior_prob <- calc_posterior_prob(ubeta, test_data_xi_i, test_data_nonmiss_day_idx)
