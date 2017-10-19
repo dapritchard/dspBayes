@@ -31,13 +31,13 @@ UGen::UGen(Rcpp::NumericMatrix& u_rcpp,
 
 	    Rcpp::List curr_var(miss_info[i]);
 
-	    Rcpp::IntegerVector var_info     ( as<Rcpp::IntegerVector>(curr_var["var_info"])      );
-	    Rcpp::NumericVector u_prior_probs( as<Rcpp::NumericVector>(curr_var["u_prior_probs"]) );
-	    Rcpp::List var_block_list        ( as<Rcpp::List>(curr_var["var_block_list"])         );
+	    Rcpp::IntegerVector var_info         (as<Rcpp::IntegerVector>(curr_var["var_info"]));
+	    Rcpp::NumericVector log_u_prior_probs(as<Rcpp::NumericVector>(curr_var["log_u_prior_probs"]));
+	    Rcpp::List var_block_list            (as<Rcpp::List>(curr_var["var_block_list"]));
 
 	    m_vars[i] = new UGenVarCateg(u_rcpp,
 					 var_info,
-					 u_prior_probs,
+					 log_u_prior_probs,
 					 var_block_list,
 					 preg_map,
 					 sex_map);

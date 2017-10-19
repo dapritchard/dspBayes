@@ -17,7 +17,7 @@
 
 UGenVarCateg::UGenVarCateg(Rcpp::NumericMatrix& u_rcpp,
 			   Rcpp::IntegerVector& var_info,
-			   Rcpp::NumericVector& u_prior_probs,
+			   Rcpp::NumericVector& log_u_prior_probs,
 			   Rcpp::List& var_block_list,
 			   Rcpp::IntegerVector& preg_map,
 			   Rcpp::IntegerVector& sex_map) :
@@ -28,7 +28,7 @@ UGenVarCateg::UGenVarCateg(Rcpp::NumericMatrix& u_rcpp,
     m_n_categs(var_info["n_categs"]),
     m_max_n_days_miss(var_info["max_n_days_miss"]),
     m_max_n_sex_days_miss(var_info["max_n_sex_days_miss"]),
-    m_u_prior_probs(u_prior_probs.begin()),
+    m_log_u_prior_probs(log_u_prior_probs.begin()),
     m_miss_block(UMissBlock::list_to_arr(var_block_list)),
     m_end_block(m_miss_block + var_block_list.size()) {
 }
@@ -91,12 +91,12 @@ void UGenVarCateg::sample(const WGen& W,
 			  UProdBeta& ubeta,
 			  UProdTau& utau) {
 
-    // storage for derived posterior probabilities of `W` and of `X` for each of
-    // the possible categories of the missing covariate
-    double posterior_w_probs[m_n_categs];
-    double posterior_x_probs[m_n_categs];
+    // storage for derived conditional probabilities of `W` and of `X` for each
+    // of the possible categories of the missing covariate
+    double log_condit_w_probs[m_n_categs];
+    double log_condit_x_probs[m_n_categs];
 
-    // if there are no missing values for `X` then the just set the posterior
+    // if there are no missing values for `X` then the just set the conditional
     // probabilities to be all 1
     double all_ones[m_n_categs];
     std::fill(all_ones, all_ones + m_n_categs, 1.0);
@@ -115,30 +115,30 @@ void UGenVarCateg::sample(const WGen& W,
 	 curr_block < m_end_block;
 	 ++curr_block) {
 
-	double* posterior_x_ptr;
+	double* condit_x_ptr;
 
-	// calculate the posterior probabilities for `W` for each of the
+	// calculate the log conditional probabilities for `W` for each of the
 	// possible categories of the missing covariate and store in
-	// `posterior_w_probs`
-	calc_posterior_w(posterior_w_probs, alt_exp_ubeta_vals, W, xi, coefs, ubeta, curr_block);
+	// `log_condit_w_probs`
+	calc_log_condit_w(log_condit_w_probs, alt_exp_ubeta_vals, W, xi, coefs, ubeta, curr_block);
 
 	// case: there are no missing in `X` for the observations affected by
-	// the covariate, so simply set the posterior probabilities each to 1
+	// the covariate, so simply set the conditional probabilities each to 1
 	if (curr_block->n_sex_days == 0) {
-	    posterior_x_ptr = all_ones;
+	    condit_x_ptr = all_ones;
 	}
 	// case: there are missing in `X` for the observations affected by the
-	// covariate, so calculate the posterior probabilities for `X` for each
-	// of the possible categories of the missing covariate and store in
-	// `posterior_x_probs`
+	// covariate, so calculate the conditional probabilities for `X` for
+	// each of the possible categories of the missing covariate and store in
+	// `log_condit_x_probs`
 	else {
-	    calc_posterior_x(posterior_x_probs, alt_utau_vals, X, utau, curr_block);
-	    posterior_x_ptr = posterior_x_probs;
+	    calc_log_condit_x(log_condit_x_probs, alt_utau_vals, X, utau, curr_block);
+	    condit_x_ptr = log_condit_x_probs;
 	}
 
 	// sample the new category for the missing covariate.  `u_col` is the
 	// column in the design matrix corresponding to the chosen category.
-	int u_categ = sample_covariate(posterior_w_probs, posterior_x_ptr);
+	int u_categ = sample_covariate(log_condit_w_probs, condit_x_ptr);
 	int u_col   = u_categ + m_col_start;
 
 	// case: we've sampled a different category for the current missing
@@ -152,8 +152,8 @@ void UGenVarCateg::sample(const WGen& W,
 	    // update U
 	    update_u(curr_block);
 
-	    // update `ubeta` and `utau` to reflect the newly sampled category for
-	    // the missing covariate
+	    // update `ubeta` and `utau` to reflect the newly sampled category
+	    // for the missing covariate
 	    update_ubeta(ubeta, u_categ, alt_exp_ubeta_vals, curr_block);
 	    if (curr_block->n_sex_days > 0) {
 		update_utau(utau, u_categ, alt_utau_vals, curr_block);
@@ -165,13 +165,13 @@ void UGenVarCateg::sample(const WGen& W,
 
 
 
-void UGenVarCateg::calc_posterior_w(double* posterior_w_probs,
-				    double* alt_exp_ubeta_vals,
-				    const WGen& W,
-				    const XiGen& xi,
-				    const CoefGen& coefs,
-				    const UProdBeta& ubeta,
-				    const UMissBlock* const miss_block) const {
+void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
+				     double* alt_exp_ubeta_vals,
+				     const WGen& W,
+				     const XiGen& xi,
+				     const CoefGen& coefs,
+				     const UProdBeta& ubeta,
+				     const UMissBlock* const miss_block) const {
 
     const int block_n_days = miss_block->n_days;
     const int block_u_col  = miss_block->u_col;
@@ -237,20 +237,19 @@ void UGenVarCateg::calc_posterior_w(double* posterior_w_probs,
 	    // TODO: normalizing constant `1 / x!` cancels out, just calculate lambda^x e^{-lambda}
 	}
 
-	// exponentiate to recover the posterior probability, and store the
-	// result
-	*posterior_w_probs++ = exp(log_dpois_sum);
+	// store the result
+	*log_condit_w_probs++ = log_dpois_sum;
     }
 }
 
 
 
 
-void UGenVarCateg::calc_posterior_x(double* posterior_x_probs,
-				    double* alt_utau_vals,
-				    const XGen& X,
-				    const UProdTau& utau,
-				    const UMissBlock* const miss_block) const {
+void UGenVarCateg::calc_log_condit_x(double* log_condit_x_probs,
+				     double* alt_utau_vals,
+				     const XGen& X,
+				     const UProdTau& utau,
+				     const UMissBlock* const miss_block) const {
 
     const int block_beg_sex_idx = miss_block->beg_sex_idx;
     const int block_n_sex_days  = miss_block->n_sex_days;
@@ -310,39 +309,63 @@ void UGenVarCateg::calc_posterior_x(double* posterior_x_probs,
 		log(1 + exp(curr_utau_val));
 	}
 
-	// exponentiate the negative of the result to recover the posterior
-	// probability, and store the result
-	*posterior_x_probs++ = exp(- neg_log_probs_sum);
+	// store the result
+	*log_condit_x_probs++ = -neg_log_probs_sum;
     }
 }
 
 
 
 
-int UGenVarCateg::sample_covariate(const double* posterior_w_probs,
-				   const double* posterior_x_probs) const {
+int UGenVarCateg::sample_covariate(const double* log_condit_w_probs,
+				   const double* log_condit_x_probs) const {
 
-    double unnormalized_probs[m_n_categs];
-    double normalizing_constant;
+    double unnorm_log_probs[m_n_categs];
+    double unnorm_probs[m_n_categs];
+    double max_val, norm_const;
 
-    // each iteration calculates the unnormalized posterior probability for the
-    // j-th category for the missing covariate, and adds the value to the
-    // running total for the normalizing constant
-    normalizing_constant = 0.0;
-    for (int j = 0; j < m_n_categs; ++j) {
-	normalizing_constant +=
-	    unnormalized_probs[j] =
-	    posterior_x_probs[j] * posterior_w_probs[j] * m_u_prior_probs[j];
+    // each iteration calculates the unnormalized value of `log p(U = j | W, X)`
+    // for the j-th covariate category, and tracks the maximum value over all
+    // the `j`
+    max_val = log_condit_x_probs[0] + log_condit_w_probs[0] + m_log_u_prior_probs[0];
+    for (int j = 1; j < m_n_categs; ++j) {
+
+	unnorm_log_probs[j] = (log_condit_x_probs[j]
+			       + log_condit_w_probs[j]
+			       + m_log_u_prior_probs[j]);
+
+	if (unnorm_log_probs[j] > max_val) {
+	    max_val = unnorm_log_probs[j];
+	}
     }
 
+    // each iteration calculates the unnormalized value of `p(U = j | W, X)` for
+    // the j-th covariate category, and adds the value to the running total for
+    // the normalizing constant.  The maximum value of the logs is subtracted
+    // for numerical stability.
+    norm_const = 0.0;
+    for (int j = 0; j < m_n_categs; ++j) {
+	norm_const += unnorm_probs[j] = exp(unnorm_log_probs[j] - max_val);
+    }
+
+    // // each iteration calculates the unnormalized conditional probability for the
+    // // j-th category for the missing covariate, and adds the value to the
+    // // running total for the normalizing constant
+    // normalizing_constant = 0.0;
+    // for (int j = 0; j < m_n_categs; ++j) {
+    // 	normalizing_constant +=
+    // 	    unnormalized_probs[j] =
+    // 	    log_condit_x_probs[j] * log_condit_w_probs[j] * m_u_prior_probs[j];
+    // }
+
     // sample a value from a `unif(0, normalizing_constant)` distribution
-    const double u = R::unif_rand() * normalizing_constant;
+    const double u = R::unif_rand() * norm_const;
 
     // draw from a multinomial distribution with 1 draw and `m_n_categs` bins
     int j = 0;
-    double bin_rhs = unnormalized_probs[0];
+    double bin_rhs = unnorm_probs[0];
     while (u > bin_rhs) {
-	bin_rhs += unnormalized_probs[++j];
+	bin_rhs += unnorm_probs[++j];
     }
 
     return j;

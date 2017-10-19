@@ -25,15 +25,15 @@ public:
     void test_constructor();
     void test_sample();
     void test_sample_covariate();
-    void test_calc_posterior_w();
-    void test_calc_posterior_x();
+    void test_calc_log_condit_w();
+    void test_calc_log_condit_x();
 
     CPPUNIT_TEST_SUITE(UGenVarCategTest);
     CPPUNIT_TEST(test_constructor);
     CPPUNIT_TEST(test_sample);
     CPPUNIT_TEST(test_sample_covariate);
-    CPPUNIT_TEST(test_calc_posterior_w);
-    CPPUNIT_TEST(test_calc_posterior_x);
+    CPPUNIT_TEST(test_calc_log_condit_w);
+    CPPUNIT_TEST(test_calc_log_condit_x);
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -62,7 +62,7 @@ private:
     int n_categs;
     int max_n_days_miss;
     int max_n_sex_days_miss;
-    Rcpp::NumericVector u_prior_probs;
+    Rcpp::NumericVector log_u_prior_probs;
     Rcpp::NumericVector input_w_probs;
     Rcpp::NumericVector input_x_probs;
     int input_block_idx;

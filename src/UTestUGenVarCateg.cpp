@@ -31,7 +31,7 @@ UGenVarCategTest::UGenVarCategTest() :
     n_categs(g_ut_factory.target_data_u_categ["n_categs"]),
     max_n_days_miss(g_ut_factory.target_data_u_categ["max_n_days_miss"]),
     max_n_sex_days_miss(g_ut_factory.target_data_u_categ["max_n_sex_days_miss"]),
-    u_prior_probs(as<Rcpp::NumericVector>(as<Rcpp::List>(g_ut_factory.u_miss_info[var_idx])["u_prior_probs"])),
+    log_u_prior_probs(as<Rcpp::NumericVector>(as<Rcpp::List>(g_ut_factory.u_miss_info[var_idx])["log_u_prior_probs"])),
     input_w_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_w_probs"])),
     input_x_probs(as<Rcpp::NumericVector>(g_ut_factory.input_u_categ["posterior_x_probs"])),
     input_block_idx(g_ut_factory.target_data_u_categ["block_idx"]),
@@ -108,7 +108,7 @@ void UGenVarCategTest::test_constructor() {
     CPPUNIT_ASSERT_EQUAL(n_categs, u_var->m_n_categs);
     CPPUNIT_ASSERT_EQUAL(max_n_days_miss, u_var->m_max_n_days_miss);
     CPPUNIT_ASSERT_EQUAL(max_n_sex_days_miss, u_var->m_max_n_sex_days_miss);
-    CPPUNIT_ASSERT(std::equal(u_prior_probs.begin(), u_prior_probs.end(), u_var->m_u_prior_probs));
+    CPPUNIT_ASSERT(std::equal(log_u_prior_probs.begin(), log_u_prior_probs.end(), u_var->m_log_u_prior_probs));
     // TODO: test `m_miss_block`?
 }
 
@@ -154,12 +154,12 @@ void UGenVarCategTest::test_sample() {
 
 
 
-void UGenVarCategTest::test_calc_posterior_w() {
+void UGenVarCategTest::test_calc_log_condit_w() {
 
-    double posterior_w_probs[u_var->m_n_categs];
+    double log_condit_w_probs[u_var->m_n_categs];
     double alt_exp_ubeta_vals[u_var->m_max_n_days_miss * u_var->m_n_categs];
 
-    u_var->calc_posterior_w(posterior_w_probs,
+    u_var->calc_log_condit_w(log_condit_w_probs,
     			    alt_exp_ubeta_vals,
     			    *W,
     			    *xi,
@@ -174,19 +174,19 @@ void UGenVarCategTest::test_calc_posterior_w() {
 
     CPPUNIT_ASSERT(std::equal(target_w_probs.begin(),
     			      target_w_probs.end(),
-    			      posterior_w_probs,
+    			      log_condit_w_probs,
     			      UTestFactory::eq_dbl));
 }
 
 
 
 
-void UGenVarCategTest::test_calc_posterior_x() {
+void UGenVarCategTest::test_calc_log_condit_x() {
 
-    double posterior_x_probs[u_var->m_n_categs];
+    double log_condit_x_probs[u_var->m_n_categs];
     double alt_utau_vals[u_var->m_max_n_sex_days_miss * u_var->m_n_categs];
 
-    u_var->calc_posterior_x(posterior_x_probs,
+    u_var->calc_log_condit_x(log_condit_x_probs,
     			    alt_utau_vals,
     			    *X,
     			    *utau,
@@ -199,7 +199,7 @@ void UGenVarCategTest::test_calc_posterior_x() {
 
     CPPUNIT_ASSERT(std::equal(target_x_probs.begin(),
     			      target_x_probs.end(),
-    			      posterior_x_probs,
+    			      log_condit_x_probs,
 			      UTestFactory::eq_dbl));
 }
 

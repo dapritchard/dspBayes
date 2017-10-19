@@ -56,7 +56,7 @@ public:
     const int m_max_n_days_miss;
     const int m_max_n_sex_days_miss;
 
-    const double* m_u_prior_probs;
+    const double* m_log_u_prior_probs;
 
     UMissBlock* m_miss_block;
     const UMissBlock* const m_end_block;
@@ -65,7 +65,7 @@ public:
 
     UGenVarCateg(Rcpp::NumericMatrix& u_rcpp,
 		 Rcpp::IntegerVector& var_info,
-		 Rcpp::NumericVector& u_prior_probs,
+		 Rcpp::NumericVector& log_u_prior_probs,
 		 Rcpp::List& var_block_list,
 		 Rcpp::IntegerVector& preg_map,
 		 Rcpp::IntegerVector& sex_map);
@@ -78,7 +78,7 @@ public:
 		UProdBeta& ubeta,
 		UProdTau& utau);
 
-    void calc_posterior_w(double* posterior_w_probs,
+    void calc_log_condit_w(double* posterior_w_probs,
 			  double* alt_exp_ubeta_vals,
 			  const WGen& W,
 			  const XiGen& xi,
@@ -86,11 +86,11 @@ public:
 			  const UProdBeta& ubeta,
 			  const UMissBlock* const miss_block) const;
 
-    void calc_posterior_x(double* posterior_x_probs,
-			  double* alt_utau_vals,
-			  const XGen& X,
-			  const UProdTau& utau,
-			  const UMissBlock* const miss_block) const;
+    void calc_log_condit_x(double* posterior_x_probs,
+			   double* alt_utau_vals,
+			   const XGen& X,
+			   const UProdTau& utau,
+			   const UMissBlock* const miss_block) const;
 
     int sample_covariate(const double* posterior_w_probs,
 			 const double* posterior_x_probs) const;

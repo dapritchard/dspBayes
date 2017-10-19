@@ -280,9 +280,9 @@ get_u_miss_info <- function(cov_col_miss_info, cov_row_miss_info) {
                       max_n_sex_days_miss = max_n_sex_days_miss)
 
         # bundle the missing covariate information needed for the sampler
-        u_miss_info_list[[i]] <- list(var_info       = var_info,
-                                      u_prior_probs  = curr_col_info$empirical_probs,
-                                      var_block_list = curr_row_info)
+        u_miss_info_list[[i]] <- list(var_info           = var_info,
+                                      log_u_prior_probs  = log(curr_col_info$empirical_probs),
+                                      var_block_list     = curr_row_info)
     }
 
     u_miss_info_list

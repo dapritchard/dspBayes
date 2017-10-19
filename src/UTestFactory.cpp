@@ -181,12 +181,12 @@ int** UTestFactory::X_temp() {
 UGenVarCateg* UTestFactory::u_categ(Rcpp::NumericMatrix* u_rcpp_copy) {
 
     Rcpp::List curr_var(u_miss_info[target_data_u_categ["var_idx"]]);
-
-    Rcpp::IntegerVector var_info     ( as<Rcpp::IntegerVector>(curr_var["var_info"])      );
-    Rcpp::NumericVector u_prior_probs( as<Rcpp::NumericVector>(curr_var["u_prior_probs"]) );
-    Rcpp::List var_block_list        ( as<Rcpp::List>(curr_var["var_block_list"])         );
-
-    return new UGenVarCateg(*u_rcpp_copy, var_info, u_prior_probs, var_block_list, u_preg_map, u_sex_map);
+    Rcpp::Rcout << "before\n";
+    Rcpp::IntegerVector var_info         ( as<Rcpp::IntegerVector>(curr_var["var_info"])      );
+    Rcpp::NumericVector log_u_prior_probs( as<Rcpp::NumericVector>(curr_var["log_u_prior_probs"]) );
+    Rcpp::List var_block_list            ( as<Rcpp::List>(curr_var["var_block_list"])         );
+    Rcpp::Rcout << "after\n";
+    return new UGenVarCateg(*u_rcpp_copy, var_info, log_u_prior_probs, var_block_list, u_preg_map, u_sex_map);
 }
 
 
