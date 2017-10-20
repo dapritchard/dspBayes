@@ -1,4 +1,4 @@
-utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
+utest_u_categ <- function(dsp_data, W, xi, beta_coefs, X, u_categ_seed) {
 
     sample <- function(U,
                        W,
@@ -20,7 +20,7 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
         for (miss_block in var_block_list) {
 
             alt_exp_ubeta_list <- calc_alt_exp_ubeta_list(ubeta, beta_coefs, miss_block, var_info)
-            posterior_w <- calc_posterior_w(W, xi, alt_exp_ubeta_list, miss_block, cov_miss_w_idx)
+            posterior_w <- calc_posterior_w(W, xi, X, alt_exp_ubeta_list, miss_block, cov_miss_w_idx)
 
             if (miss_block["n_sex_days"] == 0L) {
                 posterior_x <- rep(1, length(posterior_w))
@@ -88,10 +88,6 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
 
     calc_alt_exp_ubeta_list <- function(ubeta, beta_coefs, miss_block, var_info) {
 
-        # if (length(miss_block) == 0L) {
-        #     return(lapply(seq_len(var_info["n_categs"]), function(x) numeric(0L)))
-        # }
-
         block_day_idx <- seq(miss_block["beg_day_idx"] + 1L,
                              miss_block["beg_day_idx"] + miss_block["n_days"],
                              1L)
@@ -111,13 +107,18 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
     }
 
 
-    calc_posterior_w <- function(W, xi, alt_exp_ubeta_list, miss_block, cov_miss_w_idx) {
-
-        # if (length(miss_block) == 0L) {
-        #     return(lapply(seq_len(var_info["n_categs"]), function(x) numeric(0L)))
-        # }
+    calc_posterior_w <- function(W, xi, X, alt_exp_ubeta_list, miss_block, cov_miss_w_idx) {
 
         xi_i <- xi[miss_block["subj_idx"] + 1L]
+
+        # rows in the `X` data
+        block_x_idx <- seq(miss_block["beg_day_idx"] + 1L,
+                           miss_block["beg_day_idx"] + miss_block["n_days"],
+                           1L)
+        x_vals <- X[block_x_idx]
+        if (all(x_vals == 0L)) {
+            return(1)
+        }
 
         # rows in the map to the `W` data
         block_ptr_idx <- seq(miss_block["beg_w_idx"] + 1L,
@@ -137,8 +138,12 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
             w_vals <- vector("numeric", length(block_cov_w_idx))
             w_vals[preg_cycle_day_bool] <- W[block_cov_w_idx[preg_cycle_day_bool]]
 
+            # remove days in which intercourse didn't occur
+            w_vals <- w_vals[x_vals == 1L]
+            mean_vals <- xi_i * alt_exp_ubeta_list[[j]][x_vals == 1L]
+
             # calculate log-likelihoods and then sum and exponentiate
-            posterior_w[j] <- dpois(w_vals, xi_i * alt_exp_ubeta_list[[j]], TRUE) %>% sum %>% exp
+            posterior_w[j] <- dpois(w_vals, mean_vals, TRUE) %>% sum %>% exp
         }
 
         posterior_w
@@ -276,7 +281,7 @@ utest_u_categ <- function(dsp_data, W, xi, beta_coefs, u_categ_seed) {
     # calculate P(W | U)
     ubeta <- dsp_data$U %*% as.matrix(beta_coefs) %>% drop
     alt_exp_ubeta_list <- calc_alt_exp_ubeta_list(ubeta, beta_coefs, miss_block, var_info)
-    target_posterior_w <- calc_posterior_w(W, xi, alt_exp_ubeta_list, miss_block, u_preg_map) %>% log
+    target_posterior_w <- calc_posterior_w(W, xi, X, alt_exp_ubeta_list, miss_block, u_preg_map) %>% log
 
     # calculate P(X | U)
     alt_utau_list <- calc_alt_utau_list(utau, tau_coefs, sex_coef, miss_block, u_sex_map, var_info)

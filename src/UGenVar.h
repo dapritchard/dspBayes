@@ -79,12 +79,13 @@ public:
 		UProdTau& utau);
 
     void calc_log_condit_w(double* posterior_w_probs,
-			  double* alt_exp_ubeta_vals,
-			  const WGen& W,
-			  const XiGen& xi,
-			  const CoefGen& coefs,
-			  const UProdBeta& ubeta,
-			  const UMissBlock* const miss_block) const;
+			   double* alt_exp_ubeta_vals,
+			   const WGen& W,
+			   const XiGen& xi,
+			   const CoefGen& coefs,
+			   const XGen& X,
+			   const UProdBeta& ubeta,
+			   const UMissBlock* const miss_block) const;
 
     void calc_log_condit_x(double* posterior_x_probs,
 			   double* alt_utau_vals,

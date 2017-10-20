@@ -120,7 +120,7 @@ void UGenVarCateg::sample(const WGen& W,
 	// calculate the log conditional probabilities for `W` for each of the
 	// possible categories of the missing covariate and store in
 	// `log_condit_w_probs`
-	calc_log_condit_w(log_condit_w_probs, alt_exp_ubeta_vals, W, xi, coefs, ubeta, curr_block);
+	calc_log_condit_w(log_condit_w_probs, alt_exp_ubeta_vals, W, xi, coefs, X, ubeta, curr_block);
 
 	// case: there are no missing in `X` for the observations affected by
 	// the covariate, so simply set the conditional probabilities each to 1
@@ -170,6 +170,7 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 				     const WGen& W,
 				     const XiGen& xi,
 				     const CoefGen& coefs,
+				     const XGen& X,
 				     const UProdBeta& ubeta,
 				     const UMissBlock* const miss_block) const {
 
@@ -178,6 +179,7 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 
     const double* block_exp_ubeta_vals = ubeta.exp_vals() + miss_block->beg_day_idx;
     const int* block_w_idx             = m_w_idx + miss_block->beg_w_idx;
+    const int* block_x_vals            = X.vals() + miss_block->beg_day_idx;
 
     const double* beta_coefs = coefs.vals();
     const int* w_vals        = W.vals();
@@ -193,9 +195,9 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 	// `exp_beta_diff` is the value of `exp(beta_j - beta^{*})` where
 	// `beta^{*}` is the coefficient of beta that corresponds to the
 	// category of the missing covariate chosen for the previous sample.
-	// Either `beta_j` or `beta^{*}` or both may correspond the the
-	// reference cell category, in which case the corresponding value is
-	// implicitely 0.
+	// Either `beta_j` or `beta^{*}` or both may correspond to the reference
+	// cell category, in which case the corresponding value is implicitely
+	// 0.
 	//
 	// case: the j-th column is the one corresponding to the previous choice
 	// of category for the missing covariate
@@ -222,6 +224,15 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 	for (int r = 0 ; r < block_n_days; ++r) {
 
 	    *alt_exp_ubeta_vals = block_exp_ubeta_vals[r] * exp_beta_diff;
+
+	    // if intercourse did not occur on this day then `W` is non-random
+	    // and the log probability is 0
+	    if (! block_x_vals[r]) {
+		// have to update `alt_exp_ubeta_vals`, which would be done
+		// later in the loop otherwise
+		alt_exp_ubeta_vals++;
+		continue;
+	    }
 
 	    // the mean value for the Poisson distribution of `W_ijk`, and the
 	    // index in `W.vals()` corresponding to observation `ijk`
@@ -348,16 +359,6 @@ int UGenVarCateg::sample_covariate(const double* log_condit_w_probs,
 	norm_const += unnorm_probs[j] = exp(unnorm_log_probs[j] - max_val);
     }
 
-    // // each iteration calculates the unnormalized conditional probability for the
-    // // j-th category for the missing covariate, and adds the value to the
-    // // running total for the normalizing constant
-    // normalizing_constant = 0.0;
-    // for (int j = 0; j < m_n_categs; ++j) {
-    // 	normalizing_constant +=
-    // 	    unnormalized_probs[j] =
-    // 	    log_condit_x_probs[j] * log_condit_w_probs[j] * m_u_prior_probs[j];
-    // }
-
     // sample a value from a `unif(0, normalizing_constant)` distribution
     const double u = R::unif_rand() * norm_const;
 
@@ -418,6 +419,9 @@ void UGenVarCateg::update_utau(UProdTau& utau,
 
 
 
+
+// updates the columns of `U` corresponding to the current categorical variable
+// based upon what was sampled
 
 void UGenVarCateg::update_u(const UMissBlock* const miss_block) {
 

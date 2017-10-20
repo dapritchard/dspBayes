@@ -56,8 +56,9 @@ utest_cpp <- function(dsp_data,
     out_utest_gamma_categ <- utest_gamma_categ(dsp_data, W, xi, ubeta, gam_cat_seed)
 
     # U categorical testing data
+    X <- dsp_data$intercourse$X
     u_categ_seed <- 1687L
-    out_utest_u_categ <- utest_u_categ(dsp_data, W, xi, beta_coefs, u_categ_seed)
+    out_utest_u_categ <- utest_u_categ(dsp_data, W, xi, beta_coefs, X, u_categ_seed)
 
     # collect seeds
     seed_vals <- c(beta_coefs  = beta_coefs_seed,

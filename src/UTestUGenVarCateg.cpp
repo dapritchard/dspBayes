@@ -160,12 +160,13 @@ void UGenVarCategTest::test_calc_log_condit_w() {
     double alt_exp_ubeta_vals[u_var->m_max_n_days_miss * u_var->m_n_categs];
 
     u_var->calc_log_condit_w(log_condit_w_probs,
-    			    alt_exp_ubeta_vals,
-    			    *W,
-    			    *xi,
-    			    *coefs,
-    			    *ubeta,
-    			    u_var->m_miss_block + input_block_idx);
+			     alt_exp_ubeta_vals,
+			     *W,
+			     *xi,
+			     *coefs,
+			     *X,
+			     *ubeta,
+			     u_var->m_miss_block + input_block_idx);
 
     CPPUNIT_ASSERT(std::equal(target_alt_exp_ubeta_vals.begin(),
     			      target_alt_exp_ubeta_vals.end(),
