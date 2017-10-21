@@ -21,11 +21,14 @@ public:
     UGenVar** m_vars;
     int m_n_vars;
 
+    bool m_record_status;
+
     UGen(Rcpp::NumericMatrix& u_rcpp,
 	 Rcpp::List& miss_info,
 	 Rcpp::IntegerVector& miss_type,
 	 Rcpp::IntegerVector& preg_map,
-	 Rcpp::IntegerVector& sex_map);
+	 Rcpp::IntegerVector& sex_map,
+	 bool record_status);
     ~UGen();
 
     void sample(const WGen& W,
@@ -34,6 +37,8 @@ public:
 		const XGen& X,
 		UProdBeta& ubeta,
 		UProdTau& utau);
+
+    Rcpp::List realized_samples();
 };
 
 

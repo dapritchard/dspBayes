@@ -19,10 +19,12 @@ UGen::UGen(Rcpp::NumericMatrix& u_rcpp,
 	   Rcpp::List& miss_info,
 	   Rcpp::IntegerVector& miss_type,
 	   Rcpp::IntegerVector& preg_map,
-	   Rcpp::IntegerVector& sex_map) :
+	   Rcpp::IntegerVector& sex_map,
+	   bool record_status) :
     m_vars(new UGenVar*[miss_info.size()]),
-    m_n_vars(miss_info.size()) {
-
+    m_n_vars(miss_info.size()),
+    m_record_status(record_status)
+{
     // each iteration initialize one of the `UGenVar` subclasses and stores a
     // pointer to the data in `m_vars[i]`
     for (int i = 0; i < m_n_vars; ++i) {
@@ -40,7 +42,8 @@ UGen::UGen(Rcpp::NumericMatrix& u_rcpp,
 					 log_u_prior_probs,
 					 var_block_list,
 					 preg_map,
-					 sex_map);
+					 sex_map,
+					 record_status);
 	}
 	else {
 	    // TODO: have to construct continuous version still
@@ -68,4 +71,23 @@ void UGen::sample(const WGen& W,
     for (int i = 0; i < m_n_vars; ++i) {
 	m_vars[i]->sample(W, xi, coefs, X, ubeta, utau);
     }
+}
+
+
+
+
+Rcpp::List UGen::realized_samples() {
+
+    // case: didn't record output summary
+    if (! m_record_status) {
+	return Rcpp::List(0);
+    }
+
+    // case: output summary recorded, collect data into a list
+    Rcpp::List sample_summaries(m_n_vars);
+    for (int i = 0; i < m_n_vars; ++i) {
+	sample_summaries[i] = m_vars[i]->m_vals_rcpp;
+    }
+
+    return sample_summaries;
 }

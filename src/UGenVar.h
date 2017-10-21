@@ -17,11 +17,16 @@ class UGenVar {
 
 public:
 
+    struct UMissBlock;
+
     double* const m_u_var_col;
     const int m_n_days;
 
     const int* const m_w_idx;
     const int* const m_x_idx;
+
+    bool m_record_status;
+    Rcpp::NumericVector m_vals_rcpp;
 
     UGenVar();
     virtual ~UGenVar() {}
@@ -29,7 +34,8 @@ public:
     UGenVar(Rcpp::NumericMatrix& u_rcpp,
 	    Rcpp::IntegerVector& preg_map,
 	    Rcpp::IntegerVector& sex_map,
-	    int u_col);
+	    int u_col,
+	    bool record_status);
 
     virtual void sample(const WGen& W,
 			const XiGen& xi,
@@ -46,7 +52,7 @@ class UGenVarCateg : public UGenVar {
 
 public:
 
-    struct UMissBlock;
+    struct UMissBlockCateg;
 
     const int m_col_start;
     const int m_col_end;
@@ -58,8 +64,8 @@ public:
 
     const double* m_log_u_prior_probs;
 
-    UMissBlock* m_miss_block;
-    const UMissBlock* const m_end_block;
+    UMissBlockCateg* m_miss_block;
+    const UMissBlockCateg* const m_end_block;
 
     UGenVarCateg(Rcpp::List& var_info_list);
 
@@ -68,7 +74,8 @@ public:
 		 Rcpp::NumericVector& log_u_prior_probs,
 		 Rcpp::List& var_block_list,
 		 Rcpp::IntegerVector& preg_map,
-		 Rcpp::IntegerVector& sex_map);
+		 Rcpp::IntegerVector& sex_map,
+		 bool record_status);
     ~UGenVarCateg();
 
     void sample(const WGen& W,
@@ -85,34 +92,34 @@ public:
 			   const CoefGen& coefs,
 			   const XGen& X,
 			   const UProdBeta& ubeta,
-			   const UMissBlock* const miss_block) const;
+			   const UMissBlockCateg* const miss_block) const;
 
     void calc_log_condit_x(double* posterior_x_probs,
 			   double* alt_utau_vals,
 			   const XGen& X,
 			   const UProdTau& utau,
-			   const UMissBlock* const miss_block) const;
+			   const UMissBlockCateg* const miss_block) const;
 
     int sample_covariate(const double* posterior_w_probs,
 			 const double* posterior_x_probs) const;
 
-    void update_u(const UMissBlock* const miss_block);
+    void update_u(const UMissBlockCateg* const miss_block);
 
     static void update_ubeta(UProdBeta& ubeta,
 			     const int u_categ,
 			     const double* alt_exp_ubeta_vals,
-			     const UMissBlock* const miss_block);
+			     const UMissBlockCateg* const miss_block);
 
     void update_utau(UProdTau& utau,
 		     const int u_categ,
 		     const double* alt_utau_vals,
-		     const UMissBlock* const miss_block) const;
+		     const UMissBlockCateg* const miss_block) const;
 };
 
 
 
 
-struct UGenVarCateg::UMissBlock {
+struct UGenVar::UMissBlock {
 
     int beg_day_idx;
     int n_days;
@@ -122,7 +129,6 @@ struct UGenVarCateg::UMissBlock {
     int beg_sex_idx;
     int n_sex_days;
 
-    int u_col;
     int subj_idx;
 
     UMissBlock() :
@@ -131,7 +137,6 @@ struct UGenVarCateg::UMissBlock {
 	beg_w_idx(0),
 	beg_sex_idx(0),
 	n_sex_days(0),
-	u_col(0),
 	subj_idx(0) {
     }
 
@@ -147,11 +152,34 @@ struct UGenVarCateg::UMissBlock {
 	beg_w_idx(beg_w_idx),
 	beg_sex_idx(beg_sex_idx),
 	n_sex_days(n_sex_days),
-	u_col(u_col),
 	subj_idx(subj_idx) {
     }
+};
 
-    static UMissBlock* list_to_arr(Rcpp::List& block_list);
+
+
+
+struct UGenVarCateg::UMissBlockCateg : public UGenVar::UMissBlock {
+
+    int u_col;
+
+    UMissBlockCateg() :
+	UMissBlock(),
+	u_col(0) {
+    }
+
+    UMissBlockCateg(int beg_day_idx,
+		    int n_days,
+		    int beg_w_idx,
+		    int beg_sex_idx,
+		    int n_sex_days,
+		    int u_col,
+		    int subj_idx) :
+	UMissBlock(beg_day_idx, n_days, beg_w_idx, beg_sex_idx, n_sex_days, u_col, subj_idx),
+	u_col(u_col) {
+    }
+
+    static UMissBlockCateg* list_to_arr(Rcpp::List& block_list);
 };
 
 

@@ -20,8 +20,9 @@ UGenVarCateg::UGenVarCateg(Rcpp::NumericMatrix& u_rcpp,
 			   Rcpp::NumericVector& log_u_prior_probs,
 			   Rcpp::List& var_block_list,
 			   Rcpp::IntegerVector& preg_map,
-			   Rcpp::IntegerVector& sex_map) :
-    UGenVar(u_rcpp, preg_map, sex_map, var_info["col_start"]),
+			   Rcpp::IntegerVector& sex_map,
+			   bool record_status) :
+    UGenVar(u_rcpp, preg_map, sex_map, var_info["col_start"], record_status),
     m_col_start(var_info["col_start"]),
     m_col_end(var_info["col_end"]),
     m_ref_col(var_info["ref_col"]),
@@ -29,13 +30,16 @@ UGenVarCateg::UGenVarCateg(Rcpp::NumericMatrix& u_rcpp,
     m_max_n_days_miss(var_info["max_n_days_miss"]),
     m_max_n_sex_days_miss(var_info["max_n_sex_days_miss"]),
     m_log_u_prior_probs(log_u_prior_probs.begin()),
-    m_miss_block(UMissBlock::list_to_arr(var_block_list)),
-    m_end_block(m_miss_block + var_block_list.size()) {
+    m_miss_block(UMissBlockCateg::list_to_arr(var_block_list)),
+    m_end_block(m_miss_block + var_block_list.size())
+{
+    m_vals_rcpp = Rcpp::NumericVector(record_status ? 0 : m_n_categs * var_block_list.size());
 }
 
 
 
 
+// note: don't delete m_categ_records
 UGenVarCateg::~UGenVarCateg() {
     delete[] m_miss_block;
 }
@@ -43,22 +47,22 @@ UGenVarCateg::~UGenVarCateg() {
 
 
 
-UGenVarCateg::UMissBlock* UGenVarCateg::UMissBlock::list_to_arr(Rcpp::List& block_list) {
+UGenVarCateg::UMissBlockCateg* UGenVarCateg::UMissBlockCateg::list_to_arr(Rcpp::List& block_list) {
 
-    UMissBlock* block_arr = new UMissBlock[block_list.size()];
+    UMissBlockCateg* block_arr = new UMissBlockCateg[block_list.size()];
 
     // each iteration constructs a new struct based upon the information
     // provided by the t-th element of `block_list`
     for (int t = 0; t < block_list.size(); ++t) {
 
     	Rcpp::IntegerVector block_list_t = Rcpp::as<Rcpp::IntegerVector>(block_list[t]);
-    	block_arr[t] = UMissBlock(block_list_t["beg_day_idx"],
-				  block_list_t["n_days"],
-				  block_list_t["beg_w_idx"],
-				  block_list_t["beg_sex_idx"],
-				  block_list_t["n_sex_days"],
-				  block_list_t["u_col"],
-				  block_list_t["subj_idx"]);
+    	block_arr[t] = UMissBlockCateg(block_list_t["beg_day_idx"],
+				       block_list_t["n_days"],
+				       block_list_t["beg_w_idx"],
+				       block_list_t["beg_sex_idx"],
+				       block_list_t["n_sex_days"],
+				       block_list_t["u_col"],
+				       block_list_t["subj_idx"]);
     }
 
     return block_arr;
@@ -108,10 +112,13 @@ void UGenVarCateg::sample(const WGen& W,
     double alt_exp_ubeta_vals[m_max_n_days_miss * m_n_categs];
     double alt_utau_vals[m_max_n_sex_days_miss * m_n_categs];
 
+    // for storing which categorical variable was sampled
+    double* categ_records = m_vals_rcpp.begin();
+
     // each iteration samples a new values for the missing covariate
     // corresponding to `curr_block`, and updates the observations in `ubeta`
     // and `utau` that are affected by the missing covariate
-    for (UMissBlock* curr_block = m_miss_block;
+    for (UMissBlockCateg* curr_block = m_miss_block;
 	 curr_block < m_end_block;
 	 ++curr_block) {
 
@@ -140,6 +147,13 @@ void UGenVarCateg::sample(const WGen& W,
 	// column in the design matrix corresponding to the chosen category.
 	int u_categ = sample_covariate(log_condit_w_probs, condit_x_ptr);
 	int u_col   = u_categ + m_col_start;
+
+	// conditionally increment the count for the number of times this
+	// category was chosen, and point `categ_records` to the next missing U
+	if (m_record_status && g_record_status) {
+	    *(categ_records + u_categ) += 1.0;
+	    categ_records += m_n_categs;
+	}
 
 	// case: we've sampled a different category for the current missing
 	// covariate, so we have to update `curr_block`, `U`, `ubeta`, and
@@ -172,7 +186,7 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 				     const CoefGen& coefs,
 				     const XGen& X,
 				     const UProdBeta& ubeta,
-				     const UMissBlock* const miss_block) const {
+				     const UMissBlockCateg* const miss_block) const {
 
     const int block_n_days = miss_block->n_days;
     const int block_u_col  = miss_block->u_col;
@@ -230,7 +244,7 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 	    if (! block_x_vals[r]) {
 		// have to update `alt_exp_ubeta_vals`, which would be done
 		// later in the loop otherwise
-		alt_exp_ubeta_vals++;
+		++alt_exp_ubeta_vals;
 		continue;
 	    }
 
@@ -260,7 +274,7 @@ void UGenVarCateg::calc_log_condit_x(double* log_condit_x_probs,
 				     double* alt_utau_vals,
 				     const XGen& X,
 				     const UProdTau& utau,
-				     const UMissBlock* const miss_block) const {
+				     const UMissBlockCateg* const miss_block) const {
 
     const int block_beg_sex_idx = miss_block->beg_sex_idx;
     const int block_n_sex_days  = miss_block->n_sex_days;
@@ -378,7 +392,7 @@ int UGenVarCateg::sample_covariate(const double* log_condit_w_probs,
 void UGenVarCateg::update_ubeta(UProdBeta& ubeta,
 				int u_categ,
 				const double* alt_exp_ubeta_vals,
-				const UMissBlock* const miss_block) {
+				const UMissBlockCateg* const miss_block) {
 
     const int block_beg_day_idx = miss_block->beg_day_idx;
     const int block_n_days      = miss_block->n_days;
@@ -402,7 +416,7 @@ void UGenVarCateg::update_ubeta(UProdBeta& ubeta,
 void UGenVarCateg::update_utau(UProdTau& utau,
 			       const int u_categ,
 			       const double* alt_utau_vals,
-			       const UMissBlock* const miss_block) const {
+			       const UMissBlockCateg* const miss_block) const {
 
     const int block_beg_sex_idx = miss_block->beg_sex_idx;
     const int block_n_sex_days  = miss_block->n_sex_days;
@@ -423,7 +437,7 @@ void UGenVarCateg::update_utau(UProdTau& utau,
 // updates the columns of `U` corresponding to the current categorical variable
 // based upon what was sampled
 
-void UGenVarCateg::update_u(const UMissBlock* const miss_block) {
+void UGenVarCateg::update_u(const UMissBlockCateg* const miss_block) {
 
     // tracks the start of the `j`-th column in U
     double* curr_u_col = m_u_var_col;

@@ -60,7 +60,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     UProdBeta ubeta(u_rcpp.nrow());
     XGen X(x_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
-    UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map);
+    UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, true);
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
@@ -97,5 +97,6 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
 
     return Rcpp::List::create(Rcpp::Named("coefs") = coefs.m_vals_rcpp,
 			      Rcpp::Named("xi")    = xi.m_vals_rcpp,
-			      Rcpp::Named("phi")   = phi.m_vals_rcpp);
+			      Rcpp::Named("phi")   = phi.m_vals_rcpp,
+			      Rcpp::Named("ugen")  = U.realized_samples());
 }
