@@ -61,7 +61,7 @@ UTestFactory::UTestFactory(Rcpp::NumericMatrix u_rcpp,
     n_burn(n_burn),
     n_samp(n_samp),
     // testing data
-    input_beta_coefs(as<NumericVector>(test_data["input_beta_coefs"])),
+    input_gam_coefs(as<NumericVector>(test_data["input_gam_coefs"])),
     input_gamma_specs(as<Rcpp::List>(test_data["input_gamma_specs"])),
     input_u_categ(as<Rcpp::List>(test_data["input_u_categ"])),
     input_ubeta(as<NumericVector>(test_data["input_ubeta"])),
@@ -195,7 +195,7 @@ UGenVarCateg* UTestFactory::u_categ(Rcpp::NumericMatrix* u_rcpp_copy) {
 CoefGen* UTestFactory::coefs() {
 
     CoefGen* coefs = new CoefGen(u_rcpp, gamma_specs, n_samp);
-    std::copy(input_beta_coefs.begin(), input_beta_coefs.end(), coefs->m_vals);
+    std::copy(input_gam_coefs.begin(), input_gam_coefs.end(), coefs->m_vals);
 
     return coefs;
 }

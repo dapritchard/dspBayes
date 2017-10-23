@@ -206,12 +206,11 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 	double gam_ratio;
 	double log_dpois_sum;
 
-	// `exp_beta_diff` is the value of `exp(beta_j - beta^{*})` where
-	// `beta^{*}` is the coefficient of beta that corresponds to the
-	// category of the missing covariate chosen for the previous sample.
-	// Either `beta_j` or `beta^{*}` or both may correspond to the reference
-	// cell category, in which case the corresponding value is implicitely
-	// 0.
+	// `gam_ratio` is the value of `gamma_j - gamma^{*}` where `gamma^{*}`
+	// is the coefficient of gamma that corresponds to the category of the
+	// missing covariate chosen for the previous sample.  Either `gamma_j`
+	// or `gamma^{*}` or both may correspond to the reference cell category,
+	// in which case the corresponding value is implicitely 1.
 	//
 	// case: the j-th column is the one corresponding to the previous choice
 	// of category for the missing covariate
@@ -231,8 +230,9 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 	    gam_ratio = gam_j / gam_star;
 	}
 
-	// TODO: lets move this calculation outside of the log(p(w))
-	// calculation.  Have to calculate for each of
+	// TODO: lets move the above calculation outside of the log(p(w))
+	// calculation.  Have to calculate for each of the possible current
+	// categories.
 
 	// each iteration calculates the value of `log p(W_ijk | U, data)` and
 	// adds the value to `log_dpois_sum` for `ijk` one of the values of `W`

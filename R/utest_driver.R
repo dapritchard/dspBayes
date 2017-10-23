@@ -21,6 +21,7 @@ utest_cpp <- function(dsp_data,
     # sample beta coefs
     set.seed(beta_coefs_seed <- 2345L)
     beta_coefs <- rnorm(length(gamma_hyper_list), 0, 0.25)
+    gam_coefs <- exp(beta_coefs)
 
     # sample women-specific fecundability multiplier
     set.seed(100L)
@@ -70,7 +71,7 @@ utest_cpp <- function(dsp_data,
                    xi          = xi_seed)
 
     # collect testing objects
-    test_data <- list(input_beta_coefs           = beta_coefs,
+    test_data <- list(input_gam_coefs            = gam_coefs,
                       input_gamma_specs          = out_utest_gamma_categ$input_specs,
                       input_u_categ              = out_utest_u_categ$input,
                       input_ubeta                = ubeta,

@@ -85,7 +85,7 @@ public:
     int n_samp;
 
     // testing data
-    Rcpp::NumericVector input_beta_coefs;
+    Rcpp::NumericVector input_gam_coefs;
     Rcpp::List          input_gamma_specs;
     Rcpp::List          input_u_categ;
     Rcpp::NumericVector input_ubeta;
