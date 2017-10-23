@@ -50,17 +50,18 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
 
     // initialize global variable in case the value was set to true elsewhere
     g_record_status = false;
+    bool is_verbose = true;
     d2s = day_to_subj_idx.begin();
 
     // create data objects
     WGen W(w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, fw_len);
-    XiGen xi(subj_day_blocks, n_samp, true);
+    XiGen xi(subj_day_blocks, n_samp, is_verbose);
     CoefGen coefs(u_rcpp, gamma_specs, n_samp);
-    PhiGen phi(phi_specs, n_samp, true);  // TODO: need a variable for keeping samples
+    PhiGen phi(phi_specs, n_samp, is_verbose);  // TODO: need a variable for keeping samples
     UProdBeta ubeta(u_rcpp.nrow());
     XGen X(x_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
-    UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, true);
+    UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {

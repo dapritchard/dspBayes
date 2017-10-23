@@ -67,7 +67,7 @@ public:
     UMissBlockCateg* m_miss_block;
     const UMissBlockCateg* const m_end_block;
 
-    UGenVarCateg(Rcpp::List& var_info_list);
+    // UGenVarCateg(Rcpp::List& var_info_list);
 
     UGenVarCateg(Rcpp::NumericMatrix& u_rcpp,
 		 Rcpp::IntegerVector& var_info,

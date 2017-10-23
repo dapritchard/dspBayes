@@ -33,7 +33,7 @@ UGenVarCateg::UGenVarCateg(Rcpp::NumericMatrix& u_rcpp,
     m_miss_block(UMissBlockCateg::list_to_arr(var_block_list)),
     m_end_block(m_miss_block + var_block_list.size())
 {
-    m_vals_rcpp = Rcpp::NumericVector(record_status ? 0 : m_n_categs * var_block_list.size());
+    m_vals_rcpp = Rcpp::NumericVector(record_status ? m_n_categs * var_block_list.size() : 0);
 }
 
 
@@ -172,8 +172,8 @@ void UGenVarCateg::sample(const WGen& W,
 	    if (curr_block->n_sex_days > 0) {
 		update_utau(utau, u_categ, alt_utau_vals, curr_block);
 	    }
-	}
-    }
+	} // end conditional update if new category was sampled
+    } // end update current missing covariate loop
 }
 
 
@@ -195,15 +195,15 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
     const int* block_w_idx             = m_w_idx + miss_block->beg_w_idx;
     const int* block_x_vals            = X.vals() + miss_block->beg_day_idx;
 
-    const double* beta_coefs = coefs.vals();
-    const int* w_vals        = W.vals();
-    const double xi_i        = xi.vals()[miss_block->subj_idx];
+    const double* gam_coefs = coefs.vals();
+    const int* w_vals       = W.vals();
+    const double xi_i       = xi.vals()[miss_block->subj_idx];
 
     // each iteration calculates `p(W | U, data)` for the current category of
     // the missing covariate
     for (int j = m_col_start; j < m_col_end; ++j) {
 
-	double exp_beta_diff;
+	double gam_ratio;
 	double log_dpois_sum;
 
 	// `exp_beta_diff` is the value of `exp(beta_j - beta^{*})` where
@@ -216,20 +216,23 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 	// case: the j-th column is the one corresponding to the previous choice
 	// of category for the missing covariate
 	if (j == block_u_col) {
-	    exp_beta_diff = 1;
+	    gam_ratio = 1;
 	}
 	// case: the j-th column is not the one corresponding to the previous
 	// choice of category for the missing covariate
 	else {
-	    const double beta_j = (j == m_ref_col) ?
-		0.0 :
-		beta_coefs[j];
-	    const double beta_star = (block_u_col == m_ref_col) ?
-		0.0 :
-		beta_coefs[block_u_col];
+	    const double gam_j = (j == m_ref_col) ?
+		1.0 :
+		gam_coefs[j];
+	    const double gam_star = (block_u_col == m_ref_col) ?
+		1.0 :
+		gam_coefs[block_u_col];
 
-	    exp_beta_diff = exp(beta_j - beta_star);
+	    gam_ratio = gam_j / gam_star;
 	}
+
+	// TODO: lets move this calculation outside of the log(p(w))
+	// calculation.  Have to calculate for each of
 
 	// each iteration calculates the value of `log p(W_ijk | U, data)` and
 	// adds the value to `log_dpois_sum` for `ijk` one of the values of `W`
@@ -237,7 +240,7 @@ void UGenVarCateg::calc_log_condit_w(double* log_condit_w_probs,
 	log_dpois_sum = 0.0;
 	for (int r = 0 ; r < block_n_days; ++r) {
 
-	    *alt_exp_ubeta_vals = block_exp_ubeta_vals[r] * exp_beta_diff;
+	    *alt_exp_ubeta_vals = block_exp_ubeta_vals[r] * gam_ratio;
 
 	    // if intercourse did not occur on this day then `W` is non-random
 	    // and the log probability is 0

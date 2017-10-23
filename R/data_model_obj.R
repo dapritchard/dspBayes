@@ -7,7 +7,7 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
     subj_day_blocks <- get_subj_day_blocks(comb_dat, var_nm)
     day_to_subj_idx <- get_day_to_subj_idx(subj_day_blocks)
 
-    U = expand_model_rhs(comb_dat, dsp_model)
+    U <- expand_model_rhs(comb_dat, dsp_model)
     #### TODO check if data is collinear or constant within outcome ####
 
     intercourse_data <- get_intercourse_data(comb_dat, var_nm, fw_incl)

@@ -55,5 +55,6 @@ dsp <- function(dsp_data,
     list(coefs    = coefs_trans,
          xi       = xi_trans,
          phi      = out$phi,
+         ugen     = out$ugen,
          run_time = run_time)
 }

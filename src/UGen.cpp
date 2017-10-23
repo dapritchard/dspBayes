@@ -86,7 +86,8 @@ Rcpp::List UGen::realized_samples() {
     // case: output summary recorded, collect data into a list
     Rcpp::List sample_summaries(m_n_vars);
     for (int i = 0; i < m_n_vars; ++i) {
-	sample_summaries[i] = m_vars[i]->m_vals_rcpp;
+    	sample_summaries[i] = Rcpp::NumericVector(m_vars[i]->m_vals_rcpp);
+    	// sample_summaries[i] = m_vars[i]->m_vals_rcpp;
     }
 
     return sample_summaries;
