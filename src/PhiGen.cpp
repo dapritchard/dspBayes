@@ -4,9 +4,6 @@
 #include "XiGen.h"
 #include "ProposalFcns.h"
 
-using std::log;
-using R::lgammafn;
-
 
 
 
@@ -33,6 +30,7 @@ void PhiGen::sample(const XiGen& xi) {
 
     double proposal_val, new_val, log_r;
 
+    // TODO: make this non- hard coded
     // sample the proposal value for Metropolis step
     proposal_val = ProposalFcns::abs_unif(*m_vals, m_delta);
 
@@ -188,5 +186,5 @@ double PhiGen::calc_log_proportion_dgamma_phi(double proposal_val) const {
 //     log(a^a / gamma(a)) = a * log(a) - log( gamma(a) )
 
 double PhiGen::log_dgamma_norm_const(double a) const {
-    return a * log(a) - lgammafn(a);
+    return a * log(a) - R::lgammafn(a);
 }
