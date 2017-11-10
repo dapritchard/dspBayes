@@ -18,8 +18,8 @@ public:
     double m_gam_val;
 
     // gamma_h hyperparameters
-    const double m_hyp_a;
-    const double m_hyp_b;
+    double m_hyp_a;
+    double m_hyp_b;
     const double m_hyp_p;
     const double m_bnd_l;
     const double m_bnd_u;
@@ -30,11 +30,17 @@ public:
     // number of observations in the data
     const int m_n_days;
 
+    // whether coefficient corresponds to a DSP and has AR prior
+    const bool m_is_dsp_ar;
+
     GammaGen(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& coef_specs);
     virtual ~GammaGen() {}
 
     // TODO: change this to XGen& X
     virtual double sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) = 0;
+    bool is_dsp_ar() { return m_is_dsp_ar; }
+    void set_hyp_a(double a) {}
+    void set_hyp_b(double b) {}
 
     static GammaGen** create_arr(const Rcpp::NumericMatrix& U, const Rcpp::List& gamma_specs);
 };
@@ -56,7 +62,6 @@ public:
     // `GammaCateg::calc_p_tilde`.
     const double m_log_d2_const_terms;
 
-
     GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
 
     double sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X);
@@ -68,6 +73,9 @@ public:
     double log_dgamma_trunc_const(double a, double b);
     double init_log_d2_const_terms();
     double calc_log_d2_const_terms();
+
+    void set_hype_a(double a) { m_hyp_a = a; }
+    void set_hype_a(double b) { m_hyp_b = b; }
 };
 
 

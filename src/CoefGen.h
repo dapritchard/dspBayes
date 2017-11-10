@@ -19,6 +19,9 @@ public:
     const int m_n_psi;
     const int m_n_gamma;
 
+    double m_mu_0;
+    double m_nu_0;
+
     CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs, int n_samp);
     ~CoefGen();
 
