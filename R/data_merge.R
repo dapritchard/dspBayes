@@ -5,13 +5,13 @@
 # outside of the fertile window.  Days inside the fertile window that are not
 # included in the original data are added to the merged data with missing values
 # inserted for the remaining variables when they are not known.  If the number
-# of days in the fertile window for a cycle is smaller than `min_days_req`, then
+# of days in the fertile window for a cycle is smaller than `req_min_days`, then
 # the cycle is removed from the data. The returned data is sorted over subject
 # ID, cycle number, and fertile window day, in that order.
 #
 # PRE: `baseline`, `cycle`, and `daily` are data frames or objects that can be
 # coerced to a data frame.  `var_nm` is an object created by `extract_var_nm`.
-# `fw_incl` is a vector giving the fertile window days, and `min_days_req` is
+# `fw_incl` is a vector giving the fertile window days, and `req_min_days` is
 # the minimum number of days needed in the data to include a cycle.
 
 merge_dsp_data <- function(baseline,
@@ -20,7 +20,8 @@ merge_dsp_data <- function(baseline,
                            var_nm,
                            fw_incl,
                            fw_day_before,
-                           min_days_req) {
+                           use_na,
+                           req_min_days) {
 
     # # conditionally create some variables that track where baseline- and
     # # cycle-specific variables end up after merging
@@ -38,8 +39,9 @@ merge_dsp_data <- function(baseline,
     #     }
     # }
 
-    # reduce each dataset to only contain the variables that we need.  Returns
-    # NULL if the input is NULL.
+    # reduce each dataset to only contain the variables that we need
+    # (i.e. subsets the columns, and rows remain unchanged).  Returns NULL if
+    # the input is NULL.
     base_red <- get_red_dat(baseline, var_nm)
     cyc_red <- get_red_dat(cycle, var_nm)
     day_red <- get_red_dat(daily, var_nm)
@@ -48,11 +50,17 @@ merge_dsp_data <- function(baseline,
     # pregnancy outcome data
     keypairs <- get_keypairs(day_red, cyc_red, var_nm)
 
-    # conditionally create a variable in the daily data providing "intercourse
-    # the day before" information
+    # conditionally add a column in the daily data providing "intercourse the
+    # day before" information
     if (! is.null(fw_day_before)) {
         day_red <- daily_add_sex_yester(day_red, var_nm, fw_incl, fw_day_before)
     }
+
+    # # conditionally add columns in the daily data used later to track missing
+    # # intercourse
+    # if ((use_na == "sex") || (use_na == "all")) {
+    #     day_red <- create_xmiss_var(day_red, var_nm)
+    # }
 
     # reduce daily dataset to only include rows corresponding to days in the
     # fertile window.  Note that we must do this after obtaining `keypairs`,
@@ -65,7 +73,7 @@ merge_dsp_data <- function(baseline,
 
     # a data frame with observations given by the cross product of every day in
     # the fertile window and every (id, cycle) keypair
-    comb_dat <- construct_day_obs(day_red, keypairs, fw_incl, var_nm, min_days_req)
+    comb_dat <- construct_day_obs(day_red, keypairs, fw_incl, var_nm, req_min_days)
 
     # join operation on id and cycle.  `all.x = TRUE` specifies that we keep
     # every observation in `day_formatted`.  Under these specifications `merge`
@@ -248,9 +256,9 @@ daily_add_sex_yester <- function(daily, var_nm, fw_incl, fw_day_before) {
 # with names as given in `var_nm`.  `keypairs` is a nonempty data frame with
 # exactly two columns for id and cycle.  `fw_incl` is a nonempty atomic
 # vector. `var_nm` is a list providing the names of the id, cycle, and fertile
-# window columns.  `min_days_req` is a length-1 numeric vector.
+# window columns.  `req_min_days` is a length-1 numeric vector.
 
-construct_day_obs <- function(daily, keypairs, fw_incl, var_nm, min_days_req) {
+construct_day_obs <- function(daily, keypairs, fw_incl, var_nm, req_min_days) {
 
     # the length of fertile window and the number of cycles in the data
     fw_len <- length(fw_incl)
@@ -328,7 +336,7 @@ construct_day_obs <- function(daily, keypairs, fw_incl, var_nm, min_days_req) {
 
     # remove observations that don't meet the minimum number of observations
     # specified to keep
-    days_by_cyc <- days_by_cyc[n_obs_by_cyc >= min_days_req]
+    days_by_cyc <- days_by_cyc[n_obs_by_cyc >= req_min_days]
 
     # rbind each of the elements in `days_by_cyc`, each of which are data frames
     # corresponding to the days for a given subject and cycle pair
@@ -437,3 +445,26 @@ sort_dsp <- function(comb_dat, var_nm, fw_incl, fw_day_before = NULL) {
     row.names(out) = NROW(comb_dat) %>% seq_len
     out
 }
+
+
+
+
+# create_xmiss_var <- function(daily, var_nm) {
+
+#     # create a unique key for each observation that we can point to for missing
+#     # values of the soon-to-be created `xmiss_` variable.  Later on, `xmiss_`
+#     # will have a different structure from `daily`, so we need a way to map
+#     # elements of `xmiss_` back to the main dataset.
+#     daily$obs_idx_ <- seq_len(nrow(daily))
+
+#     # creates a vector with -1L for "no", 0L for "yes", and NA for missing
+#     daily$xmiss_ <- map_vec_to_bool(daily[[var_nm$sex]]) %>% as.integer %>% `-`(1L)
+
+#     # replace the NA's in `miss_idx_` with the index of the missing, which will
+#     # later be used to map back to the observations in the data through
+#     # `daily$obs_idx_`
+#     miss_idx <- which(is.na(daily$xmiss_))
+#     daily$xmiss_[miss_idx] <- miss_idx
+
+#     daily
+# }

@@ -58,6 +58,8 @@ remove_cycs_with_miss <- function(comb_dat, var_nm, fw_incl, use_na) {
         stop("no cycles existed without any missing", call. = FALSE)
     }
 
+    # subset `comb_dat` to observations that either have no missing or an
+    # allowed type of missingness
     comb_dat[keep_idx, , drop = FALSE]
 }
 

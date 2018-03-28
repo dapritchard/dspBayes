@@ -258,6 +258,7 @@ dspDat <- function(dsp_model,
                                var_nm,
                                fw_incl,
                                fw_day_before,
+                               use_na,
                                req_min_days)
 
     # conditionally remove any cycles from `comb_dat` that have either missing data
@@ -271,14 +272,16 @@ dspDat <- function(dsp_model,
     # else we lose the "no intercourse" observations from the model
     tau_fit <- get_tau_fit(comb_dat, var_nm, dsp_model, use_na)
 
-    # removes all observations from `comb_dat` for which intercourse did not occur.
+    xmiss <- get_xmiss(clean_dat, var_nm, fw_incl, use_na)
+
+    # removes all observations from `clean_dat` for which intercourse did not occur.
     # Observations with a missing value for intercourse remain in the data.
-    sex_only_dat <- remove_days_no_sex(comb_dat, var_nm)
+    sex_only_dat <- remove_days_no_sex(clean_dat, var_nm)
 
     #### TODO check if data is collinear or constant within outcome or covariate ####
     #### is all missing ####
 
-    dsp_data <- derive_model_obj(sex_only_dat, var_nm, fw_incl, dsp_model, use_na, tau_fit)
+    dsp_data <- derive_model_obj(sex_only_dat, var_nm, fw_incl, dsp_model, use_na, tau_fit, xmiss)
 
     # TODO: Stats related to munging process for use by summary fcn
     # datInfo <- getDatInfo(dsp_model, baseline, cycle, daily, cleanDat,
