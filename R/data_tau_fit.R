@@ -53,6 +53,10 @@ get_utau <- function(U, tau_fit, xmiss, use_na) {
              'U:  ', colnames(U), '\ntau_fit:  ', names(tau_fit$u_coefs))
     }
 
+    # calculate an initial `U * tau` vector for the rows with a missing value of
+    # `X`.  The conditional `xmiss >= 1` has the effect of testing whether there
+    # is a missing value, since these values are indices in the data, while
+    # yes/no sex are denoted by nonpositive values.
     tau <- matrix(tau_fit$u_coefs, ncol = 1L)
     miss_idx <- xmiss[xmiss >= 1L]
     drop(U[miss_idx, , drop = FALSE] %*% tau)

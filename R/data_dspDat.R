@@ -272,6 +272,9 @@ dspDat <- function(dsp_model,
     # else we lose the "no intercourse" observations from the model
     tau_fit <- get_tau_fit(comb_dat, var_nm, dsp_model, use_na)
 
+    # obtain a vector with intercourse status for each cycle in the data that
+    # had a missing value.  The full fertile window is included for such a
+    # cycle, plus the day before the start of the window.
     xmiss <- get_xmiss(clean_dat, var_nm, fw_incl, use_na)
 
     # removes all observations from `clean_dat` for which intercourse did not occur.

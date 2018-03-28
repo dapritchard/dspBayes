@@ -10,7 +10,7 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
     U <- expand_model_rhs(comb_dat, dsp_model)
     #### TODO check if data is collinear or constant within outcome ####
 
-    # intercourse_data <- get_intercourse_data(comb_dat, var_nm, fw_incl)
+    intercourse_data <- get_intercourse_data(comb_dat, var_nm, fw_incl)
     sex_miss_to_w <- get_sex_miss_to_w(comb_dat, var_nm)
 
     # fix the indices in `xmiss` now that non-sex days have been removed
@@ -30,7 +30,9 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
          w_cyc_to_subj_idx = w_cyc_to_subj_idx,
          subj_day_blocks   = subj_day_blocks,
          day_to_subj_idx   = day_to_subj_idx,
-         # intercourse       = intercourse_data,
+         intercourse       = intercourse_data,
+         x_miss            = xmiss,
+         sex_miss_to_w     = sex_miss_to_w,
          cov_col_miss_info = cov_col_miss_info,
          tau_fit           = tau_fit,
          utau              = utau,
@@ -235,103 +237,112 @@ get_var_categ_status <- function(cov_col_miss_info) {
 
 
 
-# get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
+# TODO: no longer need the `miss_cyc` and `miss_day` portions of this code.  The
+# only thing we need is the portion that initializes missing intercourse values.
 
-#     # a list with each element a vector of the days-specific indices
-#     # corresponding to one of the cycles
-#     cyc_idx_list <- get_cyc_idx_list(comb_dat, var_nm)
+get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
 
-#     # store intercourse data as a binary variable.  Missingness is preserved.
-#     X <- map_vec_to_bool(comb_dat[, var_nm$sex]) %>% as.integer
-#     # TODO: use use_na
-#     # TODO: check if there are any cycles with a pregnancy and only 1 missing
-#     # day, and all other days are non-intercourse.  In this case X_ijk must be
-#     # an intercourse.
-#     x_miss_bool <- is.na(X)
-#     x_miss_idx <- which(x_miss_bool)
+    # a list with each element a vector of the days-specific indices
+    # corresponding to one of the cycles
+    cyc_idx_list <- get_cyc_idx_list(comb_dat, var_nm)
 
-#     # convert sex yesterday to a binary variable and map missings value to the
-#     # corresponding flags.  Returns NULL if no column "sex_yester" exists
-#     # (i.e. we are not imputing missing intercourse data)
-#     sex_yester <- get_sex_yester_coding(comb_dat, var_nm)
+    # store intercourse data as a binary variable.  Missingness is preserved.
+    X <- map_vec_to_bool(comb_dat[, var_nm$sex]) %>% as.integer
+    # TODO: use use_na
+    # TODO: check if there are any cycles with a pregnancy and only 1 missing
+    # day, and all other days are non-intercourse.  In this case X_ijk must be
+    # an intercourse.
+    x_miss_bool <- is.na(X)
+    x_miss_idx <- which(x_miss_bool)
 
-#     # map the days to pregnancy days.  If the value is 0 then this signals that
-#     # the day was not a day that occured during a pregnancy cycle.
-#     preg_day_bool <- map_vec_to_bool( comb_dat[[var_nm$preg]] )
-#     preg_day_map <- vector("integer", length(X))
-#     preg_day_map[preg_day_bool] <- seq_len(sum(preg_day_bool))
+    # convert sex yesterday to a binary variable and map missings value to the
+    # corresponding flags.  Returns NULL if no column "sex_yester" exists
+    # (i.e. we are not imputing missing intercourse data)
+    sex_yester <- get_sex_yester_coding(comb_dat, var_nm)
 
-#     # containers to store missing intercourse information
-#     x_miss_cyc <- vector("list", length(cyc_idx_list))
-#     x_miss_day <- vector("list", sum(x_miss_bool))
+    # map the days to pregnancy days.  If the value is 0 then this signals that
+    # the day was not a day that occured during a pregnancy cycle.
+    preg_day_bool <- map_vec_to_bool( comb_dat[[var_nm$preg]] )
+    preg_day_map <- vector("integer", length(X))
+    preg_day_map[preg_day_bool] <- seq_len(sum(preg_day_bool))
 
-#     # maps a missing intercourse day to the index of `x_miss_idx`
-#     idx_to_x_miss_idx <- vector("integer", length(X))
-#     idx_to_x_miss_idx[x_miss_bool] <- seq_along(x_miss_idx)
+    # containers to store missing intercourse information
+    x_miss_cyc <- vector("list", length(cyc_idx_list))
+    x_miss_day <- vector("list", sum(x_miss_bool))
 
-#     # map subjects to indices
-#     id_map <- get_id_map(comb_dat[[var_nm$id]])
+    # maps a missing intercourse day to the index of `x_miss_idx`
+    idx_to_x_miss_idx <- vector("integer", length(X))
+    idx_to_x_miss_idx[x_miss_bool] <- seq_along(x_miss_idx)
 
-#     # each iteration checks the current cycle for missing.  If some exists, then
-#     # add an entry to `x_miss_cyc` detailing the missingness, and fill in the
-#     # missing elements of X.  Also the maximum amount of missing in a cycle is
-#     # tracked and stored in `x_n_max_miss`.
-#     ctr <- 1L
-#     for (curr_cyc_idx in cyc_idx_list) {
+    # map subjects to indices
+    id_map <- get_id_map(comb_dat[[var_nm$id]])
 
-#         # which among the current cycle indices are missing, and how many
-#         curr_miss_bool <- x_miss_bool[curr_cyc_idx]
-#         curr_miss_idx <- curr_cyc_idx[curr_miss_bool]
-#         map_to_x_miss_idx <- idx_to_x_miss_idx[curr_miss_idx]
-#         curr_n_miss <- length(curr_miss_idx)
+    # each iteration checks the current cycle for missing.  If some exists, then
+    # add an entry to `x_miss_cyc` detailing the missingness, and fill in the
+    # missing elements of X.  Also the maximum amount of missing in a cycle is
+    # tracked and stored in `x_n_max_miss`.
+    ctr <- 1L
+    for (curr_cyc_idx in cyc_idx_list) {
 
-#         # case: at least one day in the current cycle has missing intercourse
-#         # data
-#         if (curr_n_miss > 0L) {
+        # which among the current cycle indices are missing, and how many
+        curr_miss_bool <- x_miss_bool[curr_cyc_idx]
+        curr_miss_idx <- curr_cyc_idx[curr_miss_bool]
+        map_to_x_miss_idx <- idx_to_x_miss_idx[curr_miss_idx]
+        curr_n_miss <- length(curr_miss_idx)
 
-#             # provide cycle missing information in `x_miss_cyc`.  Subtract 1 to
-#             # adjust for 0-based indexing.
-#             x_miss_cyc[[ctr]] <- c(beg_idx  = map_to_x_miss_idx[1L] - 1L,
-#                                    n_days   = curr_n_miss,
-#                                    subj_idx = id_map[curr_cyc_idx[1L]] - 1L,
-#                                    preg_idx = preg_day_map[curr_cyc_idx[1L]] - 1L)
+        # case: at least one day in the current cycle has missing intercourse
+        # data
+        if (curr_n_miss > 0L) {
 
-#             # set the first missing X in the cycle to 1, and the remaining
-#             # missing to 0.  The logic for this is that if a pregnancy has
-#             # occurred in the cycle, then there must be at least 1 day with
-#             # intercourse, and this guarantees that.
-#             X[curr_miss_idx[1L]] <- 1L
-#             X[curr_miss_idx[-1L]] <- 0L
+            # provide cycle missing information in `x_miss_cyc`.  Subtract 1 to
+            # adjust for 0-based indexing.
+            x_miss_cyc[[ctr]] <- c(beg_idx  = map_to_x_miss_idx[1L] - 1L,
+                                   n_days   = curr_n_miss,
+                                   subj_idx = id_map[curr_cyc_idx[1L]] - 1L,
+                                   preg_idx = preg_day_map[curr_cyc_idx[1L]] - 1L)
 
-#             ctr <- ctr + 1L
-#         }
-#     }
+            # set the first missing X in the cycle to 1, and the remaining
+            # missing to 0.  The logic for this is that if a pregnancy has
+            # occurred in the cycle, then there must be at least 1 day with
+            # intercourse, and this guarantees that.
+            X[curr_miss_idx[1L]] <- 1L
+            X[curr_miss_idx[-1L]] <- 0L
 
-#     # remove entries corresponding to cycles without any missing
-#     x_miss_cyc <- x_miss_cyc[seq_len(ctr - 1L)]
+            ctr <- ctr + 1L
+        }
+    }
 
-#     # obtain indices and previous day intercourse status for each missing
-#     # intercourse observation
-#     for (i in seq_along(x_miss_idx)) {
-#         curr_idx <- x_miss_idx[i]
-#         x_miss_day[[i]] <- c(idx  = curr_idx - 1L,
-#                              prev = sex_yester[curr_idx])
-#     }
+    # remove entries corresponding to cycles without any missing
+    x_miss_cyc <- x_miss_cyc[seq_len(ctr - 1L)]
 
-#     # if (length(intercourse_data$miss_day > 0L)) {
-#     #     tau_data <- get_tau_data()
-#     # } else {
-#     #     tau_data <- 1
-#     # }
+    # obtain indices and previous day intercourse status for each missing
+    # intercourse observation
+    for (i in seq_along(x_miss_idx)) {
+        curr_idx <- x_miss_idx[i]
+        x_miss_day[[i]] <- c(idx  = curr_idx - 1L,
+                             prev = sex_yester[curr_idx])
+    }
 
-#     # return intercourse information
-#     list(X          = X,
-#          miss_cyc   = x_miss_cyc,
-#          miss_day   = x_miss_day)
-# }
+    # if (length(intercourse_data$miss_day > 0L)) {
+    #     tau_data <- get_tau_data()
+    # } else {
+    #     tau_data <- 1
+    # }
+
+    # return intercourse information
+    list(X          = X,
+         miss_cyc   = x_miss_cyc,
+         miss_day   = x_miss_day)
+}
 
 
 
+
+# returns an integer vector with elements that provide indices for the W data in
+# pregnancy cycles, or -1L otherwise.  In other words, if the k-th element of
+# the return vector has a value of t >= 0, then this means that the k-th missing
+# intercourse day corresponds to the t-th day in the W data.  A value of -1L
+# means that the k-th missing day corresponds to a non-pregnancy cycle.
 
 get_sex_miss_to_w <- function(comb_dat, var_nm) {
 
@@ -547,8 +558,13 @@ get_sex_yester_coding <- function(daily, var_nm) {
 
 map_xmiss_to_x <- function(comb_dat, var_nm, xmiss) {
 
+    # fills in the missing values of `xmiss` with the indices of the missing
+    # intercourse.  This works because the same missing intercourse observations
+    # are guaranteed to be in both vectors (and no more and no less), and the
+    # order has been preserved.
     miss_bool <- is.na(xmiss)
     xmiss[miss_bool] <- which(is.na(comb_dat[[var_nm$sex]]))
 
-    xmiss
+    # subtract 1L for 0-based indexing
+    xmiss - 1L
 }

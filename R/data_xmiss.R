@@ -1,4 +1,14 @@
-# TODO: fcn description
+# Obtain a vector with intercourse status for each cycle in the data that had a
+# missing value.  The full fertile window is included for such a cycle, plus the
+# day before the start of the window.
+#
+# The data have values of -1 for no sex and 0 for yes sex.  These values are
+# chosen since the remaining values will later be filled in with indices which
+# of course have values >= 1, and thus the yes/no can be differentiated from
+# the missing.  Missing values from the original data remain as NA's.
+#
+# Returns an empty vector when `use_na` does not keep missing intercourse
+# cycles, or if there are no missing.
 
 get_xmiss <- function(comb_dat, var_nm, fw_incl, use_na) {
 
