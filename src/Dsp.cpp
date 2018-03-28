@@ -59,7 +59,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     CoefGen coefs(u_rcpp, gamma_specs, n_samp);
     PhiGen phi(phi_specs, n_samp, is_verbose);  // TODO: need a variable for keeping samples
     UProdBeta ubeta(u_rcpp.nrow());
-    XGen X(x_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
+    XGen X(x_rcpp, x_miss_cyc, x_miss_day, fw_len, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
     UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
 

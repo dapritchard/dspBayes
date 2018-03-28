@@ -15,20 +15,25 @@ class XGen {
 
 public:
 
-    class XMissCyc;
-    class XMissDay;
-
     // storage for the X values
     Rcpp::IntegerVector& m_x_rcpp;
     Rcpp::IntegerVector::iterator m_vals;
 
-    // information about the number of X missing for a given cycle
-    const XMissCyc* m_miss_cyc;
-    const int m_n_miss_cyc;
+    // tracks whether intercourse occured on a given day if known, or the index
+    // of the corresponding day in X if missing
+    Rcpp::IntegerVector& m_x_miss_rcpp;
+    Rcpp::IntegerVector::iterator m_x_miss;
+    Rcpp::IntegerVector::iterator m_x_miss_end;
 
-    // tracks the indices of the missing values in X as well as whether
-    // intercourse occured on the previous day
-    XMissDay* m_miss_day;
+    // one entry for each missing value in intercourse, providing either the
+    // index in W that the day corresponds to, or -1 if the day was part of a
+    // non-pregnancy cycle
+    Rcpp::IntegerVector& m_sex_miss_to_w_rcpp;
+    Rcpp::IntegerVector::iterator  m_sex_miss_to_w;
+
+    // number of days in the fertile window and extended fertile window
+    // (i.e. includes the day before)
+    const int m_ext_fw_len;
 
     // global probability used to sample missing values of intercourse for the
     // day before the fertile window
@@ -44,7 +49,7 @@ public:
 	 Rcpp::List& miss_day,
 	 double cohort_sex_prob,
 	 double sex_coef);
-    ~XGen();
+    ~XGen() {}
 
     void sample(const WGen& W,
 		const XiGen& xi,
@@ -77,80 +82,6 @@ public:
     int n_days() const { return m_x_rcpp.size(); }
     double sex_coef() const { return m_sex_coef; }
 
-    // int calc_prior_probs(double prior_probs[][2],
-    // 			 const PregCyc* curr_miss_cyc,
-    // 			 const XMissDay* curr_miss_day,
-    // 			 const UProdTau& utau) const;
-
-    // static double XGen::calc_prior_prob(const XMissDay* miss_day,
-    // 					const UProdTau& utau,
-    // 					const int prev_day_sex);
-
-    // static int calc_posterior_probs(double* posterior_probs,
-    // 				    const PregCyc* curr_miss_cyc,
-    // 				    const XMissDay* curr_miss_day,
-    // 				    const double prior_probs[][2],
-    // 				    const WGen& W,
-    // 				    const XiGen& xi,
-    // 				    const UProdBeta& ubeta,
-    // 				    int day_before_fw_sex);
-
-    // static int sample_x_perm(double* probs, int n_perms);
-
-    // static int get_w_bitmap(const WGen& W,
-    // 			    const PregCyc* curr_miss_cyc,
-    // 			    const XMissDay* curr_miss_day);
-
-    // void update_cyc_x(const PregCyc* curr_miss_cyc,
-    // 		      const XMissDay* curr_miss_day,
-    // 		      int t);
-
-    // // static double calc_nonrand_sum_exp_ubeta(const PregCyc* curr_miss_cyc,
-    // // 					     const XMissDay* curr_miss_day,
-    // // 					     const UProdBeta& ubeta);
-
-    // int* vals() { return m_vals; }
-    // const int* vals() const { return m_vals; }
-};
-
-
-
-
-class XGen::XMissCyc : public PregCyc {
-
-public:
-
-    // either -1 or the index in W of the first day in the cycle
-    int preg_idx;
-
-    XMissCyc() : PregCyc(), preg_idx(0) {}
-
-    XMissCyc(int beg_idx, int n_days, int subj_idx, int preg_idx) :
-    	PregCyc(beg_idx, n_days, subj_idx),
-    	preg_idx(preg_idx) {
-    }
-
-    static XMissCyc* list_to_arr(Rcpp::List& block_list);
-};
-
-
-
-
-class XGen::XMissDay {
-
-public:
-
-    int idx;   // index in day specific data
-    int prev;  // whether intercourse occurred in the previous day
-
-    XMissDay() : idx(0), prev(0) {}
-
-    XMissDay(int idx, int prev) :
-	idx(idx),
-	prev(prev) {
-    }
-
-    static XMissDay* list_to_arr(Rcpp::List& block_list);
 };
 
 
