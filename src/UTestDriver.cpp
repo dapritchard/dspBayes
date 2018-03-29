@@ -30,7 +30,7 @@ UTestFactory g_ut_factory;
 
 
 
-// [[Rcpp::export]]
+// // [[Rcpp::export]]
 int utest_cpp_(Rcpp::NumericMatrix u_rcpp,
 	       Rcpp::IntegerVector x_rcpp,
 	       Rcpp::List          w_day_blocks,

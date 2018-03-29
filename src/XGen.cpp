@@ -7,9 +7,6 @@
 #include "XGen.h"
 #include "XiGen.h"
 
-// #define SEX_YES            1
-// #define SEX_IMPUTE_SHIFT   2
-// #define NON_PREG_CYC      -1
 
 #define IS_FW_ZERO_MISS  -99
 #define SEX_SHIFT          2
@@ -40,13 +37,6 @@ XGen::XGen(Rcpp::IntegerVector& X_rcpp,
     m_cohort_sex_prob(cohort_sex_prob),
     m_sex_coef(sex_coef) {
 }
-
-
-
-
-// // destructor
-// XGen::~XGen() {
-// }
 
 
 
@@ -276,4 +266,11 @@ int XGen::sample_x_ijk(double p_w_xIsOne,
 
 inline bool XGen::check_if_sex_miss(int miss_day) {
     return (miss_day >= 0);
+}
+
+
+
+
+inline int XGen::sample_day_before_fw_sex() const {
+    return (R::unif_rand() < m_cohort_sex_prob) ? 1 : 0;
 }

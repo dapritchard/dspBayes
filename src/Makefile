@@ -180,12 +180,14 @@ LDLIBS := $(addprefix -l, R)
 # primary makefile targets -----------------------------------------------------
 
 utests := $(addsuffix .o, $(basename $(wildcard UTest*.cpp)))
-targets := $(filter-out $(utests), $(addsuffix .o, $(basename $(wildcard *.cpp))))
+# targets := $(filter-out $(utests), $(addsuffix .o, $(basename $(wildcard *.cpp))))
+targets := $(filter-out $(utests) UGen.o UGenVar.o UGenVarCateg.o, $(addsuffix .o, $(basename $(wildcard *.cpp))))
 
 .PHONY : all clean clobber print-%
 
 # default rule
-all : $(targets) $(utests) dspBayes.so
+# all : $(targets) $(utests) dspBayes.so
+all : $(targets) dspBayes.so
 
 clean :
 	rm -f *.o
@@ -214,8 +216,10 @@ print-%:
 
 dspBayes.so : override LDFLAGS += -L$(cppunit_lib_loc) -Wl,-rpath=$(cppunit_lib_loc)
 dspBayes.so : override LDLIBS += -lcppunit
-dspBayes.so : $(targets) $(utests)
-	$(CC) $(targets) $(utests) $(LDFLAGS) $(LDLIBS) -o dspBayes.so
+# dspBayes.so : $(targets) $(utests)
+# 	$(CC) $(targets) $(utests) $(LDFLAGS) $(LDLIBS) -o dspBayes.so
+dspBayes.so : $(targets)
+	$(CC) $(targets) $(LDFLAGS) $(LDLIBS) -o dspBayes.so
 
 CoefGen.o : CoefGen.h
 
@@ -234,8 +238,11 @@ PhiGen.o : PhiGen.h ProposalFcns.h XiGen.h
 
 ProposalFcns.o : ProposalFcns.h
 
-RcppExports.cpp : Dsp.cpp UTestDriver.cpp
+# RcppExports.cpp : Dsp.cpp UTestDriver.cpp
+# 	Rscript -e 'Rcpp::compileAttributes("..")'
+RcppExports.cpp : Dsp.cpp
 	Rscript -e 'Rcpp::compileAttributes("..")'
+# TODO: have to make sure that this gets done first somehow
 
 RcppExports.o : RcppExports.cpp
 
@@ -258,25 +265,25 @@ XGen.o : XGen.h UProdBeta.h UProdTau.h
 
 
 
-# testing build rules ----------------------------------------------------------
+# # testing build rules ----------------------------------------------------------
 
-utests : override CPPFLAGS += $(cpp_incl_loc)
+# utests : override CPPFLAGS += $(cpp_incl_loc)
 
-UTestDriver.o : UTestFactory.h UTestGammaCateg.h UTestGammaContMH.h UTestPhiGen.h \
-                UTestPhiGen.h UTestWGen.h UTestXGen.h UTestWGen.h
+# UTestDriver.o : UTestFactory.h UTestGammaCateg.h UTestGammaContMH.h UTestPhiGen.h \
+#                 UTestPhiGen.h UTestWGen.h UTestXGen.h UTestWGen.h
 
-UTestFactory.o : UTestFactory.h XiGen.h WGen.h PhiGen.h UProdBeta.h
+# UTestFactory.o : UTestFactory.h XiGen.h WGen.h PhiGen.h UProdBeta.h
 
-# TODO: UTestGammaCateg.o?
+# # TODO: UTestGammaCateg.o?
 
-UTestGammaContMH.o : UTestGammaContMH.h
+# UTestGammaContMH.o : UTestGammaContMH.h
 
-UTestPhiGen.o : PhiGen.h UTestPhiGen.h XiGen.h
+# UTestPhiGen.o : PhiGen.h UTestPhiGen.h XiGen.h
 
-UTestUGenVarCateg.o : CoefGen.h UGenVar.h UProdBeta.h UProdTau.h UTestUGenVarCateg.h WGen.h XGen.h XiGen.h
+# UTestUGenVarCateg.o : CoefGen.h UGenVar.h UProdBeta.h UProdTau.h UTestUGenVarCateg.h WGen.h XGen.h XiGen.h
 
-UTestXGen.o : UTestXGen.h WGen.h XiGen.h UProdBeta.h UTestFactory.h
+# UTestXGen.o : UTestXGen.h WGen.h XiGen.h UProdBeta.h UTestFactory.h
 
-UTestXiGen.o : UTestXiGen.h XiGen.h WGen.h PhiGen.h UProdBeta.h
+# UTestXiGen.o : UTestXiGen.h XiGen.h WGen.h PhiGen.h UProdBeta.h
 
-UTestWGen.o : UTestWGen.h WGen.h XiGen.h UProdBeta.h UTestFactory.h
+# UTestWGen.o : UTestWGen.h WGen.h XiGen.h UProdBeta.h UTestFactory.h

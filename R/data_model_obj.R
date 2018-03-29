@@ -13,7 +13,7 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
     intercourse_data <- get_intercourse_data(comb_dat, var_nm, fw_incl)
     sex_miss_to_w <- get_sex_miss_to_w(comb_dat, var_nm)
 
-    # fix the indices in `xmiss` now that non-sex days have been removed
+    # set the indices in `xmiss` now that non-sex days have been removed
     xmiss <- map_xmiss_to_x(comb_dat, var_nm, xmiss)
 
     cov_col_miss_info <- get_cov_col_miss_info(U, dsp_model, use_na)

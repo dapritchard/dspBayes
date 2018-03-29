@@ -59,9 +59,9 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     CoefGen coefs(u_rcpp, gamma_specs, n_samp);
     PhiGen phi(phi_specs, n_samp, is_verbose);  // TODO: need a variable for keeping samples
     UProdBeta ubeta(u_rcpp.nrow());
-    XGen X(x_rcpp, x_miss_cyc, x_miss_day, fw_len, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
+    XGen X(x_rcpp, x_miss, x_miss, sex_miss_to_w, x_miss, fw_len, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
-    UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
+    // UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
@@ -83,8 +83,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
 	// update missing values for the intercourse variables X
 	X.sample(W, xi, ubeta, utau);
 
-	// // update missing values for the covariate data U
-	U.sample(W, xi, coefs, X, ubeta, utau);
+	// // // update missing values for the covariate data U
+	// U.sample(W, xi, coefs, X, ubeta, utau);
 
 	// case: burn-in phase is over so record samples.  Note that this occurs
 	// after the samples in this scan have been taken; this is because
@@ -96,8 +96,12 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
 	if ((s % DSP_BAYES_N_INTERRUPT_CHECK) == 0) Rcpp::checkUserInterrupt();
     }
 
+    // return Rcpp::List::create(Rcpp::Named("coefs") = coefs.m_vals_rcpp,
+    // 			      Rcpp::Named("xi")    = xi.m_vals_rcpp,
+    // 			      Rcpp::Named("phi")   = phi.m_vals_rcpp,
+    // 			      Rcpp::Named("ugen")  = U.realized_samples());
+
     return Rcpp::List::create(Rcpp::Named("coefs") = coefs.m_vals_rcpp,
 			      Rcpp::Named("xi")    = xi.m_vals_rcpp,
-			      Rcpp::Named("phi")   = phi.m_vals_rcpp,
-			      Rcpp::Named("ugen")  = U.realized_samples());
+			      Rcpp::Named("phi")   = phi.m_vals_rcpp);
 }
