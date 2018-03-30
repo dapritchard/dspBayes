@@ -9,7 +9,6 @@
 
 
 #define IS_FW_ZERO_MISS  -99
-#define SEX_SHIFT          2
 #define NON_PREG_CYC      -1
 
 
@@ -17,9 +16,10 @@
 // constructor
 XGen::XGen(Rcpp::IntegerVector& X_rcpp,
 	   Rcpp::IntegerVector& x_miss,
-	   Rcpp::IntegerVector& utau_miss,
-	   Rcpp::IntegerVector& sex_miss_to_w,
-	   Rcpp::IntegerVector& sex_miss_to_xi,
+	   Rcpp::List& sex_miss_info,
+	   // Rcpp::IntegerVector& utau_miss,
+	   // Rcpp::IntegerVector& sex_miss_to_w,
+	   // Rcpp::IntegerVector& sex_miss_to_xi,
 	   int fw_len,
 	   double cohort_sex_prob,
 	   double sex_coef) :
@@ -28,15 +28,64 @@ XGen::XGen(Rcpp::IntegerVector& X_rcpp,
     m_x_miss_rcpp(x_miss),
     m_x_miss(x_miss.begin()),
     m_x_miss_end(x_miss.end()),
-    m_utau_miss_rcpp(utau_miss),
-    m_utau_miss(utau_miss.begin()),
-    m_sex_miss_to_w_rcpp(sex_miss_to_w),
-    m_sex_miss_to_w(sex_miss_to_w.begin()),
-    m_cyc_to_subj(sex_miss_to_xi.begin()),
-    m_ext_fw_len(fw_len + 1),
+    m_miss_info(list_to_arr(sex_miss_info)),
+    m_miss_info_end(m_miss_info + ((int) sex_miss_info["n_cyc"])),
+    // m_utau_miss_rcpp(utau_miss),
+    // m_utau_miss(utau_miss.begin()),
+    // m_sex_miss_to_w_rcpp(sex_miss_to_w),
+    // m_sex_miss_to_w(sex_miss_to_w.begin()),
+    // m_cyc_to_subj(sex_miss_to_xi.begin()),
+    m_fw_len(fw_len),
     m_cohort_sex_prob(cohort_sex_prob),
     m_sex_coef(sex_coef) {
 }
+
+
+
+
+XGen::~XGen() {
+    delete[] m_miss_info;
+}
+
+
+
+
+// construct an array of `DayBlock`s based upon an `Rcpp::List` that provides
+// the specifications for each block.  In more detail, an array of `DayBlock`s
+// is created with length given by the length of `block_list`.  Furthermore, it
+// is assumed that each element in `block_list` stores integer values that can
+// be accessed using names `beg_idx` and `n_days` and which are used to
+// initialize the struct's member values of the same name.  The return value is
+// a pointer to the beginning of the array.
+
+XGen::SexMissCycInfo* XGen::list_to_arr(Rcpp::List& sex_info_list) {
+
+    // save one of the Rcpp vectors so that we can ask for its length later
+    Rcpp::IntegerVector x_cyc_rcpp = Rcpp::as<Rcpp::IntegerVector>(sex_info_list["x_cyc"]);
+
+    // get a pointer to the data for each of the vectors
+    int* x_cyc    = x_cyc_rcpp.begin();
+    int* w_cyc    = (Rcpp::as<Rcpp::IntegerVector>(sex_info_list["w_cyc"])).begin();
+    int* xi_idx   = (Rcpp::as<Rcpp::IntegerVector>(sex_info_list["xi_idx"])).begin();
+    int* sex_prev = (Rcpp::as<Rcpp::IntegerVector>(sex_info_list["sex_prev"])).begin();
+
+    // allocate memory for our structs
+    SexMissCycInfo* block_arr = new SexMissCycInfo[sex_info_list.size()];
+
+    // each iteration constructs a new struct based upon the t-th elements of
+    // the various vectors
+    for (int t = 0; t < x_cyc_rcpp.size(); ++t) {
+
+	block_arr[t] = SexMissCycInfo(x_cyc[t], w_cyc[t], xi_idx[t], sex_prev[t]);
+    }
+
+    return block_arr;
+}
+
+
+
+
+
 
 
 
@@ -47,128 +96,105 @@ void XGen::sample(const WGen& W,
 		  const UProdBeta& ubeta,
 		  const UProdTau& utau) {
 
-    const int* x_cyc         = m_x_miss;
-    const int* utau_cyc      = m_utau_miss;
-    const int* miss_to_w_map = m_sex_miss_to_w;
-    const int* subj_idx      = m_cyc_to_subj;
 
     // each iteration samples the missing intercourse values for the current
     // cycle
-    while (x_cyc < m_x_miss_end) {
+    for (const SexMissCycInfo* curr_miss_info = m_miss_info;
+	 curr_miss_info < m_miss_info_end;
+	 ++curr_miss_info) {
 
-	sample_cycle(x_cyc, utau_cyc, &miss_to_w_map, *subj_idx, W, xi, ubeta, utau);
-
-	x_cyc += m_ext_fw_len;
-	utau_cyc += m_ext_fw_len;
-	++subj_idx;
+	sample_cycle(curr_miss_info, W, xi, ubeta, utau);
     }
 }
 
 
 
 
-void XGen::sample_cycle(const int* x_cyc,
-			const int* utau_cyc,
-			const int** miss_to_w_map,
-			const int subj_idx,
+void XGen::sample_cycle(const SexMissCycInfo* curr_miss_info,
 			const WGen& W,
 			const XiGen& xi,
 			const UProdBeta& ubeta,
 			const UProdTau& utau) {
 
-    int sex_prev_day, sex_curr_day, sex_next_day;
-    int x_curr_idx, x_next_idx;
-    int utau_curr_idx, utau_next_idx;
-    int curr_w;
-    bool is_sex_miss, need_to_samp_bool;
+    int sex_prev_day, sex_curr_day, sex_next_day, utau_curr_val, utau_next_val;
     double p_w_xIsOne, p_xTodayIsOne, p_xTom_xTodayIsZero, p_xTom_xTodayIsOne;
 
-    // value of xi for the subject that `miss_cycl` corresponds to
-    const double xi_i = xi.vals()[subj_idx];
-    // const double* ubeta_exp_vals = ubeta.exp_vals();
-    // const double* utau_vals = utau.vals();
-    const int* w_vals = W.vals();
+    // point to the first day of the cycle in the (i) X data, (ii) the missing
+    // intercourse status data, and (iii) the `U * tau` data
+    int* x_cyc                  = m_vals + curr_miss_info->x_cyc;
+    const int* x_miss_cyc       = m_x_miss + curr_miss_info->x_cyc;
+    const double* ubeta_exp_cyc = ubeta.exp_vals() + curr_miss_info->x_cyc;
+    const double* utau_cyc      = utau.vals() + curr_miss_info->x_cyc;
+    const int *w_cyc;
 
-    // obtain intercourse for the 0-th fertile window day
-    if (x_cyc[0] == IS_FW_ZERO_MISS) {
-	sex_prev_day = sample_day_before_fw_sex();
-    }
-    else {
-	sex_prev_day = x_cyc[0] + SEX_SHIFT;
-    }
-
-    // for `x_curr_idx`, obtain index for missing or yes/no sex for nonmissing
-    // intercourse day.  Similarly for `utau_curr_idx`, obtain index for needed
-    // days and a dummy flag value for unneeded days.
-    x_curr_idx = x_cyc[1];
-    utau_curr_idx = utau_cyc[1];
-
-    // obtain intercourse status for the 1-th fertile window day, and track
-    // whether or not it is missing
-    if (check_if_sex_miss(x_curr_idx)) {
-	sex_curr_day = m_vals[x_curr_idx];
-	is_sex_miss = true;
-    }
-    else {
-	sex_curr_day = x_curr_idx + SEX_SHIFT;
-	is_sex_miss = false;
+    // record whether pregnancy occurred this cycle, and if it did then set
+    // `w_cyc` to point to the first day of the cycle in the W data
+    bool is_preg_cyc = (curr_miss_info->w_cyc != NON_PREG_CYC);
+    if (is_preg_cyc) {
+	w_cyc = W.vals() + curr_miss_info->w_cyc;
     }
 
-    for (int r = 1; r < m_ext_fw_len; ++r) {
+    // the value in xi for the subject that the cycle corresponds to
+    const double xi_i = xi.vals()[curr_miss_info->xi_idx];
 
-	// set initial state of `need_to_samp_bool` to the value of
-	// `is_sex_miss`, which was obtained when looking at the (r + 1)-th day
-	// in the previous iteration
-	need_to_samp_bool = is_sex_miss;
+    // obtain intercourse for the 0-th and the 1-th fertile window day
+    sex_prev_day = curr_miss_info->sex_prev;
+    if (sex_prev_day == IS_FW_ZERO_MISS) {
+    	sex_prev_day = sample_day_before_fw_sex();
+    }
+    sex_curr_day = x_cyc[0];
+    // obtain `U_ijk^T tau` for the 1-th fertile window day
+    utau_curr_val = utau_cyc[0];
 
-	// get value of W_ijk and update `miss_to_w_map`
-	curr_w = (**miss_to_w_map == NON_PREG_CYC) ? 0 : w_vals[**miss_to_w_map];
-	++*miss_to_w_map;
-	// case: W_ijk > 0, so X_ijk must have a value of 1
-	if (curr_w > 0) {
-	    m_vals[x_curr_idx] = sex_prev_day = 1;
-	    need_to_samp_bool = false;
+
+    for (int r = 0; r < m_fw_len; ++r) {
+
+	// obtain intercourse and `U_ijk^T tau` for the (r + 1)-th fertile
+	// window day
+	if (r + 1 < m_fw_len) {
+	    sex_next_day  = x_cyc[r + 1];
+	    utau_next_val = utau_cyc[r + 1];
 	}
 
-	// obtain intercourse for the (r + 1)-th fertile window day
-	if (r + 1 < m_ext_fw_len) {
+	// the next if / else if / else block is in charge of conditionally
+	// updating X_ijk, if needed
 
-	    // note that `is_sex_miss` informs the next iteration whether we
-	    // need to sample for intercourse
-	    x_next_idx = x_cyc[r + 1];
-	    utau_next_idx = utau_cyc[r + 1];
-	    is_sex_miss = check_if_sex_miss(x_next_idx);
-
-	    sex_next_day = is_sex_miss ?
-		m_vals[x_next_idx] :
-		x_next_idx + SEX_SHIFT;
+	// case: sex not missing today, so do nothing
+	if (! x_miss_cyc[r]) {
+	    // noop
 	}
 
-	// case: need to sample because (i) intercourse status was missing today
-	// and (ii) `W_ijk = 0`
-	if (need_to_samp_bool) {
+	// case: sex was missing and `W_ijk > 0`, so consequently X_ijk is
+	// required to have a value of 1
+	else if (is_preg_cyc && (w_cyc[r] > 0)) {
+	    x_cyc[r] = 1;
+	}
+
+	// case: intercourse status was missing today and `W_ijk = 0`, so need
+	// to sample X_ijk
+	else {
 
 	    // obtain `P(W = 0 | X_ijk = 1)`.  Note that we don't need to
 	    // calculate this when `X_ijk = 0`, since then the expression is
 	    // simply 1.
-	    p_w_xIsOne = calc_p_w_zero(ubeta, x_curr_idx, xi_i);
+	    p_w_xIsOne = calc_p_w_zero(ubeta_exp_cyc[r], xi_i);
 
 	    // obtain `P(X_ijk = 1 | X_{ij,k-1})`
-	    p_xTodayIsOne = calc_p_xTodayIsOne(utau, utau_curr_idx, sex_prev_day);
+	    p_xTodayIsOne = calc_p_xTodayIsOne(utau_curr_val, sex_prev_day);
 
 	    // obtain `p(X_{ij,k+1} | X_ijk = 0)` and `p(X_{ij,k+1} | X_ijk = 1)`
 	    //
 	    // case: this is the last day of the fertile window, so we can have
 	    // the effect of dropping the `p(X_{ij,k+1} | X_ijk = t)` terms by
 	    // making them both equal to 1
-	    if (r + 1 == m_ext_fw_len) {
+	    if (r + 1 == m_fw_len) {
 		p_xTom_xTodayIsZero = p_xTom_xTodayIsOne = 1;
 	    }
 	    // case: not the last day of the fertile window, so have to
 	    // calculate both terms
 	    else {
-		p_xTom_xTodayIsZero = calc_p_xTom(utau, utau_next_idx, sex_next_day, 0);
-		p_xTom_xTodayIsOne  = calc_p_xTom(utau, utau_next_idx, sex_next_day, 1);
+		p_xTom_xTodayIsZero = calc_p_xTom(utau_next_val, sex_next_day, 0);
+		p_xTom_xTodayIsOne  = calc_p_xTom(utau_next_val, sex_next_day, 1);
 	    }
 
 	    // sample missing intercourse for today
@@ -176,43 +202,36 @@ void XGen::sample_cycle(const int* x_cyc,
 					p_xTodayIsOne,
 					p_xTom_xTodayIsZero,
 					p_xTom_xTodayIsOne);
-	    m_vals[x_curr_idx] = sex_curr_day;
+	    x_cyc[r] = sex_curr_day;
 	}
 
 	// slide the 3-day sequence over 1 in preparation for the next iteration
 	sex_prev_day  = sex_curr_day;
 	sex_curr_day  = sex_next_day;
-	x_curr_idx    = x_next_idx;
-	utau_curr_idx = utau_next_idx;
+	utau_curr_val = utau_next_val;
     }
 }
 
 
 
 
-inline double XGen::calc_p_w_zero(const UProdBeta& ubeta,
-				  const int day_idx,
-				  const double xi_i) {
-
-    const double* ubeta_exp_vals = ubeta.exp_vals();
-    return exp(-xi_i * ubeta_exp_vals[day_idx]);
+inline double XGen::calc_p_w_zero(double ubeta_exp_val,
+				  double xi_i) {
+    return exp(-xi_i * ubeta_exp_val);
 }
 
 
 
 
-double XGen::calc_p_xTom(const UProdTau& utau,
-			 int utau_tomorrow_idx,
-			 int x_tomorrow,
-			 int x_today) const {
-
-    const double* utau_vals = utau.vals();
+inline double XGen::calc_p_xTom(double utau_val_tom,
+				int x_tomorrow,
+				int x_today) const {
 
     // calculate for `X_ij{k+1} = 1` and then adjust at the end for the 0 case
     // if necessary
     double p_xTomIsOne = x_today ?
-	1 / (1 + exp(-utau_vals[utau_tomorrow_idx] - m_sex_coef)) :
-	1 / (1 + exp(-utau_vals[utau_tomorrow_idx]));
+	1 / (1 + exp(-utau_val_tom - m_sex_coef)) :
+	1 / (1 + exp(-utau_val_tom));
 
     return x_tomorrow ?
 	p_xTomIsOne :
@@ -222,14 +241,12 @@ double XGen::calc_p_xTom(const UProdTau& utau,
 
 
 
-inline double XGen::calc_p_xTodayIsOne(const UProdTau& utau,
-				       const int utau_today_idx,
-				       const int sex_prev_day) const {
+inline double XGen::calc_p_xTodayIsOne(double utau_val_today,
+				       int sex_prev_day) const {
 
-    const double* utau_vals = utau.vals();
     return sex_prev_day ?
-	1 / (1 + exp(-utau_vals[utau_today_idx] - m_sex_coef)) :
-	1 / (1 + exp(-utau_vals[utau_today_idx]));
+	1 / (1 + exp(-utau_val_today - m_sex_coef)) :
+	1 / (1 + exp(-utau_val_today));
 }
 
 
@@ -242,11 +259,11 @@ int XGen::sample_x_ijk(double p_w_xIsOne,
 
     double unnorm_prob_xIsZero, unnorm_prob_xIsOne, u;
 
-    // when `X_ijk = 0`.  Note that `P(W_ijk = 0 | X_ijk = 0) = 1` so we are
-    // ignoring that term in this expression.
+    // the term for when `X_ijk = 0`.  Note that `P(W_ijk = 0 | X_ijk = 0) = 1`
+    // so we are ignoring that term in this expression.
     unnorm_prob_xIsZero = p_xTom_xTodayIsZero * (1 - p_xTodayIsOne);
 
-    // when `X_ijk = 1`
+    // the term for when `X_ijk = 1`
     unnorm_prob_xIsOne = p_w_xIsOne * p_xTom_xTodayIsOne * p_xTodayIsOne;
 
     // sample a uniform r.v. and scale by sum of the unnormalized probabilities

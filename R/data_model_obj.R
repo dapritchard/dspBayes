@@ -31,8 +31,7 @@ derive_model_obj <- function(filtered_dat_list,
     # cycle, or -1 otherwise
     sex_miss_to_w <- get_sex_miss_to_w(comb_dat, var_nm)
 
-
-    sex_miss_info <- get_sex_info(comb_dat, var_nm,  use_na)
+    sex_miss_info <- get_sex_miss_info(comb_dat, var_nm,  use_na)
 
     # # set the indices in `xmiss` now that non-sex days have been removed
     # xmiss <- map_xmiss_to_x(comb_dat, var_nm, xmiss)
@@ -54,6 +53,7 @@ derive_model_obj <- function(filtered_dat_list,
          x_vals            = x_vals,
          x_miss            = x_miss,
          sex_miss_to_w     = sex_miss_to_w,
+         sex_miss_info     = sex_miss_info,
          cov_col_miss_info = cov_col_miss_info,
          tau_fit           = tau_fit,
          utau              = utau,
