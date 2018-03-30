@@ -1,4 +1,15 @@
-derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_fit, xmiss) {
+derive_model_obj <- function(filtered_dat_list,
+                             var_nm,
+                             fw_incl,
+                             dsp_model,
+                             use_na,
+                             tau_fit) {
+
+    # bind `comb_dat` to the combined data stored in
+    comb_dat <- filtered_dat_list$comb_dat
+
+    # miss_sex_cyc_idx <- filtered_dat$miss_sex_cyc_idx
+    # day_zero_sex     <- filtered_dat$day_zero_sex
 
     w_day_blocks <- get_w_day_blocks(comb_dat, var_nm)
     w_to_days_idx <- get_w_to_days_idx(comb_dat, var_nm)
@@ -10,11 +21,18 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
     U <- expand_model_rhs(comb_dat, dsp_model)
     #### TODO check if data is collinear or constant within outcome ####
 
-    intercourse_data <- get_intercourse_data(comb_dat, var_nm, fw_incl)
+    # obtain intercourse values with missing filled in, and track which values
+    # were originally missing
+    x_vals <- get_intercourse_data_v2(comb_dat, var_nm, fw_incl)
+    x_miss <- is.na(comb_dat[[var_nm$sex]]) %>% as.integer
+
+    # a vector with length equal to the number of missing intercourse days,
+    # where each day is the index in W if the day corresponds to a pregnancy
+    # cycle, or -1 otherwise
     sex_miss_to_w <- get_sex_miss_to_w(comb_dat, var_nm)
 
-    # set the indices in `xmiss` now that non-sex days have been removed
-    xmiss <- map_xmiss_to_x(comb_dat, var_nm, xmiss)
+    # # set the indices in `xmiss` now that non-sex days have been removed
+    # xmiss <- map_xmiss_to_x(comb_dat, var_nm, xmiss)
 
     cov_col_miss_info <- get_cov_col_miss_info(U, dsp_model, use_na)
     cov_row_miss_info <- get_cov_row_miss_info(comb_dat, var_nm, U, cov_col_miss_info)
@@ -23,15 +41,15 @@ derive_model_obj <- function(comb_dat, var_nm, fw_incl, dsp_model, use_na, tau_f
     u_miss_filled_in <- get_u_miss_filled_in(U, cov_col_miss_info)
 
     # note that we have to perform this after `U` has missing values filled in
-    utau <- get_utau(u_miss_filled_in, tau_fit, xmiss, use_na)
+    utau <- get_utau(u_miss_filled_in, tau_fit, use_na)
 
     list(w_day_blocks      = w_day_blocks,
          w_to_days_idx     = w_to_days_idx,
          w_cyc_to_subj_idx = w_cyc_to_subj_idx,
          subj_day_blocks   = subj_day_blocks,
          day_to_subj_idx   = day_to_subj_idx,
-         intercourse       = intercourse_data,
-         x_miss            = xmiss,
+         x_vals            = x_vals,
+         x_miss            = x_miss,
          sex_miss_to_w     = sex_miss_to_w,
          cov_col_miss_info = cov_col_miss_info,
          tau_fit           = tau_fit,
@@ -240,6 +258,8 @@ get_var_categ_status <- function(cov_col_miss_info) {
 # TODO: no longer need the `miss_cyc` and `miss_day` portions of this code.  The
 # only thing we need is the portion that initializes missing intercourse values.
 
+# TODO: no longer use this at all?
+
 get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
 
     # a list with each element a vector of the days-specific indices
@@ -338,6 +358,26 @@ get_intercourse_data <- function(comb_dat, var_nm, fw_incl) {
 
 
 
+get_intercourse_data_v2 <- function(comb_dat, var_nm, fw_incl) {
+
+    # a list with each element a vector of the days-specific indices
+    # corresponding to one of the cycles
+    cyc_idx_list <- get_cyc_idx_list(comb_dat, var_nm)
+
+    # store intercourse data as a binary variable.  Missingness is preserved.
+    x_vals <- map_vec_to_bool(comb_dat[, var_nm$sex]) %>% as.integer
+    # TODO: use use_na
+    # TODO: check if there are any cycles with a pregnancy and only 1 missing
+    # day, and all other days are non-intercourse.  In this case X_ijk must be
+    # an intercourse.
+
+    x_vals[is.na(x_vals)] <- 1L
+    x_vals
+}
+
+
+
+
 # returns an integer vector with elements that provide indices for the W data in
 # pregnancy cycles, or -1L otherwise.  In other words, if the k-th element of
 # the return vector has a value of t >= 0, then this means that the k-th missing
@@ -418,7 +458,9 @@ get_subj_idx_list <- function(dataset, var_nm) {
 # names as given in `var_nm`.  The function strongly relies on the fact that
 # `dataset` is already sorted on the id/cycle keypairs.
 
-get_cyc_idx_list <- function(dataset, var_nm) {
+# TODO: remove?
+
+get_cyc_idx_list_old <- function(dataset, var_nm) {
 
     # container to store the indices in.  Set the length to the maximum possible
     # elements that it could need.
