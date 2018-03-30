@@ -61,20 +61,3 @@ strip_days <- function(comb_dat, var_nm, fw_incl, use_na) {
          miss_sex_cyc_idx = miss_sex_cyc_idx,
          day_zero_sex     = day_zero_sex)
 }
-
-
-
-
-get_cyc_idx_list <- function(comb_dat, var_nm) {
-
-    out <- lapply(unique(comb_dat[[var_nm$id]]), function(x) {
-
-        subj_idx <- which(comb_dat[[var_nm$id]] == x)
-
-        lapply(unique(comb_dat[subj_idx, var_nm$cyc]), function(y) {
-            subj_idx[comb_dat[subj_idx, var_nm$cyc] == y]
-        })
-    })
-
-    unlist(out, recursive = FALSE)
-}
