@@ -279,13 +279,13 @@ dspDat <- function(dsp_model,
 
     # removes all observations from `clean_dat` for which intercourse did not occur.
     # Observations with a missing value for intercourse remain in the data.
-    filtered_dat_list <- strip_days(clean_dat, var_nm, fw_incl, use_na)
+    filtered_dat <- strip_days(clean_dat, var_nm, fw_incl, use_na)
     # sex_only_dat <- remove_days_no_sex(clean_dat, var_nm)
 
     #### TODO check if data is collinear or constant within outcome or covariate ####
     #### is all missing ####
 
-    dsp_data <- derive_model_obj(filtered_dat_list, var_nm, fw_incl, dsp_model, use_na, tau_fit)
+    dsp_data <- derive_model_obj(filtered_dat, var_nm, fw_incl, dsp_model, use_na, tau_fit)
 
     # TODO: Stats related to munging process for use by summary fcn
     # datInfo <- getDatInfo(dsp_model, baseline, cycle, daily, cleanDat,
@@ -295,7 +295,7 @@ dspDat <- function(dsp_model,
     if (keep_data) {
         dsp_data$comb_dat <- comb_dat
         dsp_data$clean_dat <- clean_dat
-        dsp_data$filtered_dat <- filtered_dat_list$comb_dat
+        dsp_data$filtered_dat <- filtered_dat
     }
 
     structure(dsp_data, class="dspDat")

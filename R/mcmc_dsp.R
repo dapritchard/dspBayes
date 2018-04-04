@@ -36,7 +36,7 @@ dsp <- function(dsp_data,
                 u_miss_type       = dsp_data$u_miss_type,
                 u_preg_map        = dsp_data$cov_miss_w_idx,
                 u_sex_map         = dsp_data$cov_miss_x_idx,
-                fw_len            = 5L,
+                fw_len            = dsp_data$fw_len,
                 n_burn            = 0L,
                 n_samp            = n_samp)
 

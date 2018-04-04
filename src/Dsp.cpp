@@ -82,7 +82,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     	phi.sample(xi);
 
 	// // update missing values for the intercourse variables X
-	// X.sample(W, xi, ubeta, utau);
+	X.sample(W, xi, ubeta, utau);
 
 	// // // update missing values for the covariate data U
 	// U.sample(W, xi, coefs, X, ubeta, utau);

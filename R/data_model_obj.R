@@ -1,12 +1,12 @@
-derive_model_obj <- function(filtered_dat_list,
+derive_model_obj <- function(comb_dat,
                              var_nm,
                              fw_incl,
                              dsp_model,
                              use_na,
                              tau_fit) {
 
-    # bind `comb_dat` to the combined data stored in
-    comb_dat <- filtered_dat_list$comb_dat
+    # # bind `comb_dat` to the combined data stored in
+    # comb_dat <- filtered_dat_list$comb_dat
 
     # miss_sex_cyc_idx <- filtered_dat$miss_sex_cyc_idx
     # day_zero_sex     <- filtered_dat$day_zero_sex
@@ -61,7 +61,8 @@ derive_model_obj <- function(filtered_dat_list,
          u_miss_type       = u_miss_type,
          cov_miss_w_idx    = cov_row_miss_info$cov_miss_w_idx,
          cov_miss_x_idx    = cov_row_miss_info$cov_miss_x_idx,
-         U                 = u_miss_filled_in)
+         U                 = u_miss_filled_in,
+         fw_len            = length(fw_incl))
 }
 
 

@@ -18,7 +18,7 @@ get_sex_miss_info <- function(comb_dat, var_nm,  use_na) {
     sex_miss_bool <- is.na(comb_dat[[var_nm$sex]])
     # whether intercourse occurred the day before.  Missing is coded as -99L.
     sex_yest_bin <- map_vec_to_bool(comb_dat$sex_yester) %>% as.integer
-    is.na(sex_yest_bin) <- -99L
+    sex_yest_bin[is.na(sex_yest_bin)] <- -99L
 
     # a map from the daily data to pregnancy
     w_days_idx <- vector("integer", length(preg_bool))
@@ -26,7 +26,8 @@ get_sex_miss_info <- function(comb_dat, var_nm,  use_na) {
 
     # a map from the daily data to subject
     id <- unique(comb_dat[[var_nm$id]])
-    xi_days_idx <- rep(id, table(id))
+    counts <- table(comb_dat[[var_nm$id]])
+    xi_days_idx <- rep(id, counts)
 
     # containers for the data we are constructing
     x_cyc    <- vector("integer", length(cyc_idx_list))
@@ -53,7 +54,7 @@ get_sex_miss_info <- function(comb_dat, var_nm,  use_na) {
     }
 
     # strip the unused portion of the vectors, and subtract by 1 for 0-based
-    # indexing.  `n_cyc` given the length of the vectors (i.e. the number of
+    # indexing.  `n_cyc` gives the length of the vectors (i.e. the number of
     # cycles)
     list(x_cyc    = x_cyc[seq_len(ctr - 1L)] - 1L,
          w_cyc    = w_cyc[seq_len(ctr - 1L)] - 1L,

@@ -8,7 +8,7 @@
 #include "XiGen.h"
 
 
-#define IS_FW_ZERO_MISS  -99
+#define FW_ZERO_IS_MISS  -99
 #define NON_PREG_CYC      -1
 
 
@@ -50,31 +50,23 @@ XGen::~XGen() {
 
 
 
-// construct an array of `DayBlock`s based upon an `Rcpp::List` that provides
-// the specifications for each block.  In more detail, an array of `DayBlock`s
-// is created with length given by the length of `block_list`.  Furthermore, it
-// is assumed that each element in `block_list` stores integer values that can
-// be accessed using names `beg_idx` and `n_days` and which are used to
-// initialize the struct's member values of the same name.  The return value is
-// a pointer to the beginning of the array.
+XGen::SexMissCycInfo* XGen::list_to_arr(Rcpp::List& sex_miss_info) {
 
-XGen::SexMissCycInfo* XGen::list_to_arr(Rcpp::List& sex_info_list) {
-
-    // save one of the Rcpp vectors so that we can ask for its length later
-    Rcpp::IntegerVector x_cyc_rcpp = Rcpp::as<Rcpp::IntegerVector>(sex_info_list["x_cyc"]);
+    // number of cycles with missing intercourse
+    int n_cyc = sex_miss_info["n_cyc"];
 
     // get a pointer to the data for each of the vectors
-    int* x_cyc    = x_cyc_rcpp.begin();
-    int* w_cyc    = (Rcpp::as<Rcpp::IntegerVector>(sex_info_list["w_cyc"])).begin();
-    int* xi_idx   = (Rcpp::as<Rcpp::IntegerVector>(sex_info_list["xi_idx"])).begin();
-    int* sex_prev = (Rcpp::as<Rcpp::IntegerVector>(sex_info_list["sex_prev"])).begin();
+    int* x_cyc    = (Rcpp::as<Rcpp::IntegerVector>(sex_miss_info["x_cyc"])).begin();
+    int* w_cyc    = (Rcpp::as<Rcpp::IntegerVector>(sex_miss_info["w_cyc"])).begin();
+    int* xi_idx   = (Rcpp::as<Rcpp::IntegerVector>(sex_miss_info["xi_idx"])).begin();
+    int* sex_prev = (Rcpp::as<Rcpp::IntegerVector>(sex_miss_info["sex_prev"])).begin();
 
     // allocate memory for our structs
-    SexMissCycInfo* block_arr = new SexMissCycInfo[sex_info_list.size()];
+    SexMissCycInfo* block_arr = new SexMissCycInfo[n_cyc];
 
     // each iteration constructs a new struct based upon the t-th elements of
     // the various vectors
-    for (int t = 0; t < x_cyc_rcpp.size(); ++t) {
+    for (int t = 0; t < n_cyc; ++t) {
 
 	block_arr[t] = SexMissCycInfo(x_cyc[t], w_cyc[t], xi_idx[t], sex_prev[t]);
     }
@@ -96,7 +88,6 @@ void XGen::sample(const WGen& W,
 		  const UProdBeta& ubeta,
 		  const UProdTau& utau) {
 
-
     // each iteration samples the missing intercourse values for the current
     // cycle
     for (const SexMissCycInfo* curr_miss_info = m_miss_info;
@@ -116,16 +107,18 @@ void XGen::sample_cycle(const SexMissCycInfo* curr_miss_info,
 			const UProdBeta& ubeta,
 			const UProdTau& utau) {
 
-    int sex_prev_day, sex_curr_day, sex_next_day, utau_curr_val, utau_next_val;
+    int sex_prev_day, sex_curr_day, sex_next_day;
+    double utau_curr_day, utau_next_day;
     double p_w_xIsOne, p_xTodayIsOne, p_xTom_xTodayIsZero, p_xTom_xTodayIsOne;
 
     // point to the first day of the cycle in the (i) X data, (ii) the missing
-    // intercourse status data, and (iii) the `U * tau` data
+    // intercourse status data, (iii) the `exp(U * beta)` data, (iv) the `U *
+    // tau` data, and (v) the W data (to be stored in the future)
     int* x_cyc                  = m_vals + curr_miss_info->x_cyc;
     const int* x_miss_cyc       = m_x_miss + curr_miss_info->x_cyc;
     const double* ubeta_exp_cyc = ubeta.exp_vals() + curr_miss_info->x_cyc;
     const double* utau_cyc      = utau.vals() + curr_miss_info->x_cyc;
-    const int *w_cyc;
+    const int* w_cyc;
 
     // record whether pregnancy occurred this cycle, and if it did then set
     // `w_cyc` to point to the first day of the cycle in the W data
@@ -139,12 +132,13 @@ void XGen::sample_cycle(const SexMissCycInfo* curr_miss_info,
 
     // obtain intercourse for the 0-th and the 1-th fertile window day
     sex_prev_day = curr_miss_info->sex_prev;
-    if (sex_prev_day == IS_FW_ZERO_MISS) {
+    if (sex_prev_day == FW_ZERO_IS_MISS) {
     	sex_prev_day = sample_day_before_fw_sex();
     }
     sex_curr_day = x_cyc[0];
+
     // obtain `U_ijk^T tau` for the 1-th fertile window day
-    utau_curr_val = utau_cyc[0];
+    utau_curr_day = utau_cyc[0];
 
 
     for (int r = 0; r < m_fw_len; ++r) {
@@ -153,7 +147,7 @@ void XGen::sample_cycle(const SexMissCycInfo* curr_miss_info,
 	// window day
 	if (r + 1 < m_fw_len) {
 	    sex_next_day  = x_cyc[r + 1];
-	    utau_next_val = utau_cyc[r + 1];
+	    utau_next_day = utau_cyc[r + 1];
 	}
 
 	// the next if / else if / else block is in charge of conditionally
@@ -180,7 +174,7 @@ void XGen::sample_cycle(const SexMissCycInfo* curr_miss_info,
 	    p_w_xIsOne = calc_p_w_zero(ubeta_exp_cyc[r], xi_i);
 
 	    // obtain `P(X_ijk = 1 | X_{ij,k-1})`
-	    p_xTodayIsOne = calc_p_xTodayIsOne(utau_curr_val, sex_prev_day);
+	    p_xTodayIsOne = calc_p_xTodayIsOne(utau_curr_day, sex_prev_day);
 
 	    // obtain `p(X_{ij,k+1} | X_ijk = 0)` and `p(X_{ij,k+1} | X_ijk = 1)`
 	    //
@@ -193,8 +187,8 @@ void XGen::sample_cycle(const SexMissCycInfo* curr_miss_info,
 	    // case: not the last day of the fertile window, so have to
 	    // calculate both terms
 	    else {
-		p_xTom_xTodayIsZero = calc_p_xTom(utau_next_val, sex_next_day, 0);
-		p_xTom_xTodayIsOne  = calc_p_xTom(utau_next_val, sex_next_day, 1);
+		p_xTom_xTodayIsZero = calc_p_xTom(utau_next_day, sex_next_day, 0);
+		p_xTom_xTodayIsOne  = calc_p_xTom(utau_next_day, sex_next_day, 1);
 	    }
 
 	    // sample missing intercourse for today
@@ -208,7 +202,7 @@ void XGen::sample_cycle(const SexMissCycInfo* curr_miss_info,
 	// slide the 3-day sequence over 1 in preparation for the next iteration
 	sex_prev_day  = sex_curr_day;
 	sex_curr_day  = sex_next_day;
-	utau_curr_val = utau_next_val;
+	utau_curr_day = utau_next_day;
     }
 }
 
