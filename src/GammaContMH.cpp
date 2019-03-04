@@ -91,7 +91,7 @@ inline double GammaContMH::get_log_r(const WGen& W,
 
 
 
-// calculate `p(W | proposal_gam, xi) / p(W | current_gam, xi)`
+// calculate `log p(W | proposal_gam, xi) / p(W | current_gam, xi)`
 
 double GammaContMH::get_w_log_lik(const WGen& W,
 				  const XiGen& xi,
@@ -134,7 +134,7 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 	//
 	//         = w_{ijk} * u{ijkh} * (beta_h* - beta_h^(s))
 	//
-	// which is one of the terms in `p(W | proposal) / p(W | current)`.
+	// which is one of the terms in `log p(W | proposal) / p(W | current)`.
 	//
 	// IMPORTANT: note that `w_days_idx` has a sentinal value appended to
 	// the end of the data so that we need not worry about reading past the
@@ -150,7 +150,7 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 	}
 
 	// calculate `-xi_i * [exp(U * beta*) - exp(U * beta)]`, which is one of
-	// the terms in `p(W | proposal) / p(W | current)`.
+	// the terms in `log p(W | proposal) / p(W | current)`.
 	term2 = -xi_i * (exp(ubeta_vals[i] + (m_Uh[i] * beta_diff)) - ubeta_exp_vals[i]);
 
 	// add the portion of the log-likelihood from the current day to the

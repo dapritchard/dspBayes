@@ -228,6 +228,8 @@ GammaCateg.o : GammaGen.h global_vars.h
 
 GammaContMH.o : GammaGen.h global_vars.h WGen.h XiGen.h UProdBeta.h
 
+GammaFWDay.o : GammaGen.h global_vars.h WGen.h XiGen.h UProdBeta.h
+
 GammaGen.o : GammaGen.h
 
 PhiGen.o : PhiGen.h ProposalFcns.h XiGen.h
