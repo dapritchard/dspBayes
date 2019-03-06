@@ -37,7 +37,7 @@ double GammaContMH::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, con
     // calculate the log acceptance ratio
     const double log_r = get_log_r(W, xi, ubeta, X, proposal_beta, proposal_gam);
 
-    // accept proposal value `min(r, 1)-th` of the time
+    // accept proposal value `min(r, 1)-th` proportion of the time
     if ((log_r >= 0) || (log(R::unif_rand()) < log_r)) {
 
 	// update `U * beta` and `exp(U * beta)` based upon accepting the

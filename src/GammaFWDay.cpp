@@ -1,27 +1,35 @@
 #include "Rcpp.h"
 
 #include "GammaGen.h"
+#include "GammaFWDay.h"
 #include "global_vars.h"
-
-using R::lgammafn_sign;
-
+#include "ProposalFcns.h"
 
 
-// GammaFWDay::GammaFWDay() {
+GammaFWDay::GammaFWDay(const Rcpp::NumericMatrix& U,
+		       const Rcpp::NumericVector& gamma_specs,
+		       int day_idx) :
+    GammaContMH{U, gamma_specs},
+    m_day_idx{day_idx}
+{
+}
 
-// }
 
 
 
+double GammaFWDay::sample(const WGen& W,
+			  const XiGen& xi,
+			  UProdBeta& ubeta,
+			  const int* X,
+			  const FWPriors& fw_priors) {
 
-double GammaFWDay::sample(Mday mday, Mu mu, Nu nu, Delta delta) {
-
-    double proposal_val, new_val, log_r;
+    double proposal_beta = m_proposal_fcn(m_beta_val, m_mh_delta);
+    double proposal_gam  = exp(proposal_beta);
 
     // calculate the log acceptance ratio
-    const double log_r = get_log_r(W, xi, ubeta, X, proposal_beta, proposal_gam);
+    const double log_r = get_log_r(W, xi, ubeta, X, proposal_beta, proposal_gam, fw_priors);
 
-    // accept proposal value `min(r, 1)-th` of the time
+    // accept proposal value `min(r, 1)-th` proportion of the time
     if ((log_r >= 0) || (log(R::unif_rand()) < log_r)) {
 
 	// update `U * beta` and `exp(U * beta)` based upon accepting the
@@ -35,7 +43,6 @@ double GammaFWDay::sample(Mday mday, Mu mu, Nu nu, Delta delta) {
     }
 
     return m_gam_val;
-
 }
 
 
@@ -48,7 +55,7 @@ double GammaFWDay::sample(Mday mday, Mu mu, Nu nu, Delta delta) {
 //         -------------------------------------------
 //         p(W | gamma^(s), xi, data) * p(gamma_h^(s))
 //
-// where gamma* denotes the kgamma vector with the h-th term replaced by the
+// where gamma* denotes the gamma vector with the h-th term replaced by the
 // proposal value and similarly for gamma^(s).
 
 inline double GammaFWDay::get_log_r(const WGen& W,
@@ -56,10 +63,11 @@ inline double GammaFWDay::get_log_r(const WGen& W,
 				    const UProdBeta& ubeta,
 				    const int* X,
 				    double proposal_beta,
-				    double proposal_gam) {
+				    double proposal_gam,
+				    const FWPriors& fw_priors) {
 
     return get_w_log_lik(W, xi, ubeta, X, proposal_beta)
-	+ get_gam_log_lik(proposal_beta, proposal_gam);
+	+ get_gam_log_lik(proposal_beta, proposal_gam, fw_priors);
 }
 
 
@@ -68,7 +76,7 @@ inline double GammaFWDay::get_log_r(const WGen& W,
 // calculate
 //
 //         p(proposal_gam | m, mu, nu, delta)
-//     log ----------------------------------
+//     log ----------------------------------,
 //         p(current_gam | m, mu, nu, delta)
 //
 // which simplifies to
@@ -76,21 +84,31 @@ inline double GammaFWDay::get_log_r(const WGen& W,
 //     (nu - 1)(log(proposal_gam) - log(current_gam))
 //
 //                   nu
-//         - ------------------ (proposal_gam - current_gam)
+//         - ------------------ (proposal_gam - current_gam).
 //           delta^{|k - m|} mu
+//
+// Also recall that the logarithm of the h-th element of the gamma vector is the
+// h-th element of the beta vector.
 
-double GammaFWDay::get_gam_log_lik(double beta_proposal, Mday mday, Mu mu, Nu nu, Delta delta) {
+double GammaFWDay::get_gam_log_lik(double proposal_beta,
+				   double proposal_gam,
+				   FWPriors fw_priors) {
 
-    double term1, term2_multiple, term2_diff;
-    double day_dist, ar_delta_pow;
+    // extract priors for convenience
+    double mday_val  = fw_priors.mday.val();
+    double mu_val    = fw_priors.mu.val();
+    double nu_val    = fw_priors.nu.val();
+    double delta_val = fw_priors.delta.val();
 
     // calculate `(nu - 1)(log(proposal_gam) - log(current_gam))`
-    term1 = (nu.val - 1) * (beta_proposal - m_beta_val);
+    double term1 = (nu_val - 1) * (proposal_beta - m_beta_val);
 
     // calculate `(nu / delta^{|k - m|} mu)(proposal_gam - current_gam)`
-    day_dist = abs(m_day_idx - mday);
-    ar_delta_pow = pow(delta.val, day_dist);
-    term2_multiple = nu.val / (ar_delta_pow * mu.val);
+    double day_dist         = abs(m_day_idx - mday_val);
+    double ar_delta_pow	    = pow(delta_val, day_dist);
+    double term2_multiplier = nu_val / (ar_delta_pow * mu_val);
+    double term2_diff       = proposal_gam - m_gam_val;
+    double term2            = term2_multiplier * term2_diff;
 
     return term1 - term2;
 }
