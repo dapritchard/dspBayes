@@ -32,13 +32,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type fw_len(fw_lenSEXP);
     Rcpp::traits::input_parameter< int >::type n_burn(n_burnSEXP);
     Rcpp::traits::input_parameter< int >::type n_samp(n_sampSEXP);
-    rcpp_result_gen = Rcpp::wrap(dsp_(u_rcpp, x_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, x_miss, sex_miss_to_w, utau_rcpp, tau_coefs, u_miss_info, u_miss_type, u_preg_map, u_sex_map, fw_len, n_burn, n_samp));
+    rcpp_result_gen = Rcpp::wrap(dsp_(u_rcpp, x_rcpp, w_day_blocks, w_to_days_idx, w_cyc_to_subj_idx, subj_day_blocks, day_to_subj_idx, gamma_specs, phi_specs, x_miss, sex_miss_to_w, sex_miss_info, utau_rcpp, tau_coefs, u_miss_info, u_miss_type, u_preg_map, u_sex_map, fw_len, n_burn, n_samp));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_dspBayes_dsp_", (DL_FUNC) &_dspBayes_dsp_, 20},
+    {"_dspBayes_dsp_", (DL_FUNC) &_dspBayes_dsp_, 21},
     {NULL, NULL, 0}
 };
 
