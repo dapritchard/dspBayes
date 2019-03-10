@@ -5,6 +5,7 @@
 #include "WGen.h"
 #include "XGen.h"
 #include "XiGen.h"
+#include "FWPriors.h"
 
 #define DSP_BAYES_N_INTERRUPT_CHECK 1000
 
@@ -62,6 +63,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     XGen X(x_rcpp, x_miss_cyc, x_miss_day, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
     UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
+    FWPriors fw_priors;
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
@@ -74,7 +76,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
 
     	// update the regression coefficients gamma and psi, and update the
     	// resulting values of the `U * beta`
-    	coefs.sample(W, xi, ubeta, X.vals());
+    	coefs.sample(W, xi, ubeta, X.vals(), fw_priors);
 	ubeta.update_exp();  // <--- TODO: let's put this inside sample()
 
     	// update phi, the variance parameter for xi

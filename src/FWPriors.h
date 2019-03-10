@@ -49,13 +49,16 @@ public:
 class FWPriors {
 public:
 
-    MDay& mday;
-    Mu& mu;
-    Nu& nu;
-    Delta& delta;
+    MDay mday;
+    Mu mu;
+    Nu nu;
+    Delta delta;
 
-    FWPriors(MDay mday, Mu mu, Nu nu, Delta delta) :
-	mday{mday}, mu{mu}, nu{nu}, delta{delta}
+    FWPriors() :
+	mday {MDay()},
+	mu {Mu()},
+	nu {Nu()},
+	delta {Delta()}
     {}
 };
 

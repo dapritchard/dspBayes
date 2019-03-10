@@ -5,6 +5,7 @@
 #include "GammaGen.h"
 #include "XiGen.h"
 #include "UProdBeta.h"
+#include "FWPriors.h"
 
 
 class CoefGen {
@@ -22,7 +23,11 @@ public:
     CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs, int n_samp);
     ~CoefGen();
 
-    void sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X);
+    void sample(const WGen& W,
+		const XiGen& xi,
+		UProdBeta& ubeta,
+		const int* X,
+		const FWPriors& fw_priors);
 
     const double* vals() const { return m_vals; }
 };

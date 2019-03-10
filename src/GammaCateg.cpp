@@ -3,6 +3,7 @@
 // TODO: missing header files
 #include "GammaGen.h"
 #include "global_vars.h"
+#include "FWPriors.h"
 
 using R::lgammafn_sign;
 
@@ -24,7 +25,11 @@ GammaCateg::GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& 
 // sample a new value for gamma_h.  As a side-effect, updates `ubeta`,
 // `m_beta_val`, and `m_gam_val` to reflect the newly sampled value of gamma_h.
 
-double GammaCateg::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X) {
+double GammaCateg::sample(const WGen& W,
+			  const XiGen& xi,
+			  UProdBeta& ubeta,
+			  const int* X,
+			  const FWPriors& fw_priors) {
 
     double a_tilde, b_tilde, p_tilde;
 

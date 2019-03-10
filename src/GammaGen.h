@@ -5,6 +5,7 @@
 #include "WGen.h"
 #include "XiGen.h"
 #include "UProdBeta.h"
+#include "FWPriors.h"
 
 
 
@@ -34,7 +35,11 @@ public:
     virtual ~GammaGen() {}
 
     // TODO: change this to XGen& X
-    virtual double sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X) = 0;
+    virtual double sample(const WGen& W,
+			  const XiGen& xi,
+			  UProdBeta& ubeta,
+			  const int* X,
+			  const FWPriors& fw_priors) = 0;
 
     static GammaGen** create_arr(const Rcpp::NumericMatrix& U, const Rcpp::List& gamma_specs);
 };
@@ -59,7 +64,11 @@ public:
 
     GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
 
-    double sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X);
+    double sample(const WGen& W,
+		  const XiGen& xi,
+		  UProdBeta& ubeta,
+		  const int* X,
+		  const FWPriors& fw_priors);
     double calc_a_tilde(const WGen& W);
     double calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const int* X);
     double calc_p_tilde(double a_tilde, double b_tilde);
@@ -126,7 +135,11 @@ public:
     double (*m_log_proposal_den)(double val, double cond, double delta);
 
     GammaContMH(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
-    double sample(const WGen& W, const XiGen& xi, UProdBeta& u_prod_beta, const int* X);
+    double sample(const WGen& W,
+		  const XiGen& xi,
+		  UProdBeta& ubeta,
+		  const int* X,
+		  const FWPriors& fw_priors);
     double sample_proposal_beta() const;
     double get_log_r(const WGen& W,
 		     const XiGen& xi,

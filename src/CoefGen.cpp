@@ -4,6 +4,7 @@
 #include "WGen.h"
 #include "XiGen.h"
 #include "UProdBeta.h"
+#include "FWPriors.h"
 
 extern bool g_record_status;
 
@@ -32,7 +33,11 @@ CoefGen::~CoefGen() {
 
 
 
-void CoefGen::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X) {
+void CoefGen::sample(const WGen& W,
+		     const XiGen& xi,
+		     UProdBeta& ubeta,
+		     const int* X,
+		     const FWPriors& fw_priors) {
 
     // if we're past the burn-in phase then update `m_vals` so that we don't
     // overwrite the previous samples in the current scan
@@ -43,6 +48,6 @@ void CoefGen::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int
     // each iteration updates one gamma_h term and correspondingly udjusts
     // the value of `ubeta`.
     for (int j = 0; j < m_n_gamma; ++j) {
-	m_vals[j] = m_gamma[j]->sample(W, xi, ubeta, X);
+	m_vals[j] = m_gamma[j]->sample(W, xi, ubeta, X, fw_priors);
     }
 }

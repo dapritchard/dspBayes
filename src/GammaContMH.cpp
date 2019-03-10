@@ -6,6 +6,7 @@
 #include "WGen.h"
 #include "XiGen.h"
 #include "UProdBeta.h"
+#include "FWPriors.h"
 
 
 
@@ -29,7 +30,11 @@ GammaContMH::GammaContMH(const Rcpp::NumericMatrix& U,
 
 
 
-double GammaContMH::sample(const WGen& W, const XiGen& xi, UProdBeta& ubeta, const int* X) {
+double GammaContMH::sample(const WGen& W,
+			   const XiGen& xi,
+			   UProdBeta& ubeta,
+			   const int* X,
+			   const FWPriors& fw_priors) {
 
     const double proposal_beta = sample_proposal_beta();
     const double proposal_gam  = exp(proposal_beta);
