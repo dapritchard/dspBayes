@@ -184,8 +184,9 @@ targets := $(filter-out $(utests), $(addsuffix .o, $(basename $(wildcard *.cpp))
 
 .PHONY : all clean clobber print-%
 
-# default rule
-all : $(targets) $(utests) dspBayes.so
+# # default rule
+# all : $(targets) $(utests) dspBayes.so
+all : $(targets) dspBayes.so
 
 clean :
 	rm -f *.o
@@ -228,7 +229,7 @@ GammaCateg.o : GammaGen.h global_vars.h
 
 GammaContMH.o : GammaGen.h global_vars.h WGen.h XiGen.h UProdBeta.h
 
-GammaFWDay.o : GammaGen.h global_vars.h WGen.h XiGen.h UProdBeta.h
+GammaFWDay.o : GammaFWDay.h FWPriors.h GammaGen.h global_vars.h WGen.h XiGen.h UProdBeta.h
 
 GammaGen.o : GammaGen.h
 
@@ -236,7 +237,9 @@ PhiGen.o : PhiGen.h ProposalFcns.h XiGen.h
 
 ProposalFcns.o : ProposalFcns.h
 
-RcppExports.cpp : Dsp.cpp UTestDriver.cpp
+# RcppExports.cpp : Dsp.cpp UTestDriver.cpp
+# 	Rscript -e 'Rcpp::compileAttributes("..")'
+RcppExports.cpp : Dsp.cpp
 	Rscript -e 'Rcpp::compileAttributes("..")'
 
 RcppExports.o : RcppExports.cpp
