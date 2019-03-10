@@ -38,12 +38,15 @@ get_tau_fit <- function(comb_dat, var_nm, dsp_model, use_na) {
 
 
 
-get_utau <- function(U, tau_fit, xmiss, use_na) {
+get_utau <- function(U, tau_fit, use_na) {
 
     # case: we're not imputing missing for sex, so return some empty data
-    if (((use_na != "sex") && (use_na != "all")) || (length(xmiss) == 0L)) {
+    if (use_na == "none") {
         return(numeric(0L))
     }
+    # if (((use_na != "sex") && (use_na != "all")) || (length(xmiss) == 0L)) {
+    #     return(numeric(0L))
+    # }
 
     # assert that the tau model fit is consistent with the design matrix
     # expansion of the data, U.  This is an internal check since these should
@@ -58,8 +61,7 @@ get_utau <- function(U, tau_fit, xmiss, use_na) {
     # is a missing value, since these values are indices in the data, while
     # yes/no sex are denoted by nonpositive values.
     tau <- matrix(tau_fit$u_coefs, ncol = 1L)
-    miss_idx <- xmiss[xmiss >= 1L]
-    drop(U[miss_idx, , drop = FALSE] %*% tau)
+    drop(U %*% tau)
 }
 
 

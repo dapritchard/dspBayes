@@ -12,6 +12,9 @@
 
 get_xmiss <- function(comb_dat, var_nm, fw_incl, use_na) {
 
+    FW_ZERO_MISS_FLAG <- -98L
+    FW_ZERO_NONMISS_ONE_FLAG <- -999L
+
     # nothing to do if we're not imputing missing intercourse data
     if (! ((use_na == "sex") || (use_na == "all"))) {
         return(integer(0L))
@@ -35,7 +38,7 @@ get_xmiss <- function(comb_dat, var_nm, fw_incl, use_na) {
     # standardize allowable forms of intercourse variable to -1/0 data.  Missing
     # values are mapped to the sentinal value of -98L.
     x_yest <- map_vec_to_bool(comb_dat$sex_yester) %>% as.integer %>% `-`(., 1L)
-    x_yest[is.na(x_yest)] <- -98L
+    x_yest[is.na(x_yest)] <- FW_ZERO_MISS_FLAG
 
     # store intercourse data as a binary variable.  Missingness is preserved.
     X <- map_vec_to_bool(comb_dat[, var_nm$sex]) %>% as.integer %>% `-`(., 1L)
@@ -57,6 +60,12 @@ get_xmiss <- function(comb_dat, var_nm, fw_incl, use_na) {
             # copy day before and FW intercourse data to `out_xmiss`
             out_xmiss[r] <- day_before
             out_xmiss[(r + 1L) : (r + K)] <- curr_x
+
+            # change flag if fertile window day 1 is nonmissing (and hence. we
+            # don't need the intercourse status for day 0)
+            if ((out_xmiss[r] == FW_ZERO_MISS_FLAG) && (! is.na(curr_x[1L]))) {
+                out_xmiss[r] <- FW_ZERO_NONMISS_ONE_FLAG
+            }
 
             # update loop invariant
             r <- r + N

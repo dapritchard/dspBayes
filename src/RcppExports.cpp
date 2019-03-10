@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // dsp_
-Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp, Rcpp::IntegerVector x_rcpp, Rcpp::List w_day_blocks, Rcpp::IntegerVector w_to_days_idx, Rcpp::IntegerVector w_cyc_to_subj_idx, Rcpp::List subj_day_blocks, Rcpp::IntegerVector day_to_subj_idx, Rcpp::List gamma_specs, Rcpp::NumericVector phi_specs, Rcpp::IntegerVector x_miss, Rcpp::IntegerVector sex_miss_to_w, Rcpp::NumericVector utau_rcpp, Rcpp::List tau_coefs, Rcpp::List u_miss_info, Rcpp::IntegerVector u_miss_type, Rcpp::IntegerVector u_preg_map, Rcpp::IntegerVector u_sex_map, int fw_len, int n_burn, int n_samp);
-RcppExport SEXP _dspBayes_dsp_(SEXP u_rcppSEXP, SEXP x_rcppSEXP, SEXP w_day_blocksSEXP, SEXP w_to_days_idxSEXP, SEXP w_cyc_to_subj_idxSEXP, SEXP subj_day_blocksSEXP, SEXP day_to_subj_idxSEXP, SEXP gamma_specsSEXP, SEXP phi_specsSEXP, SEXP x_missSEXP, SEXP sex_miss_to_wSEXP, SEXP utau_rcppSEXP, SEXP tau_coefsSEXP, SEXP u_miss_infoSEXP, SEXP u_miss_typeSEXP, SEXP u_preg_mapSEXP, SEXP u_sex_mapSEXP, SEXP fw_lenSEXP, SEXP n_burnSEXP, SEXP n_sampSEXP) {
+Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp, Rcpp::IntegerVector x_rcpp, Rcpp::List w_day_blocks, Rcpp::IntegerVector w_to_days_idx, Rcpp::IntegerVector w_cyc_to_subj_idx, Rcpp::List subj_day_blocks, Rcpp::IntegerVector day_to_subj_idx, Rcpp::List gamma_specs, Rcpp::NumericVector phi_specs, Rcpp::IntegerVector x_miss, Rcpp::IntegerVector sex_miss_to_w, Rcpp::List sex_miss_info, Rcpp::NumericVector utau_rcpp, Rcpp::List tau_coefs, Rcpp::List u_miss_info, Rcpp::IntegerVector u_miss_type, Rcpp::IntegerVector u_preg_map, Rcpp::IntegerVector u_sex_map, int fw_len, int n_burn, int n_samp);
+RcppExport SEXP _dspBayes_dsp_(SEXP u_rcppSEXP, SEXP x_rcppSEXP, SEXP w_day_blocksSEXP, SEXP w_to_days_idxSEXP, SEXP w_cyc_to_subj_idxSEXP, SEXP subj_day_blocksSEXP, SEXP day_to_subj_idxSEXP, SEXP gamma_specsSEXP, SEXP phi_specsSEXP, SEXP x_missSEXP, SEXP sex_miss_to_wSEXP, SEXP sex_miss_infoSEXP, SEXP utau_rcppSEXP, SEXP tau_coefsSEXP, SEXP u_miss_infoSEXP, SEXP u_miss_typeSEXP, SEXP u_preg_mapSEXP, SEXP u_sex_mapSEXP, SEXP fw_lenSEXP, SEXP n_burnSEXP, SEXP n_sampSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,6 +22,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type phi_specs(phi_specsSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type x_miss(x_missSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type sex_miss_to_w(sex_miss_to_wSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type sex_miss_info(sex_miss_infoSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type utau_rcpp(utau_rcppSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type tau_coefs(tau_coefsSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type u_miss_info(u_miss_infoSEXP);
