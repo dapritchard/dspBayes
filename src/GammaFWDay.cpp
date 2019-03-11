@@ -7,24 +7,25 @@
 
 
 GammaFWDay::GammaFWDay(const Rcpp::NumericMatrix& U,
-		       const Rcpp::NumericVector& gamma_specs,
-		       int day_idx) :
+		       const Rcpp::NumericVector& gamma_specs) :
     GammaContMH {U, gamma_specs},
-    m_day_idx {day_idx}
+    m_day_idx   {gamma_specs["day_idx"]}
 {
 }
 
 
 
 
+// TODO: the only difference in this function and the GammaContMH version is the
+// signature for `get_log_r`.  Any way to consolidate?
 double GammaFWDay::sample(const WGen& W,
 			  const XiGen& xi,
 			  UProdBeta& ubeta,
 			  const int* X,
 			  const FWPriors& fw_priors) {
 
-    double proposal_beta = m_proposal_fcn(m_beta_val, m_mh_delta);
-    double proposal_gam  = exp(proposal_beta);
+    const double proposal_beta = m_proposal_fcn(m_beta_val, m_mh_delta);
+    const double proposal_gam  = exp(proposal_beta);
 
     // calculate the log acceptance ratio
     const double log_r = get_log_r(W, xi, ubeta, X, proposal_beta, proposal_gam, fw_priors);

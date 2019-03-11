@@ -36,10 +36,10 @@ public:
 
     // TODO: change this to XGen& X
     virtual double sample(const WGen& W,
-			  const XiGen& xi,
-			  UProdBeta& ubeta,
-			  const int* X,
-			  const FWPriors& fw_priors) = 0;
+                          const XiGen& xi,
+                          UProdBeta& ubeta,
+                          const int* X,
+                          const FWPriors& fw_priors) = 0;
 
     static GammaGen** create_arr(const Rcpp::NumericMatrix& U, const Rcpp::List& gamma_specs);
 };
@@ -65,10 +65,10 @@ public:
     GammaCateg(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
 
     double sample(const WGen& W,
-		  const XiGen& xi,
-		  UProdBeta& ubeta,
-		  const int* X,
-		  const FWPriors& fw_priors);
+                  const XiGen& xi,
+                  UProdBeta& ubeta,
+                  const int* X,
+                  const FWPriors& fw_priors);
     double calc_a_tilde(const WGen& W);
     double calc_b_tilde(UProdBeta& u_prod_beta, const XiGen& xi, const int* X);
     double calc_p_tilde(double a_tilde, double b_tilde);
@@ -136,22 +136,22 @@ public:
 
     GammaContMH(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& gamma_specs);
     double sample(const WGen& W,
-		  const XiGen& xi,
-		  UProdBeta& ubeta,
-		  const int* X,
-		  const FWPriors& fw_priors);
+                  const XiGen& xi,
+                  UProdBeta& ubeta,
+                  const int* X,
+                  const FWPriors& fw_priors);
     double sample_proposal_beta() const;
     double get_log_r(const WGen& W,
-		     const XiGen& xi,
-		     const UProdBeta& ubeta,
-		     const int* X,
-		     double proposal_beta,
-		     double proposal_gam);
+                     const XiGen& xi,
+                     const UProdBeta& ubeta,
+                     const int* X,
+                     double proposal_beta,
+                     double proposal_gam);
     double get_w_log_lik(const WGen& W,
-			 const XiGen& xi,
-			 const UProdBeta& ubeta,
-			 const int* X,
-			 double proposal_beta) const;
+                         const XiGen& xi,
+                         const UProdBeta& ubeta,
+                         const int* X,
+                         double proposal_beta) const;
     double get_gam_log_lik(double proposal_beta, double proposal_gam) const;
     double get_proposal_log_lik(double proposal_beta) const;
     double log_dgamma_trunc_norm_const() const;

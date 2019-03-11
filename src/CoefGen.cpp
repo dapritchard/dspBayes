@@ -12,12 +12,12 @@ extern bool g_record_status;
 
 
 CoefGen::CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs, int n_samp) :
-    // initialization list
-    m_gamma(GammaGen::create_arr(U, gamma_specs)),
-    m_vals_rcpp(Rcpp::NumericVector(Rcpp::no_init(gamma_specs.size() * n_samp))),
-    m_vals(m_vals_rcpp.begin()),
-    m_n_psi(0),
-    m_n_gamma(gamma_specs.size()) {
+    m_gamma {GammaGen::create_arr(U, gamma_specs)},
+    m_vals_rcpp {Rcpp::NumericVector(Rcpp::no_init(gamma_specs.size() * n_samp))},
+    m_vals {m_vals_rcpp.begin()},
+    m_n_psi {0},
+    m_n_gamma {gamma_specs.size()}
+{
 }
 
 

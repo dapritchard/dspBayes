@@ -13,17 +13,18 @@
 
 GammaContMH::GammaContMH(const Rcpp::NumericMatrix& U,
 			 const Rcpp::NumericVector& gamma_specs) :
-    GammaGen(U, gamma_specs),
-    m_log_norm_const(log_dgamma_trunc_norm_const()),
-    m_log_p_over_1_minus_p(log(m_hyp_p / (1 - m_hyp_p))),
-    m_log_1_minus_p_over_p(-m_log_p_over_1_minus_p),
-    m_mh_p(gamma_specs["mh_p"]),
-    m_mh_log_p(log(m_mh_p)),
-    m_mh_log_1_minus_p(log(1 - m_mh_p)),
-    m_mh_delta(gamma_specs["mh_delta"]),
-    m_mh_accept_ctr(0),
-    m_proposal_fcn(ProposalFcns::unif),
-    m_log_proposal_den(ProposalFcns::log_den_unif) {
+    GammaGen               {U, gamma_specs},
+    m_log_norm_const       {log_dgamma_trunc_norm_const()},
+    m_log_p_over_1_minus_p {log(m_hyp_p / (1 - m_hyp_p))},
+    m_log_1_minus_p_over_p {-m_log_p_over_1_minus_p},
+    m_mh_p                 {gamma_specs["mh_p"]},
+    m_mh_log_p             {log(m_mh_p)},
+    m_mh_log_1_minus_p     {log(1 - m_mh_p)},
+    m_mh_delta             {gamma_specs["mh_delta"]},
+    m_mh_accept_ctr        {0},
+    m_proposal_fcn         {ProposalFcns::unif},
+    m_log_proposal_den     {ProposalFcns::log_den_unif}
+{
 }
 // TODO: provide a way to choose the proposal functions
 

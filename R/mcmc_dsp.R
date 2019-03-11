@@ -45,13 +45,13 @@ dsp <- function(dsp_data,
 
     # transpose data
     coefs_trans <- matrix(out$coefs,
-                        nrow = n_samp,
-                        ncol = ncol(dsp_data$U),
-                        byrow = TRUE,
-                        dimnames = list(NULL, colnames(dsp_data$U)))
+                          nrow     = n_samp,
+                          ncol     = ncol(dsp_data$U),
+                          byrow    = TRUE,
+                          dimnames = list(NULL, colnames(dsp_data$U)))
     xi_trans <- matrix(out$xi,
-                     nrow = n_samp,
-                     byrow = TRUE)
+                       nrow  = n_samp,
+                       byrow = TRUE)
 
     list(coefs    = coefs_trans,
          xi       = xi_trans,

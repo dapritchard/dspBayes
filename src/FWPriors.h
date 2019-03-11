@@ -9,6 +9,8 @@ public:
 
     MDay() {}
     double val() { return m_peak_idx; }
+
+    // void sample();
 };
 
 
@@ -34,6 +36,7 @@ public:
 
 
 
+
 class Delta {
 public:
 
@@ -54,10 +57,10 @@ public:
     Nu nu;
     Delta delta;
 
-    FWPriors() :
-	mday {MDay()},
-	mu {Mu()},
-	nu {Nu()},
+    FWPriors(Rcpp::List fw_prior_specs) :
+	mday  {MDay()},
+	mu    {Mu()},
+	nu    {Nu()},
 	delta {Delta()}
     {}
 };
