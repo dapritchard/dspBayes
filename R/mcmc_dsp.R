@@ -1,16 +1,17 @@
 dsp <- function(dsp_data,
-                n_samp     = 10000L,
-                nBurn      = 5000L,
-                nThin      = 1L,
-                hypGam     = NULL,
-                tuningGam  = NULL,
-                hypPhi     = NULL,
-                tuningPhi  = 0.3,
-                trackProg  = "percent",
-                progQuants = seq(0.1, 1.0, 0.1)) {
+                n_samp      = 10000L,
+                nBurn       = 5000L,
+                nThin       = 1L,
+                hypGam      = NULL,
+                tuningGam   = NULL,
+                hypPhi      = NULL,
+                tuningPhi   = 0.3,
+                trackProg   = "percent",
+                progQuants  = seq(0.1, 1.0, 0.1),
+                fw_ar_model = FALSE) {
 
     # stub functions for gamma and phi specs
-    gamma_hyper_list <- get_gamma_specs(dsp_data)
+    gamma_hyper_list <- get_gamma_specs(dsp_data, fw_ar_model)
     phi_specs <- get_phi_specs()
 
     # TODO: need to insert a way to add priors for UGen

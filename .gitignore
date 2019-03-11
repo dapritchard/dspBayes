@@ -1,3 +1,5 @@
+.Rhistory
+
 src/*.o
 src/dspBayes.so
 

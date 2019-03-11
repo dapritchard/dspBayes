@@ -1,4 +1,4 @@
-get_gamma_specs <- function(dsp_data) {
+get_gamma_specs <- function(dsp_data, fw_ar_model) {
 
     # some temporary glue code.  create gamma specs
     gamma_hyper_list <- vector("list", ncol(dsp_data$U))
@@ -12,6 +12,12 @@ get_gamma_specs <- function(dsp_data) {
                                    bnd_u    = Inf,
                                    mh_p     = 0.1,
                                    mh_delta = 0.1)
+    }
+
+    if (fw_ar_model) {       # FIXME: hardcoded number of FW days!!
+        for (i in 1L:5L) {
+            gamma_hyper_list[[i]]["type"] <- 3
+        }
     }
 
     gamma_hyper_list

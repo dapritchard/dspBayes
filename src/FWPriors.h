@@ -21,9 +21,10 @@ public:
 
     double m_mu;
 
-    Mu() : m_mu {1.0} {}
+    Mu() : m_mu {0.44} {}
     double val() { return m_mu; }
 };
+
 
 
 
@@ -44,7 +45,7 @@ public:
 
     double m_delta;
 
-    Delta() : m_delta {0.9} {}
+    Delta() : m_delta {0.5} {}
     double val() { return m_delta; }
 };
 

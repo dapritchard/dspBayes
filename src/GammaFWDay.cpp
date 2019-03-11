@@ -9,7 +9,7 @@
 GammaFWDay::GammaFWDay(const Rcpp::NumericMatrix& U,
                        const Rcpp::NumericVector& gamma_specs) :
     GammaContMH {U, gamma_specs},
-    m_day_idx   {gamma_specs["day_idx"]}
+    m_day_idx   {static_cast<int>(gamma_specs["h"]) + 1}  // TODO: make this indep of loc in the design mat?
 {}
 
 
@@ -27,7 +27,9 @@ double GammaFWDay::sample(const WGen& W,
     const double proposal_gam  = exp(proposal_beta);
 
     // calculate the log acceptance ratio
+    std::cout << "start calculating `get_log_r`" << std::endl;
     const double log_r = get_log_r(W, xi, ubeta, X, proposal_beta, proposal_gam, fw_priors);
+    std::cout << "end calculating `get_log_r`" << std::endl;
 
     // accept proposal value `min(r, 1)-th` proportion of the time
     if ((log_r >= 0) || (log(R::unif_rand()) < log_r)) {
@@ -103,7 +105,7 @@ double GammaFWDay::get_gam_log_lik(double proposal_beta,
     // calculate `(nu - 1)(log(proposal_gam) - log(current_gam))`
     double term1 = (nu_val - 1) * (proposal_beta - m_beta_val);
 
-    // calculate `(nu / delta^{|k - m|} mu)(proposal_gam - current_gam)`
+    // calculate `(nu / (delta^{|k - m|} mu)) * (proposal_gam - current_gam)`
     double day_dist         = abs(m_day_idx - mday_val);
     double ar_delta_pow     = pow(delta_val, day_dist);
     double term2_multiplier = nu_val / (ar_delta_pow * mu_val);
