@@ -13,7 +13,7 @@ using Rcpp::as;
 
 
 GammaGen::GammaGen(const Rcpp::NumericMatrix& U,
-		   const Rcpp::NumericVector& gamma_specs) :
+                   const Rcpp::NumericVector& gamma_specs) :
     // initialization list
     m_beta_val(0),
     m_gam_val(1),
@@ -30,28 +30,28 @@ GammaGen::GammaGen(const Rcpp::NumericMatrix& U,
 
 
 GammaGen** GammaGen::create_arr(const Rcpp::NumericMatrix& U,
-				const Rcpp::List& gamma_specs) {
+                                const Rcpp::List& gamma_specs) {
 
     GammaGen** gamma = new GammaGen*[gamma_specs.size()];
 
     for (int t = 0; t < gamma_specs.size(); ++t) {
 
-	// convert `List` element to `NumericVector`
-	const NumericVector& curr_gamma_specs = as<NumericVector>(gamma_specs[t]);
+        // convert `List` element to `NumericVector`
+        const NumericVector& curr_gamma_specs = as<NumericVector>(gamma_specs[t]);
 
-	// initialize the appropriate subclass of `GammaGen`, as specified by
-	// `curr_gamma_specs`
-	switch((int) curr_gamma_specs["type"]) {
-	case GAMMA_GEN_TYPE_CATEG:
-	    gamma[t] = new GammaCateg(U, curr_gamma_specs);
-	    break;
-	case GAMMA_GEN_TYPE_CONT_MH:
-	    gamma[t] = new GammaContMH(U, curr_gamma_specs);
-	    break;
-	case GAMMA_GEN_TYPE_FW_DAY:
-	    gamma[t] = new GammaFWDay(U, curr_gamma_specs);
-	    break;
-	}
+        // initialize the appropriate subclass of `GammaGen`, as specified by
+        // `curr_gamma_specs`
+        switch((int) curr_gamma_specs["type"]) {
+        case GAMMA_GEN_TYPE_CATEG:
+            gamma[t] = new GammaCateg(U, curr_gamma_specs);
+            break;
+        case GAMMA_GEN_TYPE_CONT_MH:
+            gamma[t] = new GammaContMH(U, curr_gamma_specs);
+            break;
+        case GAMMA_GEN_TYPE_FW_DAY:
+            gamma[t] = new GammaFWDay(U, curr_gamma_specs);
+            break;
+        }
     }
 
     return gamma;

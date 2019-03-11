@@ -100,8 +100,8 @@ void XGenTest::test_sample() {
 
     X->sample(*W, *xi, *ubeta, *utau);
     CPPUNIT_ASSERT(std::equal(target_x_samples.begin(),
-    			      target_x_samples.end(),
-    			      X->vals()));
+                              target_x_samples.end(),
+                              X->vals()));
 }
 
 
@@ -123,8 +123,8 @@ void XGenTest::test_sample() {
 
 //     X->sample_cycle(miss_cyc + , W, xi, ubeta, utau);
 //     CPPUNIT_ASSERT(std::equal(target_sample_cycle.begin(),
-// 			      target_sample_cycle.end(),
-// 			      X.vals() + miss_day[miss_cyc->beg_idx].idx));
+//                            target_sample_cycle.end(),
+//                            X.vals() + miss_day[miss_cyc->beg_idx].idx));
 
 //     delete[] miss_cyc;
 // }
@@ -162,10 +162,10 @@ void XGenTest::test_sample_x_ijk() {
 
     // test "sex yesterday" samples
     for (Rcpp::IntegerVector::const_iterator curr = target_x_ijk_samples.begin();
-    	 curr < target_x_ijk_samples.end();
-    	 ++curr) {
+         curr < target_x_ijk_samples.end();
+         ++curr) {
 
-    	CPPUNIT_ASSERT_EQUAL(*curr, XGen::sample_x_ijk(prior_prob_yes, posterior_prob_yes));
+        CPPUNIT_ASSERT_EQUAL(*curr, XGen::sample_x_ijk(prior_prob_yes, posterior_prob_yes));
     }
 }
 
@@ -181,9 +181,9 @@ void XGenTest::test_sample_day_before_fw_sex() {
 
     // test "sex yesterday" samples
     for (Rcpp::IntegerVector::const_iterator curr = target_day_before_samples.begin();
-    	 curr < target_day_before_samples.end();
-    	 ++curr) {
+         curr < target_day_before_samples.end();
+         ++curr) {
 
-    	CPPUNIT_ASSERT_EQUAL(*curr, X->sample_day_before_fw_sex());
+        CPPUNIT_ASSERT_EQUAL(*curr, X->sample_day_before_fw_sex());
     }
 }

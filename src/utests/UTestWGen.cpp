@@ -70,17 +70,17 @@ void WGenTest::test_sample() {
     // check values of samples
     W->sample(*xi, *ubeta, *X);
     CPPUNIT_ASSERT(std::equal(target_samples.begin(),
-			      target_samples.end(),
-			      W->m_vals,
-			      UTestFactory::eq_dbl));
+                              target_samples.end(),
+                              W->m_vals,
+                              UTestFactory::eq_dbl));
 
     // check values of `sum_jk W_ijk`
     int w_ctr = 0;
     int* w_vals = W->m_vals;
     int* w_sums = W->m_sums;
     for (const PregCyc* curr = W->m_preg_cyc; curr < W->m_preg_cyc + W->m_n_preg_cyc; ++curr) {
-    	int sum_val = std::accumulate(w_vals + w_ctr, w_vals + w_ctr + curr->n_days, 0.0);
-    	CPPUNIT_ASSERT_DOUBLES_EQUAL(sum_val, *w_sums++, epsilon);
-    	w_ctr += curr->n_days;
+        int sum_val = std::accumulate(w_vals + w_ctr, w_vals + w_ctr + curr->n_days, 0.0);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(sum_val, *w_sums++, epsilon);
+        w_ctr += curr->n_days;
     }
 }

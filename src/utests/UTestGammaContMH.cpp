@@ -332,13 +332,13 @@ void GammaContMHTest::test_log_dgamma_trunc_norm_const_bnd_05_1() {
 GammaContMHTest::FromScratchGamma::FromScratchGamma() :
     U(Rcpp::NumericMatrix(9, 1)),
     gamma_specs(Rcpp::NumericVector::create(Rcpp::_["h"]        = 0.0,
-					    Rcpp::_["hyp_a"]    = 1.2,
-					    Rcpp::_["hyp_b"]    = 0.9,
-					    Rcpp::_["hyp_p"]    = 0.5,
-					    Rcpp::_["bnd_l"]    = 0.0,
-					    Rcpp::_["bnd_u"]    = R_PosInf,
-					    Rcpp::_["mh_p"]     = 0.1,
-					    Rcpp::_["mh_delta"] = 0.2)),
+                                            Rcpp::_["hyp_a"]    = 1.2,
+                                            Rcpp::_["hyp_b"]    = 0.9,
+                                            Rcpp::_["hyp_p"]    = 0.5,
+                                            Rcpp::_["bnd_l"]    = 0.0,
+                                            Rcpp::_["bnd_u"]    = R_PosInf,
+                                            Rcpp::_["mh_p"]     = 0.1,
+                                            Rcpp::_["mh_delta"] = 0.2)),
     gamma_obj(U, gamma_specs)
 {
     // specify values of `U_h`
@@ -357,13 +357,13 @@ GammaContMHTest::FromScratchW::FromScratchW() :
     // create `preg_cyc`, a list with each element providing the location and
     // number of days in a pregnancy cycle
     subj0_preg_cyc(Rcpp::IntegerVector::create(Rcpp::_("beg_idx")  = 3,
-					       Rcpp::_("n_days")   = 3,
-					       Rcpp::_("subj_idx") = 0,
-					       Rcpp::_("cyc_idx")  = 1)),
+                                               Rcpp::_("n_days")   = 3,
+                                               Rcpp::_("subj_idx") = 0,
+                                               Rcpp::_("cyc_idx")  = 1)),
     subj1_preg_cyc(Rcpp::IntegerVector::create(Rcpp::_("beg_idx")  = 3,
-					       Rcpp::_("n_days")   = 3,
-					       Rcpp::_("subj_idx") = 0,
-					       Rcpp::_("cyc_idx")  = 1)),
+                                               Rcpp::_("n_days")   = 3,
+                                               Rcpp::_("subj_idx") = 0,
+                                               Rcpp::_("cyc_idx")  = 1)),
     preg_cyc(Rcpp::List::create(subj0_preg_cyc, subj1_preg_cyc)),
     // create a vector giving the indices in the daily data that the `W` days
     // correspond to (plus a sentinal entry to signify the end of the vector)
@@ -392,9 +392,9 @@ GammaContMHTest::FromScratchXi::FromScratchXi() :
     // create `subj_day_blocks`, a list with each element providing the location
     // and number of days for a subject
     subj0_day_block(Rcpp::IntegerVector::create(Rcpp::_("beg_idx")  = 0,
-						Rcpp::_("n_days")   = 5)),
+                                                Rcpp::_("n_days")   = 5)),
     subj1_day_block(Rcpp::IntegerVector::create(Rcpp::_("beg_idx")  = 5,
-						Rcpp::_("n_days")   = 4)),
+                                                Rcpp::_("n_days")   = 4)),
     subj_day_blocks(Rcpp::List::create(subj0_day_block, subj1_day_block)),
     // create `XiGen` object
     xi_obj(subj_day_blocks, 1, false)
@@ -448,13 +448,13 @@ GammaContMH GammaContMHTest::gen_gamma_proposal2_propval04() {
 
     // the only values of importance are those for `mh_p` and `mh_delta`
     Rcpp::NumericVector gamma_specs = Rcpp::NumericVector::create(Rcpp::_["h"]        = 0.0,
-								  Rcpp::_["hyp_a"]    = 1.0,
-								  Rcpp::_["hyp_b"]    = 1.0,
-								  Rcpp::_["hyp_p"]    = 0.5,
-								  Rcpp::_["bnd_l"]    = 0.0,
-								  Rcpp::_["bnd_u"]    = R_PosInf,
-								  Rcpp::_["mh_p"]     = 0.4,
-								  Rcpp::_["mh_delta"] = 0.0);
+                                                                  Rcpp::_["hyp_a"]    = 1.0,
+                                                                  Rcpp::_["hyp_b"]    = 1.0,
+                                                                  Rcpp::_["hyp_p"]    = 0.5,
+                                                                  Rcpp::_["bnd_l"]    = 0.0,
+                                                                  Rcpp::_["bnd_u"]    = R_PosInf,
+                                                                  Rcpp::_["mh_p"]     = 0.4,
+                                                                  Rcpp::_["mh_delta"] = 0.0);
 
     // specify the current value of `beta_h` and corresponding `gamma_h`
     GammaContMH gamma(m_Uh, gamma_specs);
@@ -471,13 +471,13 @@ GammaContMH GammaContMHTest::gen_gamma_bndl_bndu(double bnd_l,  double bnd_u) {
 
     // the only values of importance are those for `bnd_l` and `bnd_u`
     Rcpp::NumericVector gamma_specs = Rcpp::NumericVector::create(Rcpp::_["h"]        = 0.0,
-								  Rcpp::_["hyp_a"]    = 1.2,
-								  Rcpp::_["hyp_b"]    = 0.9,
-								  Rcpp::_["hyp_p"]    = 0.5,
-								  Rcpp::_["bnd_l"]    = bnd_l,
-								  Rcpp::_["bnd_u"]    = bnd_u,
-								  Rcpp::_["mh_p"]     = 0.4,
-								  Rcpp::_["mh_delta"] = 0.1);
+                                                                  Rcpp::_["hyp_a"]    = 1.2,
+                                                                  Rcpp::_["hyp_b"]    = 0.9,
+                                                                  Rcpp::_["hyp_p"]    = 0.5,
+                                                                  Rcpp::_["bnd_l"]    = bnd_l,
+                                                                  Rcpp::_["bnd_u"]    = bnd_u,
+                                                                  Rcpp::_["mh_p"]     = 0.4,
+                                                                  Rcpp::_["mh_delta"] = 0.1);
 
     return GammaContMH(m_Uh, gamma_specs);
 }
@@ -489,13 +489,13 @@ GammaContMH GammaContMHTest::gen_gamma_curr(double curr) {
 
     // the only values of importance are those for `bnd_l` and `bnd_u`
     Rcpp::NumericVector gamma_specs = Rcpp::NumericVector::create(Rcpp::_["h"]        = 0.0,
-								  Rcpp::_["hyp_a"]    = 1.2,
-								  Rcpp::_["hyp_b"]    = 0.9,
-								  Rcpp::_["hyp_p"]    = 0.5,
-								  Rcpp::_["bnd_l"]    = 0.0,
-								  Rcpp::_["bnd_u"]    = R_PosInf,
-								  Rcpp::_["mh_p"]     = 0.1,
-								  Rcpp::_["mh_delta"] = 3.0);
+                                                                  Rcpp::_["hyp_a"]    = 1.2,
+                                                                  Rcpp::_["hyp_b"]    = 0.9,
+                                                                  Rcpp::_["hyp_p"]    = 0.5,
+                                                                  Rcpp::_["bnd_l"]    = 0.0,
+                                                                  Rcpp::_["bnd_u"]    = R_PosInf,
+                                                                  Rcpp::_["mh_p"]     = 0.1,
+                                                                  Rcpp::_["mh_delta"] = 3.0);
 
     // specify the current value of `beta_h` and corresponding `gamma_h`
     GammaContMH gamma(m_Uh, gamma_specs);

@@ -50,9 +50,9 @@ public:
 
 
     WGen(Rcpp::List& preg_cyc,
-	 Rcpp::IntegerVector& w_to_days_idx,
-	 Rcpp::IntegerVector& w_cyc_to_subj_idx,
-	 int fw_len);
+         Rcpp::IntegerVector& w_to_days_idx,
+         Rcpp::IntegerVector& w_cyc_to_subj_idx,
+         int fw_len);
     ~WGen();
 
     void sample(XiGen& xi, UProdBeta& ubeta, XGen& X);

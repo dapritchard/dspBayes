@@ -47,7 +47,7 @@ void PhiGen::sample(const XiGen& xi) {
     // save the value of the new sample.  If we are recording samples then
     // increment `m_vals` so that we don't overwrite the previous sample.
     if (m_record_status && g_record_status) {
-	++m_vals;
+        ++m_vals;
     }
     *m_vals = new_val;
 }
@@ -92,12 +92,12 @@ double PhiGen::update_phi(double log_r, double proposal_val) {
 
     // case: accept proposal value
     if (log(R::unif_rand()) < log_r) {
-	m_is_same_as_prev = false;
-	++m_accept_ctr;
+        m_is_same_as_prev = false;
+        ++m_accept_ctr;
     }
     // case: reject proposal value
     else {
-	m_is_same_as_prev = true;
+        m_is_same_as_prev = true;
     }
 
     return m_is_same_as_prev ? *m_vals : proposal_val;
@@ -133,18 +133,18 @@ double PhiGen::calc_log_proportion_dgamma_xi(const XiGen& xi, double proposal_va
     // the current value is the same as the previous (i.e. the proposal value
     // was not accepted), then the term need not be calculated again.
     if (m_is_same_as_prev) {
-	denom_log_norm_const = m_log_norm_const;
+        denom_log_norm_const = m_log_norm_const;
     } else {
-	denom_log_norm_const = n_subj * log_dgamma_norm_const(*m_vals);
-	m_log_norm_const = denom_log_norm_const;
+        denom_log_norm_const = n_subj * log_dgamma_norm_const(*m_vals);
+        m_log_norm_const = denom_log_norm_const;
     }
 
     // each iteration adds the kernel log likelihood ratio of the current
     // subject to `log_kernel_ratio`
     log_kernel_ratio = 0;
     for (int i = 0; i < n_subj; ++i) {
-	curr_xi = xi_vals[i];
-	log_kernel_ratio += log(curr_xi) - curr_xi;
+        curr_xi = xi_vals[i];
+        log_kernel_ratio += log(curr_xi) - curr_xi;
     }
     // mutiply in the `phi^{*} - phi^(s)` term
     log_kernel_ratio *= proposal_val - *m_vals;

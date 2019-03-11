@@ -23,8 +23,8 @@ DayBlock* DayBlock::list_to_arr(Rcpp::List& block_list) {
     // provided by the t-th element of `block_list`
     for (int t = 0; t < block_list.size(); ++t) {
 
-	block_arr[t] = DayBlock(as<IntegerVector>(block_list[t])["beg_idx"],
-				as<IntegerVector>(block_list[t])["n_days"]);
+        block_arr[t] = DayBlock(as<IntegerVector>(block_list[t])["beg_idx"],
+                                as<IntegerVector>(block_list[t])["n_days"]);
     }
 
     return block_arr;
@@ -47,9 +47,9 @@ PregCyc* PregCyc::list_to_arr(Rcpp::List& block_list) {
     // provided by the t-th element of `block_list`
     for (int t = 0; t < block_list.size(); ++t) {
 
-	block_arr[t] = PregCyc(as<IntegerVector>(block_list[t])["beg_idx"],
-			       as<IntegerVector>(block_list[t])["n_days"],
-			       as<IntegerVector>(block_list[t])["subj_idx"]);
+        block_arr[t] = PregCyc(as<IntegerVector>(block_list[t])["beg_idx"],
+                               as<IntegerVector>(block_list[t])["n_days"],
+                               as<IntegerVector>(block_list[t])["subj_idx"]);
     }
 
     return block_arr;
@@ -72,12 +72,12 @@ PregCyc* PregCyc::list_to_arr(Rcpp::List& block_list) {
 //     // provided by the t-th element of `block_list`
 //     for (int t = 0; t < block_list.size(); ++t) {
 
-// 	Rcpp::IntegerVector block_list_t = as<Rcpp::IntegerVector>(block_list[t]);
-// 	block_arr[t] = MissCyc(block_list_t["beg_idx"],
-// 			       block_list_t["n_days"],
-// 			       block_list_t["subj_idx"],
-// 			       block_list_t["n_miss"],
-// 			       block_list_t["preg"]);
+//      Rcpp::IntegerVector block_list_t = as<Rcpp::IntegerVector>(block_list[t]);
+//      block_arr[t] = MissCyc(block_list_t["beg_idx"],
+//                             block_list_t["n_days"],
+//                             block_list_t["subj_idx"],
+//                             block_list_t["n_miss"],
+//                             block_list_t["preg"]);
 //     }
 
 //     return block_arr;

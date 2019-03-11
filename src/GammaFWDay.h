@@ -20,23 +20,23 @@ public:
     double (*m_proposal_fcn)(double cond, double delta);
 
     GammaFWDay(const Rcpp::NumericMatrix& U,
-	       const Rcpp::NumericVector& gamma_specs,
-	       int day_idx);
+               const Rcpp::NumericVector& gamma_specs,
+               int day_idx);
     double sample(const WGen& W,
-		  const XiGen& xi,
-		  UProdBeta& ubeta,
-		  const int* X,
-		  const FWPriors& fw_priors);
+                  const XiGen& xi,
+                  UProdBeta& ubeta,
+                  const int* X,
+                  const FWPriors& fw_priors);
     double get_log_r(const WGen& W,
-		     const XiGen& xi,
-		     const UProdBeta& ubeta,
-		     const int* X,
-		     double proposal_beta,
-		     double proposal_gam,
-		     const FWPriors& fw_priors);
+                     const XiGen& xi,
+                     const UProdBeta& ubeta,
+                     const int* X,
+                     double proposal_beta,
+                     double proposal_gam,
+                     const FWPriors& fw_priors);
     double get_gam_log_lik(double proposal_beta,
-			   double proposal_gam,
-			   FWPriors fw_priors);
+                           double proposal_gam,
+                           FWPriors fw_priors);
 };
 
 

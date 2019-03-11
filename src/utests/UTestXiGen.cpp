@@ -92,13 +92,13 @@ void XiGenTest::test_sample_yes_record() {
     CPPUNIT_ASSERT_EQUAL(xi->m_vals_rcpp.begin() + 2 * n_subj, xi->m_vals);
     // check values of samples
     CPPUNIT_ASSERT(std::equal(target_samples.begin(),
-			      target_samples.end(),
-			      xi->m_vals - n_subj,
-			      UTestFactory::eq_dbl));
+                              target_samples.end(),
+                              xi->m_vals - n_subj,
+                              UTestFactory::eq_dbl));
     CPPUNIT_ASSERT(std::equal(target_samples.begin(),
-			      target_samples.end(),
-			      xi->m_vals,
-			      UTestFactory::eq_dbl));
+                              target_samples.end(),
+                              xi->m_vals,
+                              UTestFactory::eq_dbl));
 }
 
 
@@ -120,7 +120,7 @@ void XiGenTest::test_sample_no_record() {
     CPPUNIT_ASSERT_EQUAL(xi_no_rec->m_vals_rcpp.begin(), xi_no_rec->m_vals);
     // check values of samples
     CPPUNIT_ASSERT(std::equal(target_samples.begin(),
-			      target_samples.end(),
-			      xi_no_rec->m_vals,
-			      UTestFactory::eq_dbl));
+                              target_samples.end(),
+                              xi_no_rec->m_vals,
+                              UTestFactory::eq_dbl));
 }

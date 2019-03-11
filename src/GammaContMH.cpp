@@ -12,7 +12,7 @@
 
 
 GammaContMH::GammaContMH(const Rcpp::NumericMatrix& U,
-			 const Rcpp::NumericVector& gamma_specs) :
+                         const Rcpp::NumericVector& gamma_specs) :
     GammaGen               {U, gamma_specs},
     m_log_norm_const       {log_dgamma_trunc_norm_const()},
     m_log_p_over_1_minus_p {log(m_hyp_p / (1 - m_hyp_p))},
@@ -32,10 +32,10 @@ GammaContMH::GammaContMH(const Rcpp::NumericMatrix& U,
 
 
 double GammaContMH::sample(const WGen& W,
-			   const XiGen& xi,
-			   UProdBeta& ubeta,
-			   const int* X,
-			   const FWPriors& fw_priors) {
+                           const XiGen& xi,
+                           UProdBeta& ubeta,
+                           const int* X,
+                           const FWPriors& fw_priors) {
 
     const double proposal_beta = sample_proposal_beta();
     const double proposal_gam  = exp(proposal_beta);
@@ -46,14 +46,14 @@ double GammaContMH::sample(const WGen& W,
     // accept proposal value `min(r, 1)-th` proportion of the time
     if ((log_r >= 0) || (log(R::unif_rand()) < log_r)) {
 
-	// update `U * beta` and `exp(U * beta)` based upon accepting the
-	// proposal value
-	ubeta.update(m_Uh, proposal_beta, m_beta_val);
+        // update `U * beta` and `exp(U * beta)` based upon accepting the
+        // proposal value
+        ubeta.update(m_Uh, proposal_beta, m_beta_val);
 
-	// update member variables to based upon accepting the proposal value
-	m_beta_val = proposal_beta;
-	m_gam_val = proposal_gam;
-	++m_mh_accept_ctr;
+        // update member variables to based upon accepting the proposal value
+        m_beta_val = proposal_beta;
+        m_gam_val = proposal_gam;
+        ++m_mh_accept_ctr;
     }
 
     return m_gam_val;
@@ -65,8 +65,8 @@ double GammaContMH::sample(const WGen& W,
 inline double GammaContMH::sample_proposal_beta() const {
 
     return (R::unif_rand() < m_mh_p) ?
-	0.0 :
-	m_proposal_fcn(m_beta_val, m_mh_delta);
+        0.0 :
+        m_proposal_fcn(m_beta_val, m_mh_delta);
 }
 
 
@@ -83,15 +83,15 @@ inline double GammaContMH::sample_proposal_beta() const {
 // proposal value and similarly for gamma^(s).
 
 inline double GammaContMH::get_log_r(const WGen& W,
-				     const XiGen& xi,
-				     const UProdBeta& ubeta,
-				     const int* X,
-				     double proposal_beta,
-				     double proposal_gam) {
+                                     const XiGen& xi,
+                                     const UProdBeta& ubeta,
+                                     const int* X,
+                                     double proposal_beta,
+                                     double proposal_gam) {
 
     return (get_w_log_lik(W, xi, ubeta, X, proposal_beta)
-	    + get_gam_log_lik(proposal_beta, proposal_gam)
-	    + get_proposal_log_lik(proposal_beta));
+            + get_gam_log_lik(proposal_beta, proposal_gam)
+            + get_proposal_log_lik(proposal_beta));
 }
 
 
@@ -100,10 +100,10 @@ inline double GammaContMH::get_log_r(const WGen& W,
 // calculate `log p(W | proposal_gam, xi) / p(W | current_gam, xi)`
 
 double GammaContMH::get_w_log_lik(const WGen& W,
-				  const XiGen& xi,
-				  const UProdBeta& ubeta,
-				  const int* X,
-				  double proposal_beta) const {
+                                  const XiGen& xi,
+                                  const UProdBeta& ubeta,
+                                  const int* X,
+                                  double proposal_beta) const {
 
     const int* w_vals            = W.vals();
     const int* w_days_idx        = W.days_idx();
@@ -121,47 +121,47 @@ double GammaContMH::get_w_log_lik(const WGen& W,
     // value of `sum_log_lik`
     for (int i = 0; i < m_n_days; ++i) {
 
-	// if intercourse did not occur on this day then `W` is non-random and
-	// the log ratio is 0
-	if (! X[i]) {
-	    continue;
-	}
+        // if intercourse did not occur on this day then `W` is non-random and
+        // the log ratio is 0
+        if (! X[i]) {
+            continue;
+        }
 
-	double term1, term2;
+        double term1, term2;
 
-	// map the current day to the i-th subject to obtain `xi_i`
-	double xi_i = xi_vals[d2s[i]];
+        // map the current day to the i-th subject to obtain `xi_i`
+        double xi_i = xi_vals[d2s[i]];
 
-	// calculate
-	//
-	//           [xi_i * exp(u_{ijk}^T beta*)]^{w_{ijk}
-	//     log -----------------------------------------
-	//         [xi_i * exp(u_{ijk}^T beta^(s))]^{w_{ijk}
-	//
-	//         = w_{ijk} * u{ijkh} * (beta_h* - beta_h^(s))
-	//
-	// which is one of the terms in `log p(W | proposal) / p(W | current)`.
-	//
-	// IMPORTANT: note that `w_days_idx` has a sentinal value appended to
-	// the end of the data so that we need not worry about reading past the
-	// end of the array
+        // calculate
+        //
+        //           [xi_i * exp(u_{ijk}^T beta*)]^{w_{ijk}
+        //     log -----------------------------------------
+        //         [xi_i * exp(u_{ijk}^T beta^(s))]^{w_{ijk}
+        //
+        //         = w_{ijk} * u{ijkh} * (beta_h* - beta_h^(s))
+        //
+        // which is one of the terms in `log p(W | proposal) / p(W | current)`.
+        //
+        // IMPORTANT: note that `w_days_idx` has a sentinal value appended to
+        // the end of the data so that we need not worry about reading past the
+        // end of the array
 
-	if (*w_days_idx == i) {
-	    term1 = *w_vals * m_Uh[i] * beta_diff;
-	    ++w_vals;
-	    ++w_days_idx;
-	}
-	else {
-	    term1 = 0.0;
-	}
+        if (*w_days_idx == i) {
+            term1 = *w_vals * m_Uh[i] * beta_diff;
+            ++w_vals;
+            ++w_days_idx;
+        }
+        else {
+            term1 = 0.0;
+        }
 
-	// calculate `-xi_i * [exp(U * beta*) - exp(U * beta)]`, which is one of
-	// the terms in `log p(W | proposal) / p(W | current)`.
-	term2 = -xi_i * (exp(ubeta_vals[i] + (m_Uh[i] * beta_diff)) - ubeta_exp_vals[i]);
+        // calculate `-xi_i * [exp(U * beta*) - exp(U * beta)]`, which is one of
+        // the terms in `log p(W | proposal) / p(W | current)`.
+        term2 = -xi_i * (exp(ubeta_vals[i] + (m_Uh[i] * beta_diff)) - ubeta_exp_vals[i]);
 
-	// add the portion of the log-likelihood from the current day to the
-	// running total
-	sum_log_lik += term1 + term2;
+        // add the portion of the log-likelihood from the current day to the
+        // running total
+        sum_log_lik += term1 + term2;
     }
 
     return sum_log_lik;
@@ -214,24 +214,24 @@ double GammaContMH::get_gam_log_lik(double proposal_beta, double proposal_gam) c
     double gam_log_lik;
 
     if ((proposal_gam == 1.0) && (m_gam_val == 1.0)) {
-	gam_log_lik = 0.0;
+        gam_log_lik = 0.0;
     }
     else if ((proposal_gam == 1.0) && (m_gam_val != 1.0)) {
-	gam_log_lik = (m_log_p_over_1_minus_p
-		       - m_log_norm_const
-		       - ((m_hyp_a - 1) * m_beta_val)
-		       + (m_hyp_b * m_gam_val));
+        gam_log_lik = (m_log_p_over_1_minus_p
+                       - m_log_norm_const
+                       - ((m_hyp_a - 1) * m_beta_val)
+                       + (m_hyp_b * m_gam_val));
     }
     else if ((proposal_gam != 1.0) && (m_gam_val == 1.0)) {
-	gam_log_lik = (m_log_1_minus_p_over_p
-		       + m_log_norm_const
-		       + ((m_hyp_a - 1) * proposal_beta)
-		       - (m_hyp_b * proposal_gam));
+        gam_log_lik = (m_log_1_minus_p_over_p
+                       + m_log_norm_const
+                       + ((m_hyp_a - 1) * proposal_beta)
+                       - (m_hyp_b * proposal_gam));
     }
     else {
-	const double beta_diff = proposal_beta - m_beta_val;
-	const double gam_diff  = proposal_gam - m_gam_val;
-	gam_log_lik = ((m_hyp_a - 1) * beta_diff) - (m_hyp_b * (gam_diff));
+        const double beta_diff = proposal_beta - m_beta_val;
+        const double gam_diff  = proposal_gam - m_gam_val;
+        gam_log_lik = ((m_hyp_a - 1) * beta_diff) - (m_hyp_b * (gam_diff));
     }
 
     return gam_log_lik;
@@ -249,9 +249,9 @@ double GammaContMH::get_proposal_log_lik(double proposal_beta) const {
     // latter case is b/c the proposal distributions are symmetric) so that the
     // log is 0.
     if (((proposal_beta != 0.0) && (m_beta_val != 0.0))
-	|| ((proposal_beta == 0.0) && (m_beta_val == 0.0))) {
+        || ((proposal_beta == 0.0) && (m_beta_val == 0.0))) {
 
-	return 0.0;
+        return 0.0;
     }
 
     // case: proposal is 0 and current is continuous.  This gives us (for `J`
@@ -263,9 +263,9 @@ double GammaContMH::get_proposal_log_lik(double proposal_beta) const {
     //
     else if (proposal_beta == 0.0) {
 
-	double log_dgamma_curr = m_log_proposal_den(m_beta_val, proposal_beta, m_mh_delta);
+        double log_dgamma_curr = m_log_proposal_den(m_beta_val, proposal_beta, m_mh_delta);
 
-	return m_mh_log_1_minus_p + log_dgamma_curr - m_mh_log_p;
+        return m_mh_log_1_minus_p + log_dgamma_curr - m_mh_log_p;
     }
 
     // case: proposal is continuous and current is 0.  This gives us (for `J`
@@ -277,9 +277,9 @@ double GammaContMH::get_proposal_log_lik(double proposal_beta) const {
     //
     else {
 
-	double log_dgamma_proposal = m_log_proposal_den(proposal_beta, m_beta_val, m_mh_delta);
+        double log_dgamma_proposal = m_log_proposal_den(proposal_beta, m_beta_val, m_mh_delta);
 
-	return m_mh_log_p - m_mh_log_1_minus_p - log_dgamma_proposal;
+        return m_mh_log_p - m_mh_log_1_minus_p - log_dgamma_proposal;
     }
 }
 
@@ -297,13 +297,13 @@ double GammaContMH::log_dgamma_trunc_norm_const() const {
 
     // if the upper bound is infinity then F(infinity) = 1
     double F_upp = (m_bnd_u == R_PosInf) ?
-	1.0 :
-	R::pgamma(m_bnd_u, m_hyp_a, 1.0 / m_hyp_b, 1, 0);
+        1.0 :
+        R::pgamma(m_bnd_u, m_hyp_a, 1.0 / m_hyp_b, 1, 0);
 
     // if the lower bound is 0 then F(0) = 0
     double F_low = (m_bnd_l == 0.0) ?
-	0.0 :
-	R::pgamma(m_bnd_l, m_hyp_a, 1.0 / m_hyp_b, 1, 0);
+        0.0 :
+        R::pgamma(m_bnd_l, m_hyp_a, 1.0 / m_hyp_b, 1, 0);
 
     return (m_hyp_a * log(m_hyp_b)) - R::lgammafn_sign(m_hyp_a, NULL) - log(F_upp - F_low);
 }
@@ -317,7 +317,7 @@ double GammaContMH::log_dgamma_trunc_norm_const() const {
 //     // `curr_gamma_specs`
 //     switch((int) proposal_code) {
 //     case UNIF:
-// 	// TODO
-// 	break;
+//      // TODO
+//      break;
 //     }
 // }

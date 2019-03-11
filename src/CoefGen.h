@@ -24,10 +24,10 @@ public:
     ~CoefGen();
 
     void sample(const WGen& W,
-		const XiGen& xi,
-		UProdBeta& ubeta,
-		const int* X,
-		const FWPriors& fw_priors);
+                const XiGen& xi,
+                UProdBeta& ubeta,
+                const int* X,
+                const FWPriors& fw_priors);
 
     const double* vals() const { return m_vals; }
 };

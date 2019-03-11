@@ -95,8 +95,8 @@ void UGenVarCategTest::test_constructor() {
 
     // parent class
     CPPUNIT_ASSERT(std::equal(u_rcpp.begin() + ((int) u_rcpp.nrow() * col_start),
-    			      u_rcpp.begin() + ((int) u_rcpp.nrow() * ref_col),
-    			      u_var->m_u_var_col));
+                              u_rcpp.begin() + ((int) u_rcpp.nrow() * ref_col),
+                              u_var->m_u_var_col));
     CPPUNIT_ASSERT_EQUAL(n_days, u_var->m_n_days);
     CPPUNIT_ASSERT(std::equal(w_idx.begin(), w_idx.end(), u_var->m_w_idx));
     CPPUNIT_ASSERT(std::equal(x_idx.begin(), x_idx.end(), u_var->m_x_idx));
@@ -127,28 +127,28 @@ void UGenVarCategTest::test_sample() {
 
     // check sampled covariate
     for (int i = 0; i < target_categ_update.size(); ++i) {
-	CPPUNIT_ASSERT_EQUAL(target_categ_update[i], u_var->m_miss_block[i].u_col);
+        CPPUNIT_ASSERT_EQUAL(target_categ_update[i], u_var->m_miss_block[i].u_col);
     }
 
     // check `U * beta` update
     CPPUNIT_ASSERT(std::equal(target_ubeta_update.begin(),
-    			      target_ubeta_update.end(),
-    			      ubeta->vals(),
-    			      UTestFactory::eq_dbl));
+                              target_ubeta_update.end(),
+                              ubeta->vals(),
+                              UTestFactory::eq_dbl));
 
     // TODO: test exp(ubeta) ?
 
     // check `U * tau` update
     CPPUNIT_ASSERT(std::equal(target_utau_update.begin(),
-    			      target_utau_update.end(),
-    			      utau->vals(),
-    			      UTestFactory::eq_dbl));
+                              target_utau_update.end(),
+                              utau->vals(),
+                              UTestFactory::eq_dbl));
 
     // check `U` update
     CPPUNIT_ASSERT(std::equal(target_u_update.begin(),
-    			      target_u_update.end(),
-    			      u_var->m_u_var_col,
-    			      UTestFactory::eq_dbl));
+                              target_u_update.end(),
+                              u_var->m_u_var_col,
+                              UTestFactory::eq_dbl));
 }
 
 
@@ -160,23 +160,23 @@ void UGenVarCategTest::test_calc_log_condit_w() {
     double alt_exp_ubeta_vals[u_var->m_max_n_days_miss * u_var->m_n_categs];
 
     u_var->calc_log_condit_w(log_condit_w_probs,
-			     alt_exp_ubeta_vals,
-			     *W,
-			     *xi,
-			     *coefs,
-			     *X,
-			     *ubeta,
-			     u_var->m_miss_block + input_block_idx);
+                             alt_exp_ubeta_vals,
+                             *W,
+                             *xi,
+                             *coefs,
+                             *X,
+                             *ubeta,
+                             u_var->m_miss_block + input_block_idx);
 
     CPPUNIT_ASSERT(std::equal(target_alt_exp_ubeta_vals.begin(),
-    			      target_alt_exp_ubeta_vals.end(),
-    			      alt_exp_ubeta_vals,
-    			      UTestFactory::eq_dbl));
+                              target_alt_exp_ubeta_vals.end(),
+                              alt_exp_ubeta_vals,
+                              UTestFactory::eq_dbl));
 
     CPPUNIT_ASSERT(std::equal(target_w_probs.begin(),
-    			      target_w_probs.end(),
-    			      log_condit_w_probs,
-    			      UTestFactory::eq_dbl));
+                              target_w_probs.end(),
+                              log_condit_w_probs,
+                              UTestFactory::eq_dbl));
 }
 
 
@@ -188,20 +188,20 @@ void UGenVarCategTest::test_calc_log_condit_x() {
     double alt_utau_vals[u_var->m_max_n_sex_days_miss * u_var->m_n_categs];
 
     u_var->calc_log_condit_x(log_condit_x_probs,
-    			    alt_utau_vals,
-    			    *X,
-    			    *utau,
-    			    u_var->m_miss_block + input_block_idx);
+                            alt_utau_vals,
+                            *X,
+                            *utau,
+                            u_var->m_miss_block + input_block_idx);
 
     CPPUNIT_ASSERT(std::equal(target_alt_utau_vals.begin(),
-    			      target_alt_utau_vals.end(),
-    			      alt_utau_vals,
-			      UTestFactory::eq_dbl));
+                              target_alt_utau_vals.end(),
+                              alt_utau_vals,
+                              UTestFactory::eq_dbl));
 
     CPPUNIT_ASSERT(std::equal(target_x_probs.begin(),
-    			      target_x_probs.end(),
-    			      log_condit_x_probs,
-			      UTestFactory::eq_dbl));
+                              target_x_probs.end(),
+                              log_condit_x_probs,
+                              UTestFactory::eq_dbl));
 }
 
 
@@ -215,9 +215,9 @@ void UGenVarCategTest::test_sample_covariate() {
     set_seed(seed_val);
 
     for (int i = 0; i < target_sample_covs.size(); ++i) {
-    	CPPUNIT_ASSERT_EQUAL(target_sample_covs[i],
-    			     u_var->sample_covariate(input_w_probs.begin(),
-    						     input_x_probs.begin()));
+        CPPUNIT_ASSERT_EQUAL(target_sample_covs[i],
+                             u_var->sample_covariate(input_w_probs.begin(),
+                                                     input_x_probs.begin()));
     }
 }
 
@@ -231,17 +231,17 @@ void UGenVarCategTest::test_sample_covariate() {
 
 //     // set the data to the last category and update `ubeta`
 //     u_var->update_ubeta(*ubeta,
-// 			n_categs - 1,
-// 			input_uprod_vals.begin(),
-// 			u_var->m_miss_block + input_block_idx);
+//                      n_categs - 1,
+//                      input_uprod_vals.begin(),
+//                      u_var->m_miss_block + input_block_idx);
 
 //     CPPUNIT_ASSERT(std::equal(target_ubeta_vals.begin(),
-//     			      target_ubeta_vals.end(),
-//     			      ubeta->m_vals,
-// 			      UTestFactory::eq_dbl));
+//                            target_ubeta_vals.end(),
+//                            ubeta->m_vals,
+//                            UTestFactory::eq_dbl));
 
 //     CPPUNIT_ASSERT(std::equal(target_exp_ubeta_vals.begin(),
-//     			      target_exp_ubeta_vals.end(),
-//     			      ubeta->m_exp_vals,
-// 			      UTestFactory::eq_dbl));
+//                            target_exp_ubeta_vals.end(),
+//                            ubeta->m_exp_vals,
+//                            UTestFactory::eq_dbl));
 // }

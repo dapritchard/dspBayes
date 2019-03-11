@@ -25,7 +25,7 @@ CoefGen::CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs, int n_samp) :
 
 CoefGen::~CoefGen() {
     for (int h = 0; h < m_n_gamma; ++h) {
-    	delete m_gamma[h];
+        delete m_gamma[h];
     }
     delete[] m_gamma;
 }
@@ -34,20 +34,20 @@ CoefGen::~CoefGen() {
 
 
 void CoefGen::sample(const WGen& W,
-		     const XiGen& xi,
-		     UProdBeta& ubeta,
-		     const int* X,
-		     const FWPriors& fw_priors) {
+                     const XiGen& xi,
+                     UProdBeta& ubeta,
+                     const int* X,
+                     const FWPriors& fw_priors) {
 
     // if we're past the burn-in phase then update `m_vals` so that we don't
     // overwrite the previous samples in the current scan
     if (g_record_status) {
-	m_vals += m_n_gamma;
+        m_vals += m_n_gamma;
     }
 
     // each iteration updates one gamma_h term and correspondingly udjusts
     // the value of `ubeta`.
     for (int j = 0; j < m_n_gamma; ++j) {
-	m_vals[j] = m_gamma[j]->sample(W, xi, ubeta, X, fw_priors);
+        m_vals[j] = m_gamma[j]->sample(W, xi, ubeta, X, fw_priors);
     }
 }

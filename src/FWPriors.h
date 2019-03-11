@@ -58,10 +58,10 @@ public:
     Delta delta;
 
     FWPriors(Rcpp::List fw_prior_specs) :
-	mday  {MDay()},
-	mu    {Mu()},
-	nu    {Nu()},
-	delta {Delta()}
+        mday  {MDay()},
+        mu    {Mu()},
+        nu    {Nu()},
+        delta {Delta()}
     {}
 };
 

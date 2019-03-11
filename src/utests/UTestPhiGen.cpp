@@ -81,32 +81,32 @@ void PhiGenTest::test_calculations() {
 
     // log_dgamma_norm_const()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(log_dgamma_norm_const,
-    				 phi->log_dgamma_norm_const(proposal_val),
-    				 epsilon);
+                                 phi->log_dgamma_norm_const(proposal_val),
+                                 epsilon);
 
     // calc_log_proportion_dgamma_phi()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(log_proportion_dgamma_phi,
-    				 phi->calc_log_proportion_dgamma_phi(proposal_val),
-    				 epsilon);
+                                 phi->calc_log_proportion_dgamma_phi(proposal_val),
+                                 epsilon);
 
     // calc_log_proportion_dgamma_xi()
     // run once when `m_is_same_as_prev` is false
     CPPUNIT_ASSERT(! phi->m_is_same_as_prev);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(log_proportion_dgamma_xi,
-    				 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
-    				 epsilon);
+                                 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
+                                 epsilon);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(m_log_norm_const,
-    				 phi->m_log_norm_const,
-    				 epsilon);
+                                 phi->m_log_norm_const,
+                                 epsilon);
     // now run when `m_is_same_as_prev` is true.  The function should reuse some
     // of the internal calculations from last time
     phi->m_is_same_as_prev = true;
     CPPUNIT_ASSERT_DOUBLES_EQUAL(log_proportion_dgamma_xi,
-    				 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
-    				 epsilon);
+                                 phi->calc_log_proportion_dgamma_xi(*xi, proposal_val),
+                                 epsilon);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(m_log_norm_const,
-    				 phi->m_log_norm_const,
-    				 epsilon);
+                                 phi->m_log_norm_const,
+                                 epsilon);
 }
 
 
@@ -116,19 +116,19 @@ void PhiGenTest::test_update() {
 
     // calc_log_r
     CPPUNIT_ASSERT_DOUBLES_EQUAL(calc_log_r,
-				 phi->calc_log_r(*xi, proposal_val),
-				 epsilon);
+                                 phi->calc_log_r(*xi, proposal_val),
+                                 epsilon);
 
     // update_phi
     // reject proposal value
     CPPUNIT_ASSERT_DOUBLES_EQUAL(*(phi->m_vals),
-				 phi->update_phi(R_NegInf, proposal_val),
-				 epsilon);
+                                 phi->update_phi(R_NegInf, proposal_val),
+                                 epsilon);
     CPPUNIT_ASSERT(phi->m_is_same_as_prev);
     // accept proposal value
     CPPUNIT_ASSERT_DOUBLES_EQUAL(proposal_val,
-				 phi->update_phi(0.0, proposal_val),
-				 epsilon);
+                                 phi->update_phi(0.0, proposal_val),
+                                 epsilon);
     CPPUNIT_ASSERT(! phi->m_is_same_as_prev);
     CPPUNIT_ASSERT_EQUAL(1, phi->m_accept_ctr);
 }
@@ -145,11 +145,11 @@ void PhiGenTest::test_sample_yes_record() {
 
     // sample
     for (int i = 0; i < target_samples.size(); ++i) {
-	phi->sample(*xi);
-	CPPUNIT_ASSERT_DOUBLES_EQUAL(target_samples[i], phi->val(), epsilon);
+        phi->sample(*xi);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(target_samples[i], phi->val(), epsilon);
     }
     CPPUNIT_ASSERT_EQUAL(target_samples.size(),
-    			 phi->m_vals - phi->m_vals_rcpp.begin());
+                         phi->m_vals - phi->m_vals_rcpp.begin());
     CPPUNIT_ASSERT_EQUAL(accept_ctr, phi->m_accept_ctr);
 }
 
@@ -165,8 +165,8 @@ void PhiGenTest::test_sample_no_record() {
 
     // sample
     for (int i = 0; i < target_samples.size(); ++i) {
-	phi_no_rec->sample(*xi);
-	CPPUNIT_ASSERT_DOUBLES_EQUAL(target_samples[i], phi_no_rec->val(), epsilon);
+        phi_no_rec->sample(*xi);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(target_samples[i], phi_no_rec->val(), epsilon);
     }
     CPPUNIT_ASSERT_EQUAL((long int) 0, phi_no_rec->m_vals - phi_no_rec->m_vals_rcpp.begin());
     CPPUNIT_ASSERT_EQUAL(accept_ctr, phi_no_rec->m_accept_ctr);

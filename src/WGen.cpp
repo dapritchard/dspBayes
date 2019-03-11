@@ -7,9 +7,9 @@
 
 
 WGen::WGen(Rcpp::List& preg_cyc,
-	   Rcpp::IntegerVector& w_to_days_idx,
-	   Rcpp::IntegerVector& w_cyc_to_subj_idx,
-	   int fw_len) :
+           Rcpp::IntegerVector& w_to_days_idx,
+           Rcpp::IntegerVector& w_cyc_to_subj_idx,
+           int fw_len) :
     // subtract 1 from number of days and storage of values b/c we've included
     // an extra value as a sentinal for loops
     m_vals(new int[w_to_days_idx.size() - 1]),
@@ -57,47 +57,47 @@ void WGen::sample(XiGen& xi, UProdBeta& ubeta, XGen& X) {
     // intercourse).  Values of `sum_k W_ijk` are also stored for these cycles.
     for (int q = 0; q < m_n_preg_cyc; ++q) {
 
-	// the day-specific index and number of days in the current cycle
-	PregCyc curr_cyc = m_preg_cyc[q];
-	int curr_beg_idx = curr_cyc.beg_idx;
-	int curr_n_days = curr_cyc.n_days;
-	int curr_subj_idx = curr_cyc.subj_idx;
+        // the day-specific index and number of days in the current cycle
+        PregCyc curr_cyc = m_preg_cyc[q];
+        int curr_beg_idx = curr_cyc.beg_idx;
+        int curr_n_days = curr_cyc.n_days;
+        int curr_subj_idx = curr_cyc.subj_idx;
 
-	// variable to store the value of `sum_k W_ijk` for the current cycle
-	double curr_sum_val = 0;
+        // variable to store the value of `sum_k W_ijk` for the current cycle
+        double curr_sum_val = 0;
 
-	// each iteration calculates `X_ijk * exp( u_{ijk}^T beta )` for the
-	// v-th day in the current cycle with a random `W_ijk` in the cycle,
-	// (i.e. a day with intercourse or at least a missing value for
-	// intercourse), and adds it to `sum_val`
-	for (int v = 0; v < curr_n_days; ++v) {
+        // each iteration calculates `X_ijk * exp( u_{ijk}^T beta )` for the
+        // v-th day in the current cycle with a random `W_ijk` in the cycle,
+        // (i.e. a day with intercourse or at least a missing value for
+        // intercourse), and adds it to `sum_val`
+        for (int v = 0; v < curr_n_days; ++v) {
 
-	    // day-specific index of the v-th day in the current cycle
-	    int r = curr_beg_idx + v;
+            // day-specific index of the v-th day in the current cycle
+            int r = curr_beg_idx + v;
 
-	    // copy and add in the `X_ijk * exp( u_{ijk}^T beta )` term to the
-	    // running total for `sum_k W_ijk`
-	    curr_sum_val += mult_probs[v] = x_vals[r] * ubeta_exp_vals[r];
-	}
+            // copy and add in the `X_ijk * exp( u_{ijk}^T beta )` term to the
+            // running total for `sum_k W_ijk`
+            curr_sum_val += mult_probs[v] = x_vals[r] * ubeta_exp_vals[r];
+        }
 
-	// normalize the multinomial probabilities
-	for (int v = 0; v < curr_n_days; ++v) {
-	    mult_probs[v] /= curr_sum_val;
-	}
+        // normalize the multinomial probabilities
+        for (int v = 0; v < curr_n_days; ++v) {
+            mult_probs[v] /= curr_sum_val;
+        }
 
-	// calculate `xi_i * sum_k { X_ijk * exp( u_{ijk}^T beta ) }`
-	double pois_mean = xi_vals[ curr_subj_idx ] * curr_sum_val;
+        // calculate `xi_i * sum_k { X_ijk * exp( u_{ijk}^T beta ) }`
+        double pois_mean = xi_vals[ curr_subj_idx ] * curr_sum_val;
 
-	// sample new `sum_k W_ijk`
-	*curr_w_sum = rpois_zero_tr(pois_mean);
+        // sample new `sum_k W_ijk`
+        *curr_w_sum = rpois_zero_tr(pois_mean);
 
-	// sample new `W_ij | { sum_k W_ijk }`
-	rmultinom(*curr_w_sum, mult_probs, curr_n_days, curr_w);
+        // sample new `W_ij | { sum_k W_ijk }`
+        rmultinom(*curr_w_sum, mult_probs, curr_n_days, curr_w);
 
-	// update pointers to point to the next elements of `W_ijk` and `sum_k
-	// W_ijk`
-	curr_w += curr_n_days;
-	++curr_w_sum;
+        // update pointers to point to the next elements of `W_ijk` and `sum_k
+        // W_ijk`
+        curr_w += curr_n_days;
+        ++curr_w_sum;
     }
 }
 

@@ -24,19 +24,19 @@ public:
     bool m_record_status;
 
     UGen(Rcpp::NumericMatrix& u_rcpp,
-	 Rcpp::List& miss_info,
-	 Rcpp::IntegerVector& miss_type,
-	 Rcpp::IntegerVector& preg_map,
-	 Rcpp::IntegerVector& sex_map,
-	 bool record_status);
+         Rcpp::List& miss_info,
+         Rcpp::IntegerVector& miss_type,
+         Rcpp::IntegerVector& preg_map,
+         Rcpp::IntegerVector& sex_map,
+         bool record_status);
     ~UGen();
 
     void sample(const WGen& W,
-		const XiGen& xi,
-		const CoefGen& coefs,
-		const XGen& X,
-		UProdBeta& ubeta,
-		UProdTau& utau);
+                const XiGen& xi,
+                const CoefGen& coefs,
+                const XGen& X,
+                UProdBeta& ubeta,
+                UProdTau& utau);
 
     Rcpp::List realized_samples();
 };

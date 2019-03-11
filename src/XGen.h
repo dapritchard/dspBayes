@@ -62,41 +62,41 @@ public:
 
 
     XGen(Rcpp::IntegerVector& X_rcpp,
-	 Rcpp::IntegerVector& x_miss,
-	 Rcpp::List& sex_miss_info,
-	 int fw_len,
-	 double cohort_sex_prob,
-	 double sex_coef);
+         Rcpp::IntegerVector& x_miss,
+         Rcpp::List& sex_miss_info,
+         int fw_len,
+         double cohort_sex_prob,
+         double sex_coef);
 
     ~XGen();
 
     SexMissCycInfo* list_to_arr(Rcpp::List& sex_info_list);
 
     void sample(const WGen& W,
-		const XiGen& xi,
-		const UProdBeta& ubeta,
-		const UProdTau& utau);
+                const XiGen& xi,
+                const UProdBeta& ubeta,
+                const UProdTau& utau);
 
     void sample_cycle(const SexMissCycInfo* curr_miss_info,
-		      const WGen& W,
-		      const XiGen& xi,
-		      const UProdBeta& ubeta,
-		      const UProdTau& utau);
+                      const WGen& W,
+                      const XiGen& xi,
+                      const UProdBeta& ubeta,
+                      const UProdTau& utau);
 
     static double calc_p_w_zero(double ubeta_exp_val,
-				double xi_i);
+                                double xi_i);
 
     double calc_p_xTom(double utau_val_tom,
-		       int x_tomorrow,
-		       int x_today) const;
+                       int x_tomorrow,
+                       int x_today) const;
 
     double calc_p_xTodayIsOne(double utau_val_today,
-			      int sex_prev_day) const;
+                              int sex_prev_day) const;
 
     static int sample_x_ijk(double p_w_xIsOne,
-			    double p_xTodayIsOne,
-			    double p_xTom_xTodayIsZero,
-			    double p_xTom_xTodayIsOne);
+                            double p_xTodayIsOne,
+                            double p_xTom_xTodayIsZero,
+                            double p_xTom_xTodayIsOne);
 
     int sample_day_before_fw_sex() const;
     static bool check_if_sex_miss(int miss_day);
@@ -124,10 +124,10 @@ public:
     SexMissCycInfo() : x_cyc(0), w_cyc(0), xi_idx(0), sex_prev(0) {}
 
     SexMissCycInfo(int x_cyc, int w_cyc, int xi_idx, int sex_prev) :
-	x_cyc(x_cyc),
-	w_cyc(w_cyc),
-	xi_idx(xi_idx),
-	sex_prev(sex_prev) {
+        x_cyc(x_cyc),
+        w_cyc(w_cyc),
+        xi_idx(xi_idx),
+        sex_prev(sex_prev) {
     }
 
     static SexMissCycInfo* list_to_arr(Rcpp::List& block_list);

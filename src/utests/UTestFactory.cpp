@@ -19,26 +19,26 @@ double UTestFactory::epsilon = 0.0;
 
 
 UTestFactory::UTestFactory(Rcpp::NumericMatrix u_rcpp,
-			   Rcpp::IntegerVector x_rcpp,
-			   Rcpp::List          w_day_blocks,
-			   Rcpp::IntegerVector w_to_days_idx,
-			   Rcpp::IntegerVector w_cyc_to_subj_idx,
-			   Rcpp::List          subj_day_blocks,
-			   Rcpp::IntegerVector day_to_subj_idx,
-			   Rcpp::List          gamma_specs,
-			   Rcpp::NumericVector phi_specs,
-			   Rcpp::List          x_miss_cyc,
-			   Rcpp::List          x_miss_day,
-			   Rcpp::NumericVector utau_rcpp,
-			   Rcpp::List          tau_coefs,
-			   Rcpp::List          u_miss_info,
-			   Rcpp::IntegerVector u_miss_type,
-			   Rcpp::IntegerVector u_preg_map,
-			   Rcpp::IntegerVector u_sex_map,
-			   int fw_len,
-			   int n_burn,
-			   int n_samp,
-			   Rcpp::List test_data) :
+                           Rcpp::IntegerVector x_rcpp,
+                           Rcpp::List          w_day_blocks,
+                           Rcpp::IntegerVector w_to_days_idx,
+                           Rcpp::IntegerVector w_cyc_to_subj_idx,
+                           Rcpp::List          subj_day_blocks,
+                           Rcpp::IntegerVector day_to_subj_idx,
+                           Rcpp::List          gamma_specs,
+                           Rcpp::NumericVector phi_specs,
+                           Rcpp::List          x_miss_cyc,
+                           Rcpp::List          x_miss_day,
+                           Rcpp::NumericVector utau_rcpp,
+                           Rcpp::List          tau_coefs,
+                           Rcpp::List          u_miss_info,
+                           Rcpp::IntegerVector u_miss_type,
+                           Rcpp::IntegerVector u_preg_map,
+                           Rcpp::IntegerVector u_sex_map,
+                           int fw_len,
+                           int n_burn,
+                           int n_samp,
+                           Rcpp::List test_data) :
     // usual input
     u_rcpp(u_rcpp),
     x_rcpp(x_rcpp),
@@ -109,9 +109,9 @@ WGen* UTestFactory::W() {
     int* w_vals = W->m_vals;
     int* w_sums = W->m_sums;
     for (const PregCyc* curr = W->m_preg_cyc; curr < W->m_preg_cyc + W->m_n_preg_cyc; ++curr) {
-    	*w_sums = std::accumulate(w_vals + w_ctr, w_vals + w_ctr + curr->n_days, 0.0);
-    	++w_sums;
-    	w_ctr += curr->n_days;
+        *w_sums = std::accumulate(w_vals + w_ctr, w_vals + w_ctr + curr->n_days, 0.0);
+        ++w_sums;
+        w_ctr += curr->n_days;
     }
     return W;
 }

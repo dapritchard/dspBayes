@@ -7,7 +7,7 @@
 
 
 GammaFWDay::GammaFWDay(const Rcpp::NumericMatrix& U,
-		       const Rcpp::NumericVector& gamma_specs) :
+                       const Rcpp::NumericVector& gamma_specs) :
     GammaContMH {U, gamma_specs},
     m_day_idx   {gamma_specs["day_idx"]}
 {
@@ -19,10 +19,10 @@ GammaFWDay::GammaFWDay(const Rcpp::NumericMatrix& U,
 // TODO: the only difference in this function and the GammaContMH version is the
 // signature for `get_log_r`.  Any way to consolidate?
 double GammaFWDay::sample(const WGen& W,
-			  const XiGen& xi,
-			  UProdBeta& ubeta,
-			  const int* X,
-			  const FWPriors& fw_priors) {
+                          const XiGen& xi,
+                          UProdBeta& ubeta,
+                          const int* X,
+                          const FWPriors& fw_priors) {
 
     const double proposal_beta = m_proposal_fcn(m_beta_val, m_mh_delta);
     const double proposal_gam  = exp(proposal_beta);
@@ -33,14 +33,14 @@ double GammaFWDay::sample(const WGen& W,
     // accept proposal value `min(r, 1)-th` proportion of the time
     if ((log_r >= 0) || (log(R::unif_rand()) < log_r)) {
 
-	// update `U * beta` and `exp(U * beta)` based upon accepting the
-	// proposal value
-	ubeta.update(m_Uh, proposal_beta, m_beta_val);
+        // update `U * beta` and `exp(U * beta)` based upon accepting the
+        // proposal value
+        ubeta.update(m_Uh, proposal_beta, m_beta_val);
 
-	// update member variables to based upon accepting the proposal value
-	m_beta_val = proposal_beta;
-	m_gam_val = proposal_gam;
-	++m_mh_accept_ctr;
+        // update member variables to based upon accepting the proposal value
+        m_beta_val = proposal_beta;
+        m_gam_val = proposal_gam;
+        ++m_mh_accept_ctr;
     }
 
     return m_gam_val;
@@ -60,15 +60,15 @@ double GammaFWDay::sample(const WGen& W,
 // proposal value and similarly for gamma^(s).
 
 inline double GammaFWDay::get_log_r(const WGen& W,
-				    const XiGen& xi,
-				    const UProdBeta& ubeta,
-				    const int* X,
-				    double proposal_beta,
-				    double proposal_gam,
-				    const FWPriors& fw_priors) {
+                                    const XiGen& xi,
+                                    const UProdBeta& ubeta,
+                                    const int* X,
+                                    double proposal_beta,
+                                    double proposal_gam,
+                                    const FWPriors& fw_priors) {
 
     return get_w_log_lik(W, xi, ubeta, X, proposal_beta)
-	+ get_gam_log_lik(proposal_beta, proposal_gam, fw_priors);
+        + get_gam_log_lik(proposal_beta, proposal_gam, fw_priors);
 }
 
 
@@ -92,8 +92,8 @@ inline double GammaFWDay::get_log_r(const WGen& W,
 // h-th element of the beta vector.
 
 double GammaFWDay::get_gam_log_lik(double proposal_beta,
-				   double proposal_gam,
-				   FWPriors fw_priors) {
+                                   double proposal_gam,
+                                   FWPriors fw_priors) {
 
     // extract priors for convenience
     double mday_val  = fw_priors.mday.val();
@@ -106,7 +106,7 @@ double GammaFWDay::get_gam_log_lik(double proposal_beta,
 
     // calculate `(nu / delta^{|k - m|} mu)(proposal_gam - current_gam)`
     double day_dist         = abs(m_day_idx - mday_val);
-    double ar_delta_pow	    = pow(delta_val, day_dist);
+    double ar_delta_pow     = pow(delta_val, day_dist);
     double term2_multiplier = nu_val / (ar_delta_pow * mu_val);
     double term2_diff       = proposal_gam - m_gam_val;
     double term2            = term2_multiplier * term2_diff;

@@ -13,8 +13,8 @@ int* d2s;
 bool g_record_status = false;
 
 // Rcpp::List collect_output(const CoefGen& regr_coefs,
-// 			  const XiGen& xi,
-// 			  const PhiGen& phi);
+//                        const XiGen& xi,
+//                        const PhiGen& phi);
 
 // w_day_blocks          used when sampling W
 // w_to_days_idx         categorical gamma: a_tilde
@@ -29,26 +29,26 @@ bool g_record_status = false;
 
 // [[Rcpp::export]]
 Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
-		Rcpp::IntegerVector x_rcpp,
-		Rcpp::List          w_day_blocks,
-		Rcpp::IntegerVector w_to_days_idx,
-		Rcpp::IntegerVector w_cyc_to_subj_idx,
-		Rcpp::List          subj_day_blocks,
-		Rcpp::IntegerVector day_to_subj_idx,
-		Rcpp::List          gamma_specs,
-		Rcpp::NumericVector phi_specs,
-		Rcpp::IntegerVector x_miss,
-		Rcpp::IntegerVector sex_miss_to_w,
-		Rcpp::List          sex_miss_info,
-		Rcpp::NumericVector utau_rcpp,
-		Rcpp::List          tau_coefs,
-		Rcpp::List          u_miss_info,
-		Rcpp::IntegerVector u_miss_type,
-		Rcpp::IntegerVector u_preg_map,
-		Rcpp::IntegerVector u_sex_map,
-		int fw_len,
-		int n_burn,
-		int n_samp) {
+                Rcpp::IntegerVector x_rcpp,
+                Rcpp::List          w_day_blocks,
+                Rcpp::IntegerVector w_to_days_idx,
+                Rcpp::IntegerVector w_cyc_to_subj_idx,
+                Rcpp::List          subj_day_blocks,
+                Rcpp::IntegerVector day_to_subj_idx,
+                Rcpp::List          gamma_specs,
+                Rcpp::NumericVector phi_specs,
+                Rcpp::IntegerVector x_miss,
+                Rcpp::IntegerVector sex_miss_to_w,
+                Rcpp::List          sex_miss_info,
+                Rcpp::NumericVector utau_rcpp,
+                Rcpp::List          tau_coefs,
+                Rcpp::List          u_miss_info,
+                Rcpp::IntegerVector u_miss_type,
+                Rcpp::IntegerVector u_preg_map,
+                Rcpp::IntegerVector u_sex_map,
+                int fw_len,
+                int n_burn,
+                int n_samp) {
 
     // initialize global variable in case the value was set to true elsewhere
     g_record_status = false;
@@ -69,42 +69,42 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
 
-    	// update the latent day-specific pregnancy variables W
-    	W.sample(xi, ubeta, X);
+        // update the latent day-specific pregnancy variables W
+        W.sample(xi, ubeta, X);
 
-    	// update the woman-specific fecundability multipliers xi
-    	xi.sample(W, phi, ubeta, X);
+        // update the woman-specific fecundability multipliers xi
+        xi.sample(W, phi, ubeta, X);
 
-    	// update the regression coefficients gamma and psi, and update the
-    	// resulting values of the `U * beta`
-    	coefs.sample(W, xi, ubeta, X.vals(), fw_priors);
-	ubeta.update_exp();  // <--- TODO: let's put this inside sample()
+        // update the regression coefficients gamma and psi, and update the
+        // resulting values of the `U * beta`
+        coefs.sample(W, xi, ubeta, X.vals(), fw_priors);
+        ubeta.update_exp();  // <--- TODO: let's put this inside sample()
 
-    	// update phi, the variance parameter for xi
-    	phi.sample(xi);
+        // update phi, the variance parameter for xi
+        phi.sample(xi);
 
-	// // update missing values for the intercourse variables X
-	X.sample(W, xi, ubeta, utau);
+        // // update missing values for the intercourse variables X
+        X.sample(W, xi, ubeta, utau);
 
-	// // // update missing values for the covariate data U
-	// U.sample(W, xi, coefs, X, ubeta, utau);
+        // // // update missing values for the covariate data U
+        // U.sample(W, xi, coefs, X, ubeta, utau);
 
-	// case: burn-in phase is over so record samples.  Note that this occurs
-	// after the samples in this scan have been taken; this is because
-	// `g_record_status` has the effect of informing the various classes to
-	// not overwrite previous data.
-	if (s == 0) g_record_status = true;
+        // case: burn-in phase is over so record samples.  Note that this occurs
+        // after the samples in this scan have been taken; this is because
+        // `g_record_status` has the effect of informing the various classes to
+        // not overwrite previous data.
+        if (s == 0) g_record_status = true;
 
-	// check for user interrupt every `DSP_BAYES_N_INTER_CHECK` iterations
-	if ((s % DSP_BAYES_N_INTERRUPT_CHECK) == 0) Rcpp::checkUserInterrupt();
+        // check for user interrupt every `DSP_BAYES_N_INTER_CHECK` iterations
+        if ((s % DSP_BAYES_N_INTERRUPT_CHECK) == 0) Rcpp::checkUserInterrupt();
     }
 
     // return Rcpp::List::create(Rcpp::Named("coefs") = coefs.m_vals_rcpp,
-    // 			      Rcpp::Named("xi")    = xi.m_vals_rcpp,
-    // 			      Rcpp::Named("phi")   = phi.m_vals_rcpp,
-    // 			      Rcpp::Named("ugen")  = U.realized_samples());
+    //                        Rcpp::Named("xi")    = xi.m_vals_rcpp,
+    //                        Rcpp::Named("phi")   = phi.m_vals_rcpp,
+    //                        Rcpp::Named("ugen")  = U.realized_samples());
 
     return Rcpp::List::create(Rcpp::Named("coefs") = coefs.m_vals_rcpp,
-			      Rcpp::Named("xi")    = xi.m_vals_rcpp,
-			      Rcpp::Named("phi")   = phi.m_vals_rcpp);
+                              Rcpp::Named("xi")    = xi.m_vals_rcpp,
+                              Rcpp::Named("phi")   = phi.m_vals_rcpp);
 }
