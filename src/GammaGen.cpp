@@ -1,10 +1,10 @@
 #include "Rcpp.h"
 #include "GammaGen.h"
 
-#define GAMMA_GEN_TYPE_CATEG    0
-#define GAMMA_GEN_TYPE_CONT_MH  1
-// #define GAMMA_GEN_TYPE_CONT_ADAPT  2
-// #define GAMMA_GEN_TYPE_SMOOTH 3
+#define GAMMA_GEN_TYPE_CATEG       0
+#define GAMMA_GEN_TYPE_CONT_MH     1
+#define GAMMA_GEN_TYPE_CONT_ADAPT  2
+#define GAMMA_GEN_TYPE_FW_DAY      3
 
 using Rcpp::NumericVector;
 using Rcpp::as;
@@ -48,12 +48,9 @@ GammaGen** GammaGen::create_arr(const Rcpp::NumericMatrix& U,
 	case GAMMA_GEN_TYPE_CONT_MH:
 	    gamma[t] = new GammaContMH(U, curr_gamma_specs);
 	    break;
-	// case GAMMA_GEN_TYPE_CONT_ADAPT:
-	//     // ******************** TODO
-	//     break;
-	// case GAMMA_GEN_TYPE_SMOOTH:
-	//     // ******************** TODO
-	//     break;
+	case GAMMA_GEN_TYPE_FW_DAY:
+	    gamma[t] = new GammaFWDay(U, curr_gamma_specs);
+	    break;
 	}
     }
 

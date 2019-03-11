@@ -64,7 +64,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     XGen X(x_rcpp, x_miss, sex_miss_info, fw_len, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
     UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
-    FWPriors fw_priors;
+    FWPriors fw_priors(as<Rcpp::List>(gamma_specs["fw_prior_specs"]));
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
