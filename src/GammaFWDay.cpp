@@ -10,8 +10,7 @@ GammaFWDay::GammaFWDay(const Rcpp::NumericMatrix& U,
                        const Rcpp::NumericVector& gamma_specs) :
     GammaContMH {U, gamma_specs},
     m_day_idx   {gamma_specs["day_idx"]}
-{
-}
+{}
 
 
 

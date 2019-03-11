@@ -7,7 +7,7 @@ public:
 
     double m_peak_idx;
 
-    MDay() {}
+    MDay() : m_peak_idx {3} {}
     double val() { return m_peak_idx; }
 
     // void sample();
@@ -21,6 +21,7 @@ public:
 
     double m_mu;
 
+    Mu() : m_mu {1.0} {}
     double val() { return m_mu; }
 };
 
@@ -31,6 +32,7 @@ public:
 
     double m_nu;
 
+    Nu() : m_nu {1.0} {}
     double val() { return m_nu; }
 };
 
@@ -42,6 +44,7 @@ public:
 
     double m_delta;
 
+    Delta() : m_delta {0.9} {}
     double val() { return m_delta; }
 };
 

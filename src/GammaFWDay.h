@@ -20,8 +20,7 @@ public:
     double (*m_proposal_fcn)(double cond, double delta);
 
     GammaFWDay(const Rcpp::NumericMatrix& U,
-               const Rcpp::NumericVector& gamma_specs,
-               int day_idx);
+               const Rcpp::NumericVector& gamma_specs);
     double sample(const WGen& W,
                   const XiGen& xi,
                   UProdBeta& ubeta,

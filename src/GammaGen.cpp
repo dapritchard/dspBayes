@@ -1,5 +1,6 @@
 #include "Rcpp.h"
 #include "GammaGen.h"
+#include "GammaFWDay.h"
 
 #define GAMMA_GEN_TYPE_CATEG       0
 #define GAMMA_GEN_TYPE_CONT_MH     1
