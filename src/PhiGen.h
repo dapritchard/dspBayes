@@ -11,10 +11,11 @@ class PhiGen {
 
 public:
 
-    // gamma distribution hyperparameters c1 and c2 and tuning parameter for the
-    // proposal distribution delta
+    // gamma distribution hyperparameters c1 and c2 and
     const double m_hyp_c1;
     const double m_hyp_c2;
+
+    //tuning parameter for the proposal distribution
     const double m_delta;
 
     // current value of phi and storage for previous values

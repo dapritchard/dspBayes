@@ -20,8 +20,8 @@ PhiGen::PhiGen(Rcpp::NumericVector phi_specs, int n_samp, bool record_status) :
     m_accept_ctr(0),
     m_record_status(record_status),
     m_is_same_as_prev(false),
-    m_log_norm_const(0) {
-
+    m_log_norm_const(0)
+{
     // initialize current value of phi to be the mean of the prior distribution
     *m_vals = phi_specs["mean"];
 }
