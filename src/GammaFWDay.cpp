@@ -23,13 +23,17 @@ double GammaFWDay::sample(const WGen& W,
                           const int* X,
                           const FWPriors& fw_priors) {
 
-    const double proposal_beta = m_proposal_fcn(m_beta_val, m_mh_delta);
+    // std::cout << "beginning of GammaFWDay::sample" << std::endl;
+    // std::cout << "start m_proposal_fcn" << std::endl;
+    // std::cout << "m_beta_val:  " << m_beta_val << std::endl;
+    // std::cout << "m_mh_delta:  " << m_mh_delta << std::endl;
+    // const double proposal_beta = m_proposal_fcn(m_beta_val, m_mh_delta);
+    const double proposal_beta = (m_beta_val - m_mh_delta) + (2.0 * m_mh_delta * R::unif_rand());
+    // std::cout << "start exp(proposal_beta)" << std::endl;
     const double proposal_gam  = exp(proposal_beta);
 
     // calculate the log acceptance ratio
-    std::cout << "start calculating `get_log_r`" << std::endl;
     const double log_r = get_log_r(W, xi, ubeta, X, proposal_beta, proposal_gam, fw_priors);
-    std::cout << "end calculating `get_log_r`" << std::endl;
 
     // accept proposal value `min(r, 1)-th` proportion of the time
     if ((log_r >= 0) || (log(R::unif_rand()) < log_r)) {
@@ -67,6 +71,14 @@ inline double GammaFWDay::get_log_r(const WGen& W,
                                     double proposal_beta,
                                     double proposal_gam,
                                     const FWPriors& fw_priors) {
+
+    // // std::cout << "start `get_w_log_lik`" << std::endl;
+    // get_w_log_lik(W, xi, ubeta, X, proposal_beta);
+    // // std::cout << "start `get_w_log_lik`" << std::endl;
+
+    // // std::cout << "start `get_gam_log_lik`" << std::endl;
+    // get_gam_log_lik(proposal_beta, proposal_gam, fw_priors);
+    // // std::cout << "start `get_gam_log_lik`" << std::endl;
 
     return get_w_log_lik(W, xi, ubeta, X, proposal_beta)
         + get_gam_log_lik(proposal_beta, proposal_gam, fw_priors);

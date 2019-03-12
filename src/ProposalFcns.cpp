@@ -17,7 +17,6 @@
 //         = (cond - delta) + (2 * delta * u)
 
 double ProposalFcns::unif(double cond, double delta) {
-
     return (cond - delta) + (2.0 * delta * R::unif_rand());
 }
 

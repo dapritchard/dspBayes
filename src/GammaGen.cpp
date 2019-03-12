@@ -4,7 +4,7 @@
 
 #define GAMMA_GEN_TYPE_CATEG       0
 #define GAMMA_GEN_TYPE_CONT_MH     1
-#define GAMMA_GEN_TYPE_CONT_ADAPT  2
+// #define GAMMA_GEN_TYPE_CONT_ADAPT  2
 #define GAMMA_GEN_TYPE_FW_DAY      3
 
 using Rcpp::NumericVector;
