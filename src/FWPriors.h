@@ -19,7 +19,7 @@ public:
     double m_peak_idx;
 
     MDay() : m_peak_idx {3} {}
-    double val() { return m_peak_idx; }
+    double val() const { return m_peak_idx; }
 
     // void sample();
 };
@@ -30,17 +30,32 @@ public:
 class Mu : public MHCont {
 public:
 
+    // hyperparameters for mu
     const double m_alpha_0_minus_1;
     const double m_beta_0;
 
+    // current value and log-value
     double m_mu_val;
     double m_log_mu_val;
 
     Mu(double proposal_dispersion, int n_samp, bool record_status);
-
     void sample(const CoefGen& coefs, const MDay& mday, const Nu& nu, const Delta& delta);
-    double calc_mu_log_lik_gamma_term(CoefGen coefs, MDay mday, Nu nu, Delta delta);
-    double calc_mu_log_lik_prior_term(double proposal_val, double log_proposal_val);
+
+    double calc_log_r(const CoefGen& coefs,
+                      const MDay& mday,
+                      const Nu& nu,
+                      const Delta& delta,
+                      double proposal_val,
+                      double log_proposal_val) const;
+
+    double calc_log_lik_gamma_term(const CoefGen& coefs,
+                                   const MDay& mday,
+                                   const Nu& nu,
+                                   const Delta& delta,
+                                   double proposal_val,
+                                   double log_proposal_val) const;
+
+    double calc_log_lik_mu_term(double proposal_val, double log_proposal_val) const;
 };
 
 
@@ -52,7 +67,7 @@ public:
     double m_nu;
 
     Nu() : m_nu {100} {}
-    double val() { return m_nu; }
+    double val() const { return m_nu; }
 };
 
 
@@ -64,7 +79,7 @@ public:
     double m_delta;
 
     Delta() : m_delta {0.5} {}
-    double val() { return m_delta; }
+    double val() const { return m_delta; }
 };
 
 

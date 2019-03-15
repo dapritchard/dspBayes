@@ -226,8 +226,10 @@ CoefGen.o : CoefGen.h
 
 DayBlock.o : DayBlock.h
 
-# TODO: depends needs updated here big time
+# TODO: the depends here need updated big time
 Dsp.o : CoefGen.h PhiGen.h WGen.h XiGen.h
+
+FWPriorMu.o : FWPriors.h CoefGen.h ProposalFcns.h
 
 GammaCateg.o : GammaGen.h global_vars.h
 
