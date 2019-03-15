@@ -64,7 +64,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     XGen X(x_rcpp, x_miss, sex_miss_info, fw_len, tau_coefs["cohort_sex_prob"], tau_coefs["sex_coef"]);
     UProdTau utau(utau_rcpp, tau_coefs);
     // UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
-    Rcpp::List placeholder_list;
+    Rcpp::List placeholder_list;  // FIXME
     FWPriors fw_priors(placeholder_list);
 
     // begin sampler loop
@@ -80,14 +80,17 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
         // resulting values of the `U * beta`
         coefs.sample(W, xi, ubeta, X.vals(), fw_priors);
         ubeta.update_exp();  // <--- TODO: let's put this inside sample()
+        if (true) { // FIXME: have to change this
+            fw_priors.sample(coefs);
+        }
 
         // update phi, the variance parameter for xi
         phi.sample(xi);
 
-        // // update missing values for the intercourse variables X
+        // update missing values for the intercourse variables X
         X.sample(W, xi, ubeta, utau);
 
-        // // // update missing values for the covariate data U
+        // // update missing values for the covariate data U
         // U.sample(W, xi, coefs, X, ubeta, utau);
 
         // case: burn-in phase is over so record samples.  Note that this occurs

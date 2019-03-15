@@ -1,6 +1,17 @@
 #ifndef DSP_BAYES_FW_PRIORS_H_
 #define DSP_BAYES_FW_PRIORS_H_
 
+#include "MHCont.h"
+
+// note that CoefGen.h included at the bottom of the file
+class CoefGen;
+class MDay;
+class Mu;
+class Nu;
+class Delta;
+
+
+
 
 class MDay {
 public:
@@ -16,13 +27,20 @@ public:
 
 
 
-class Mu {
+class Mu : public MHCont {
 public:
 
-    double m_mu;
+    const double m_alpha_0_minus_1;
+    const double m_beta_0;
 
-    Mu() : m_mu {0.44} {}
-    double val() { return m_mu; }
+    double m_mu_val;
+    double m_log_mu_val;
+
+    Mu(double proposal_dispersion, int n_samp, bool record_status);
+
+    void sample(const CoefGen& coefs, const MDay& mday, const Nu& nu, const Delta& delta);
+    double calc_mu_log_lik_gamma_term(CoefGen coefs, MDay mday, Nu nu, Delta delta);
+    double calc_mu_log_lik_prior_term(double proposal_val, double log_proposal_val);
 };
 
 
@@ -33,7 +51,7 @@ public:
 
     double m_nu;
 
-    Nu() : m_nu {1.0} {}
+    Nu() : m_nu {100} {}
     double val() { return m_nu; }
 };
 
@@ -56,18 +74,33 @@ public:
 class FWPriors {
 public:
 
-    MDay mday;
-    Mu mu;
-    Nu nu;
-    Delta delta;
+    MDay m_mday;
+    Mu m_mu;
+    Nu m_nu;
+    Delta m_delta;
 
-    FWPriors(Rcpp::List fw_prior_specs) :
-        mday  {MDay()},
-        mu    {Mu()},
-        nu    {Nu()},
-        delta {Delta()}
+    FWPriors(const Rcpp::List& fw_prior_specs) :
+        m_mday  {MDay()},
+        m_mu    {build_mu(fw_prior_specs)},
+        m_nu    {Nu()},
+        m_delta {Delta()}
     {}
+
+    void sample(const CoefGen& coefs) { // FIXME
+        // m_mday.sample();
+        m_mu.sample(coefs, m_mday, m_nu, m_delta);
+        // m_nu.sample();
+        // m_delta.sample();
+    }
+
+    Mu build_mu(const Rcpp::List& fw_prior_specs) { // FIXME
+        // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
+        Mu out {Mu(1.0, 1.0, true)};
+        return out;
+    }
 };
 
+
+#include "CoefGen.h"
 
 #endif

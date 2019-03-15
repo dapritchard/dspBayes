@@ -36,6 +36,7 @@ public:
     double get_gam_log_lik(double proposal_beta,
                            double proposal_gam,
                            FWPriors fw_priors);
+    bool is_fw_day() const { return true; }
 };
 
 

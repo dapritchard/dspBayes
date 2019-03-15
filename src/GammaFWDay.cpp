@@ -72,14 +72,6 @@ inline double GammaFWDay::get_log_r(const WGen& W,
                                     double proposal_gam,
                                     const FWPriors& fw_priors) {
 
-    // // std::cout << "start `get_w_log_lik`" << std::endl;
-    // get_w_log_lik(W, xi, ubeta, X, proposal_beta);
-    // // std::cout << "start `get_w_log_lik`" << std::endl;
-
-    // // std::cout << "start `get_gam_log_lik`" << std::endl;
-    // get_gam_log_lik(proposal_beta, proposal_gam, fw_priors);
-    // // std::cout << "start `get_gam_log_lik`" << std::endl;
-
     return get_w_log_lik(W, xi, ubeta, X, proposal_beta)
         + get_gam_log_lik(proposal_beta, proposal_gam, fw_priors);
 }

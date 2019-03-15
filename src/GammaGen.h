@@ -41,6 +41,7 @@ public:
                           const int* X,
                           const FWPriors& fw_priors) = 0;
 
+    bool is_fw_day() const { return false; }
     static GammaGen** create_arr(const Rcpp::NumericMatrix& U, const Rcpp::List& gamma_specs);
 };
 
