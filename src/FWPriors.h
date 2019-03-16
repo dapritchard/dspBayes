@@ -118,7 +118,7 @@ public:
     FWPriors(const Rcpp::List& fw_prior_specs) :
         m_mday  {MDay()},
         m_mu    {build_mu(fw_prior_specs)},
-        m_nu    {Nu()},
+        m_nu    {build_nu(fw_prior_specs)},
         m_delta {Delta()}
     {}
 
@@ -129,9 +129,17 @@ public:
         // m_delta.sample();
     }
 
+    // FIXME
     Mu build_mu(const Rcpp::List& fw_prior_specs) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
         Mu out {Mu(1.0, 100000, true)};
+        return out;
+    }
+
+    // FIXME
+    Nu build_nu(const Rcpp::List& fw_prior_specs) { // FIXME
+        // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
+        Nu out {Nu(1.0, 100000, true)};
         return out;
     }
 };

@@ -231,6 +231,8 @@ Dsp.o : CoefGen.h PhiGen.h WGen.h XiGen.h
 
 FWPriorMu.o : FWPriors.h CoefGen.h ProposalFcns.h
 
+FWPriorNu.o : FWPriors.h CoefGen.h ProposalFcns.h
+
 GammaCateg.o : GammaGen.h global_vars.h
 
 GammaContMH.o : GammaGen.h global_vars.h WGen.h XiGen.h UProdBeta.h

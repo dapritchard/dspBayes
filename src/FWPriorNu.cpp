@@ -11,8 +11,8 @@ Nu::Nu(double proposal_dispersion, int n_samp, bool record_status) :
     MHCont(proposal_dispersion, n_samp, record_status),
     m_alpha_0_minus_1 {1.0},
     m_beta_0          {1.0},
-    m_mu_val          {2.0},
-    m_log_mu_val      {std::log(2.0)}
+    m_nu_val          {2.0},
+    m_log_nu_val      {std::log(2.0)}
 {}
 
 
@@ -35,9 +35,9 @@ void Nu::sample(const CoefGen& coefs,
     // sample the updated value by either accepting the proposal value or by
     // keeping the current value
     double new_val = update(log_r, proposal_val);
-    if (new_val != m_mu_val) {
+    if (new_val != m_nu_val) {
         m_nu_val = new_val;
-        m_log_nu_val = std::log(m_mu_val);
+        m_log_nu_val = std::log(m_nu_val);
     }
 
     // save the value of the new sample.  If we are recording samples then
@@ -69,25 +69,25 @@ double Nu::calc_log_r(const CoefGen& coefs,
 
 // calculate
 //
-//         p(gamma_1, ..., gamma_K | m, mu, nu_proposal, delta)
+//         p(gamma_1, ..., gamma_K | m, mu, proposal_val, delta)
 //     log ----------------------------------------------------
-//         p(gamma_1, ..., gamma_K | m, mu, nu_current, delta)
+//         p(gamma_1, ..., gamma_K | m, mu, m_nu_val, delta)
 //
-//                           p(gamma_k | m, mu, nu_proposal, delta)
+//                           p(gamma_k | m, mu, proposal_val, delta)
 //         = sum_{k=1}^K log --------------------------------------.
-//                           p(gamma_k | m, mu, nu_current, delta)
+//                           p(gamma_k | m, mu, m_nu_val, delta)
 //
 // Furthermore, the k-th term of the sum simplifies to
 //
-//     nu_proposal * log(nu_proposal)
+//     proposal_val * log(proposal_val)
 //
-//         - nu_current * log(nu_current)
+//         - m_nu_val * log(m_nu_val)
 //
-//         - log(GammaFn(nu_proposal))
+//         - log(GammaFn(proposal_val))
 //
-//         + log(GammaFn(nu_current))
+//         + log(GammaFn(m_nu_val))
 //
-//         + (nu_proposal - nu_current) * (log(gamma_k) - log(delta^{|k-m|}) - (gamma_k / (delta^{|k-m|}))).
+//         + (proposal_val - m_nu_val) * (log(gamma_k) - log(delta^{|k-m|}) - (gamma_k / (delta^{|k-m|}))).
 //
 // Additionally, we note that terms not indexed by `k` can be factored out of
 // each term in the sum for efficiency.
@@ -118,8 +118,9 @@ double Nu::calc_log_lik_gamma_term(const CoefGen& coefs,
         if (coefs.m_gamma[k]->is_fw_day()) {
 
             // current FW day index and coefficient value
-            int curr_day_idx    = dynamic_cast<GammaFWDay*>(coefs.m_gamma[k])->m_day_idx;
-            double curr_gam_val = coefs.m_gamma[k]->m_gam_val;
+            int curr_day_idx     = dynamic_cast<GammaFWDay*>(coefs.m_gamma[k])->m_day_idx;
+            double curr_beta_val = coefs.m_gamma[k]->m_beta_val;
+            double curr_gam_val  = coefs.m_gamma[k]->m_gam_val;
 
             // calculate `delta^{|k-m|} * mu`
             double day_dist          = abs(curr_day_idx - mday_val);
@@ -131,18 +132,18 @@ double Nu::calc_log_lik_gamma_term(const CoefGen& coefs,
             double term_b       = std::log(delta_pow_prod_mu);
             double term_c       = curr_gam_val / delta_pow_prod_mu;
 
-            sum_log_lik += term5_a - term5_b - term5_c;
+            sum_log_lik += term_a - term_b - term_c;
         }
     }
 
     // calculate the terms in the sum
-    double term_1 = nu_proposal * std::log(nu_proposal);
-    double term_2 = nu_current * std::log(nu_current);
-    double term_3 = R::lgammafn(nu_proposal);
-    double term_4 = R::lgammafn(nu_current);
-    double term_5 = (nu_proposal - nu_current) * sum_log_lik;
+    double term_1 = proposal_val * std::log(proposal_val);
+    double term_2 = m_nu_val * m_log_nu_val;
+    double term_3 = R::lgammafn(proposal_val);
+    double term_4 = R::lgammafn(m_nu_val);
+    double term_5 = (proposal_val - m_nu_val) * sum_log_lik;
 
-    return term_1 + term_2 + term_3 + term_4 + term_5;
+    return K * (term_1 + term_2 + term_3 + term_4) + term_5;
 }
 
 
@@ -150,13 +151,13 @@ double Nu::calc_log_lik_gamma_term(const CoefGen& coefs,
 
 // calculate
 //
-//         p(nu_proposal | a, b)
+//         p(proposal_val | a, b)
 //     log ---------------------
-//         p(nu_current | a, b)
+//         p(m_nu_val | a, b)
 //
-//         = (a - 1) * (log(nu_proposal) - log(nu_current))
+//         = (a - 1) * (log(proposal_val) - log(m_nu_val))
 //
-//             - b * (nu_proposal - nu_current)
+//             - b * (proposal_val - m_nu_val)
 
 double Nu::calc_log_lik_nu_term(double proposal_val, double log_proposal_val) const {
 
