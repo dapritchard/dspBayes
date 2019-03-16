@@ -61,13 +61,35 @@ public:
 
 
 
-class Nu {
+class Nu : public MHCont {
 public:
 
-    double m_nu;
+    // hyperparameters for nu
+    const double m_alpha_0_minus_1;
+    const double m_beta_0;
 
-    Nu() : m_nu {5} {}
-    double val() const { return m_nu; }
+    // current value and log-value
+    double m_nu_val;
+    double m_log_nu_val;
+
+    Nu(double proposal_dispersion, int n_samp, bool record_status);
+    void sample(const CoefGen& coefs, const MDay& mday, const Mu& mu, const Delta& delta);
+
+    double calc_log_r(const CoefGen& coefs,
+                      const MDay& mday,
+                      const Mu& mu,
+                      const Delta& delta,
+                      double proposal_val,
+                      double log_proposal_val) const;
+
+    double calc_log_lik_gamma_term(const CoefGen& coefs,
+                                   const MDay& mday,
+                                   const Mu& mu,
+                                   const Delta& delta,
+                                   double proposal_val,
+                                   double log_proposal_val) const;
+
+    double calc_log_lik_nu_term(double proposal_val, double log_proposal_val) const;
 };
 
 

@@ -19,13 +19,13 @@ Nu::Nu(double proposal_dispersion, int n_samp, bool record_status) :
 
 
 // update the value of `m_nu_val` using a Metropolis step
-void Mu::sample(const CoefGen& coefs,
+void Nu::sample(const CoefGen& coefs,
                 const MDay& mday,
                 const Mu& mu,
                 const Delta& delta) {
 
     // sample the proposal value for Metropolis step.  TODO: generalize proposal function
-    const double proposal_val = ProposalFcns::abs_unif(*m_vals, m_prp_disp);
+    const double proposal_val     = ProposalFcns::abs_unif(*m_vals, m_prp_disp);
     const double log_proposal_val = std::log(proposal_val);
 
     // calculate `log(r)` where `r` is the acceptance ratio for the Metropolis
@@ -36,8 +36,8 @@ void Mu::sample(const CoefGen& coefs,
     // keeping the current value
     double new_val = update(log_r, proposal_val);
     if (new_val != m_mu_val) {
-        m_mu_val = new_val;
-        m_log_mu_val = std::log(m_mu_val);
+        m_nu_val = new_val;
+        m_log_nu_val = std::log(m_mu_val);
     }
 
     // save the value of the new sample.  If we are recording samples then
