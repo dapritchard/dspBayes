@@ -66,7 +66,7 @@ public:
 
     double m_nu;
 
-    Nu() : m_nu {1} {}
+    Nu() : m_nu {5} {}
     double val() const { return m_nu; }
 };
 
@@ -109,7 +109,7 @@ public:
 
     Mu build_mu(const Rcpp::List& fw_prior_specs) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Mu out {Mu(1.0, 1.0, true)};
+        Mu out {Mu(1.0, 100000, true)};
         return out;
     }
 };

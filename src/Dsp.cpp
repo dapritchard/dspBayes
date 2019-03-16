@@ -80,9 +80,9 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
         // resulting values of the `U * beta`
         coefs.sample(W, xi, ubeta, X.vals(), fw_priors);
         ubeta.update_exp();  // <--- TODO: let's put this inside sample()
-        // if (true) { // FIXME: have to change this
-        //     fw_priors.sample(coefs);
-        // }
+        if (true) { // FIXME: have to change this
+            fw_priors.sample(coefs);
+        }
 
         // update phi, the variance parameter for xi
         phi.sample(xi);
@@ -103,12 +103,10 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
         if ((s % DSP_BAYES_N_INTERRUPT_CHECK) == 0) {
             Rcpp::checkUserInterrupt();
             std::cout << "Iter:  " << s << std::endl;
-            // each iteration updates one gamma_h term and correspondingly udjusts
-            // the value of `ubeta`.
-            for (int j = 0; j < coefs.m_n_gamma; ++j) {
-                std::cout << coefs.m_gamma[j]->m_gam_val << "    ";
-            }
-            std::cout << std::endl;
+            // for (int j = 0; j < coefs.m_n_gamma; ++j) {
+            //     std::cout << coefs.m_gamma[j]->m_gam_val << "    ";
+            // }
+            // std::cout << std::endl;
         }
     }
 
