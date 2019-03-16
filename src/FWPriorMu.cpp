@@ -105,6 +105,7 @@ double Mu::calc_log_lik_gamma_term(const CoefGen& coefs,
 
     // each iteration conditionally calculates the log-likelihood ratio of the
     // j-th gamma term and adds it to `sum_log-lik`
+    // TODO: can take more of the terms out of the sum
     for (int k = 0; k < coefs.m_n_gamma; ++k) {
 
         // only consider the gamma terms that are part of the fertile window
