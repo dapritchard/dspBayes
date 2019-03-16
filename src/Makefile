@@ -181,7 +181,7 @@ LDLIBS := $(addprefix -l, R)
 
 utests := $(addsuffix .o, $(basename $(wildcard UTest*.cpp)))
 # targets := $(filter-out $(utests), $(addsuffix .o, $(basename $(wildcard *.cpp))))
-targets := $(filter-out $(utests) MHCont.o UGen.o UGenVar.o UGenVarCateg.o, $(addsuffix .o, $(basename $(wildcard *.cpp))))
+targets := $(filter-out $(utests) UGen.o UGenVar.o UGenVarCateg.o, $(addsuffix .o, $(basename $(wildcard *.cpp))))
 
 .PHONY : all clean clobber print-%
 

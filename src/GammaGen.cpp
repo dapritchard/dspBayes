@@ -2,7 +2,7 @@
 #include "GammaGen.h"
 #include "GammaFWDay.h"
 
-#define GAMMA_GEN_TYPE_CATEG       0
+#define GAMMA_GEN_TYPE_CATEG       0  // TODO: change to enum
 #define GAMMA_GEN_TYPE_CONT_MH     1
 // #define GAMMA_GEN_TYPE_CONT_ADAPT  2
 #define GAMMA_GEN_TYPE_FW_DAY      3
@@ -16,16 +16,17 @@ using Rcpp::as;
 GammaGen::GammaGen(const Rcpp::NumericMatrix& U,
                    const Rcpp::NumericVector& gamma_specs) :
     // initialization list
-    m_beta_val(0),
-    m_gam_val(1),
-    m_hyp_a(gamma_specs["hyp_a"]),
-    m_hyp_b(gamma_specs["hyp_b"]),
-    m_hyp_p(gamma_specs["hyp_p"]),
-    m_bnd_l(gamma_specs["bnd_l"]),
-    m_bnd_u(gamma_specs["bnd_u"]),
-    m_Uh(U.begin() + ((int) gamma_specs["h"]) * U.nrow()),
-    m_n_days(U.nrow())  {
-}
+    m_beta_val  {0},
+    m_gam_val   {1},
+    m_hyp_a     {gamma_specs["hyp_a"]},
+    m_hyp_b     {gamma_specs["hyp_b"]},
+    m_hyp_p     {gamma_specs["hyp_p"]},
+    m_bnd_l     {gamma_specs["bnd_l"]},
+    m_bnd_u     {gamma_specs["bnd_u"]},
+    m_Uh        {U.begin() + ((int) gamma_specs["h"]) * U.nrow()},
+    m_n_days    {U.nrow()},
+    m_is_fw_day {false}
+{}
 
 
 

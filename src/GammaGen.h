@@ -8,8 +8,6 @@
 #include "FWPriors.h"
 
 
-
-
 class GammaGen {
 
 public:
@@ -31,6 +29,9 @@ public:
     // number of observations in the data
     const int m_n_days;
 
+    // whether or not this is the `GammaFWDay` subclass
+    bool m_is_fw_day;
+
     GammaGen(const Rcpp::NumericMatrix& U, const Rcpp::NumericVector& coef_specs);
     virtual ~GammaGen() {}
 
@@ -41,7 +42,7 @@ public:
                           const int* X,
                           const FWPriors& fw_priors) = 0;
 
-    bool is_fw_day() const { return false; }
+    bool is_fw_day() const { return m_is_fw_day; }
     static GammaGen** create_arr(const Rcpp::NumericMatrix& U, const Rcpp::List& gamma_specs);
 };
 

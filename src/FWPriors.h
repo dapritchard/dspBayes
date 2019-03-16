@@ -66,7 +66,7 @@ public:
 
     double m_nu;
 
-    Nu() : m_nu {100} {}
+    Nu() : m_nu {1} {}
     double val() const { return m_nu; }
 };
 
@@ -85,7 +85,6 @@ public:
 
 
 
-// FIXME: need to call destructors for these classes?
 class FWPriors {
 public:
 

@@ -10,7 +10,9 @@ GammaFWDay::GammaFWDay(const Rcpp::NumericMatrix& U,
                        const Rcpp::NumericVector& gamma_specs) :
     GammaContMH {U, gamma_specs},
     m_day_idx   {static_cast<int>(gamma_specs["h"]) + 1}  // TODO: make this indep of loc in the design mat?
-{}
+{
+    m_is_fw_day = true;
+}
 
 
 
@@ -23,13 +25,8 @@ double GammaFWDay::sample(const WGen& W,
                           const int* X,
                           const FWPriors& fw_priors) {
 
-    // std::cout << "beginning of GammaFWDay::sample" << std::endl;
-    // std::cout << "start m_proposal_fcn" << std::endl;
-    // std::cout << "m_beta_val:  " << m_beta_val << std::endl;
-    // std::cout << "m_mh_delta:  " << m_mh_delta << std::endl;
     // const double proposal_beta = m_proposal_fcn(m_beta_val, m_mh_delta);
     const double proposal_beta = (m_beta_val - m_mh_delta) + (2.0 * m_mh_delta * R::unif_rand());
-    // std::cout << "start exp(proposal_beta)" << std::endl;
     const double proposal_gam  = exp(proposal_beta);
 
     // calculate the log acceptance ratio
@@ -101,10 +98,10 @@ double GammaFWDay::get_gam_log_lik(double proposal_beta,
                                    FWPriors fw_priors) {
 
     // extract priors for convenience
-    double mday_val  = fw_priors.mday.val();
-    double mu_val    = fw_priors.mu.val();
-    double nu_val    = fw_priors.nu.val();
-    double delta_val = fw_priors.delta.val();
+    double mday_val  = fw_priors.m_mday.val();
+    double mu_val    = fw_priors.m_mu.val();
+    double nu_val    = fw_priors.m_nu.val();
+    double delta_val = fw_priors.m_delta.val();
 
     // calculate `(nu - 1)(log(proposal_gam) - log(current_gam))`
     double term1 = (nu_val - 1) * (proposal_beta - m_beta_val);

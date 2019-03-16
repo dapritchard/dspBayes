@@ -1,11 +1,12 @@
 #ifndef DSP_BAYES_SRC_COEF_GEN_H
 #define DSP_BAYES_SRC_COEF_GEN_H
 
+// note that GammaGen.h is included at the bottom of the file
 #include "Rcpp.h"
-#include "GammaGen.h"
 #include "XiGen.h"
 #include "UProdBeta.h"
 #include "FWPriors.h"
+class GammaGen;
 
 
 class CoefGen {
@@ -32,5 +33,7 @@ public:
     const double* vals() const { return m_vals; }
 };
 
+
+#include "GammaGen.h"
 
 #endif
