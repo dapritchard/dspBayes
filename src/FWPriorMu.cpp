@@ -104,11 +104,11 @@ double Mu::calc_log_lik_gamma_term(const CoefGen& coefs,
     const double delta_val = delta.val();
 
     // used to collect the sum log-likelihood ratio of the individual gamma terms
-    double sum_log_lik = 0;
+    double sum_term = 0;
+    int K = 0;  // TODO: make available in CoefGen.h
 
-    // each iteration conditionally calculates the log-likelihood ratio of the
-    // j-th gamma term and adds it to `sum_log-lik`
-    // TODO: can take more of the terms out of the sum
+    // each iteration conditionally calculates the log-likelihood ratio portion
+    // in the sum of the k-th gamma term and adds it to `sum_term`
     for (int k = 0; k < coefs.m_n_gamma; ++k) {
 
         // only consider the gamma terms that are part of the fertile window
@@ -119,21 +119,23 @@ double Mu::calc_log_lik_gamma_term(const CoefGen& coefs,
             int curr_day_idx    = dynamic_cast<GammaFWDay*>(coefs.m_gamma[k])->m_day_idx;
             double curr_gam_val = coefs.m_gamma[k]->m_gam_val;
 
-            // calculate the first term for the k-th element in the sum
-            double term1 = log_proposal_val - m_log_mu_val;
+            // calculate `delta^{|k-m|}`
+            double day_dist  = abs(curr_day_idx - mday_val);
+            double delta_pow = pow(delta_val, day_dist);
 
-            // calculate the second term for the k-th element in the sum
-            double day_dist         = abs(curr_day_idx - mday_val);
-            double ar_delta_pow     = pow(delta_val, day_dist);
-            double term2_multiplier = curr_gam_val / ar_delta_pow;
-            double term2_diff       = (1 / proposal_val) - (1 / m_mu_val);
-            double term2            = term2_multiplier * term2_diff;
-
-            sum_log_lik += term1 + term2;
+            // add `gamma_k / delta^{|k-m|}` to the running total
+            sum_term += curr_gam_val / delta_pow;
+            K += 1;
         }
     }
 
-    return -nu_val * sum_log_lik;
+    //
+
+    // calculate the terms after including the non-indexed portions
+    double term1 = K * (log_proposal_val - m_log_mu_val);
+    double term2 = ((1 / proposal_val) - (1 / m_mu_val)) * sum_term;
+
+    return -nu_val * (term1 + term2);
 }
 
 

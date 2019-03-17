@@ -26,7 +26,9 @@ void Delta::sample(const CoefGen& coefs,
                    const Mu& mu,
                    const Nu& nu) {
 
-    // sample the proposal value for Metropolis step.  TODO: generalize proposal function
+    // sample the proposal value for Metropolis step.
+    // TODO: generalize proposal function
+    // TODO: proposal function generates values > 1
     const double proposal_val     = ProposalFcns::abs_unif(*m_vals, m_prp_disp);
     const double log_proposal_val = std::log(proposal_val);
 
@@ -157,5 +159,5 @@ double Delta::calc_log_lik_nu_term(double proposal_val, double log_proposal_val)
     double term1 = m_alpha_0_minus_1 * (log_proposal_val - m_log_delta_val);
     double term2 = m_beta_0_minus_1 * (std::log(1 - proposal_val) - std::log(1 - m_delta_val));
 
-    return term1 - term2;
+    return term1 + term2;
 }
