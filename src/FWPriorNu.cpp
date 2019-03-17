@@ -14,7 +14,6 @@ Nu::Nu(int n_samp, bool record_status, double proposal_dispersion) :
     m_nu_val          {2.0},
     m_log_nu_val      {std::log(2.0)}
 {
-    // initialize with an arbitrary value
     *m_vals = m_nu_val;
 }
 

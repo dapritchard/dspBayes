@@ -229,6 +229,8 @@ DayBlock.o : DayBlock.h
 # TODO: the depends here need updated big time
 Dsp.o : CoefGen.h PhiGen.h WGen.h XiGen.h
 
+FWPriorDelta.o : FWPriors.h CoefGen.h ProposalFcns.h
+
 FWPriorMu.o : FWPriors.h CoefGen.h ProposalFcns.h
 
 FWPriorNu.o : FWPriors.h CoefGen.h ProposalFcns.h

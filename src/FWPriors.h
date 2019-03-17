@@ -99,14 +99,51 @@ public:
 
 
 
-class Delta {
+// class Delta {
+// public:
+
+//     double m_delta;
+
+//     Delta() : m_delta {0.5} {}
+//     double val() const { return m_delta; }
+// };
+
+
+
+
+class Delta : public MHCont {
 public:
 
-    double m_delta;
+    // hyperparameters for nu
+    const double m_alpha_0_minus_1;
+    const double m_beta_0_minus_1;
 
-    Delta() : m_delta {0.5} {}
-    double val() const { return m_delta; }
+    // current value and log-value
+    double m_delta_val;
+    double m_log_delta_val;
+
+    Delta(int n_samp, bool record_status, double proposal_dispersion);
+    void sample(const CoefGen& coefs, const MDay& mday, const Mu& mu, const Nu& nu);
+
+    double val() const { return 0.5; }  // TODO: take this out!!
+
+    double calc_log_r(const CoefGen& coefs,
+                      const MDay& mday,
+                      const Mu& mu,
+                      const Nu& nu,
+                      double proposal_val,
+                      double log_proposal_val) const;
+
+    double calc_log_lik_gamma_term(const CoefGen& coefs,
+                                   const MDay& mday,
+                                   const Mu& mu,
+                                   const Nu& nu,
+                                   double proposal_val,
+                                   double log_proposal_val) const;
+
+    double calc_log_lik_nu_term(double proposal_val, double log_proposal_val) const;
 };
+
 
 
 
@@ -123,14 +160,21 @@ public:
         m_mday  {MDay()},
         m_mu    {build_mu(fw_prior_specs)},
         m_nu    {build_nu(fw_prior_specs)},
-        m_delta {Delta()}
+        m_delta {build_delta(fw_prior_specs)}
     {}
 
     void sample(const CoefGen& coefs) { // FIXME
         // m_mday.sample();
         m_mu.sample(coefs, m_mday, m_nu, m_delta);
         m_nu.sample(coefs, m_mday, m_mu, m_delta);
-        // m_delta.sample();
+        m_delta.sample(coefs, m_mday, m_mu, m_nu);
+    }
+
+    // FIXME
+    Delta build_delta(const Rcpp::List& fw_prior_specs) { // FIXME
+        // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
+        Delta out {Delta(50000, true, 0.1)};
+        return out;
     }
 
     // FIXME

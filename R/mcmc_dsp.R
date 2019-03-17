@@ -60,5 +60,6 @@ dsp <- function(dsp_data,
          ugen     = out$ugen,
          mu       = out$mu,
          nu       = out$nu,
+         delta    = out$delta,
          run_time = run_time)
 }
