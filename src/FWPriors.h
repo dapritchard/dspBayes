@@ -38,8 +38,6 @@ public:
     double m_mu_val;
     double m_log_mu_val;
 
-    double val() const { return 0.44; }  // TODO: take this out!!
-
     Mu(int n_samp, bool record_status, double proposal_dispersion);
     void sample(const CoefGen& coefs, const MDay& mday, const Nu& nu, const Delta& delta);
 
@@ -77,8 +75,6 @@ public:
     Nu(int n_samp, bool record_status, double proposal_dispersion);
     void sample(const CoefGen& coefs, const MDay& mday, const Mu& mu, const Delta& delta);
 
-    double val() const { return 50.0; }  // TODO: take this out!!
-
     double calc_log_r(const CoefGen& coefs,
                       const MDay& mday,
                       const Mu& mu,
@@ -99,18 +95,6 @@ public:
 
 
 
-// class Delta {
-// public:
-
-//     double m_delta;
-
-//     Delta() : m_delta {0.5} {}
-//     double val() const { return m_delta; }
-// };
-
-
-
-
 class Delta : public MHCont {
 public:
 
@@ -124,8 +108,6 @@ public:
 
     Delta(int n_samp, bool record_status, double proposal_dispersion);
     void sample(const CoefGen& coefs, const MDay& mday, const Mu& mu, const Nu& nu);
-
-    double val() const { return 0.5; }  // TODO: take this out!!
 
     double calc_log_r(const CoefGen& coefs,
                       const MDay& mday,

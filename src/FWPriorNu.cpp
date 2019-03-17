@@ -105,11 +105,11 @@ double Nu::calc_log_lik_gamma_term(const CoefGen& coefs,
     const double mday_val  = mday.val();
     const double mu_val    = mu.val();
     const double delta_val = delta.val();
-    const int K            = coefs.m_n_gamma;
 
     // used to collect the sum log-likelihood ratio of the individual gamma
     // terms (not including the terms that aren't indexed by the sum)
     double sum_log_lik = 0;
+    int K = 0;  // TODO: make available in CoefGen.h
 
     // each iteration conditionally calculates the log-likelihood ratio of the
     // j-th gamma term and adds it to `sum_log-lik`
@@ -135,6 +135,7 @@ double Nu::calc_log_lik_gamma_term(const CoefGen& coefs,
             double term_c       = curr_gam_val / delta_pow_prod_mu;
 
             sum_log_lik += term_a - term_b - term_c;
+            K += 1;
         }
     }
 
@@ -145,7 +146,7 @@ double Nu::calc_log_lik_gamma_term(const CoefGen& coefs,
     double term_4 = R::lgammafn(m_nu_val);
     double term_5 = (proposal_val - m_nu_val) * sum_log_lik;
 
-    return K * (term_1 + term_2 + term_3 + term_4) + term_5;
+    return K * (term_1 - term_2 - term_3 + term_4) + term_5;
 }
 
 

@@ -10,7 +10,7 @@
 Mu::Mu(int n_samp, bool record_status, double proposal_dispersion) :
     MHCont(n_samp, record_status, proposal_dispersion),
     m_alpha_0_minus_1 {1.0},
-    m_beta_0          {1.0},
+    m_beta_0          {2.0 / 0.44},
     m_mu_val          {0.44},
     m_log_mu_val      {std::log(0.44)}
 {
