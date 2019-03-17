@@ -38,7 +38,9 @@ public:
     double m_mu_val;
     double m_log_mu_val;
 
-    Mu(double proposal_dispersion, int n_samp, bool record_status);
+    double val() const { return 0.44; }  // TODO: take this out!!
+
+    Mu(int n_samp, bool record_status, double proposal_dispersion);
     void sample(const CoefGen& coefs, const MDay& mday, const Nu& nu, const Delta& delta);
 
     double calc_log_r(const CoefGen& coefs,
@@ -72,8 +74,10 @@ public:
     double m_nu_val;
     double m_log_nu_val;
 
-    Nu(double proposal_dispersion, int n_samp, bool record_status);
+    Nu(int n_samp, bool record_status, double proposal_dispersion);
     void sample(const CoefGen& coefs, const MDay& mday, const Mu& mu, const Delta& delta);
+
+    double val() const { return 50.0; }  // TODO: take this out!!
 
     double calc_log_r(const CoefGen& coefs,
                       const MDay& mday,
@@ -125,21 +129,21 @@ public:
     void sample(const CoefGen& coefs) { // FIXME
         // m_mday.sample();
         m_mu.sample(coefs, m_mday, m_nu, m_delta);
-        // m_nu.sample();
+        m_nu.sample(coefs, m_mday, m_mu, m_delta);
         // m_delta.sample();
     }
 
     // FIXME
     Mu build_mu(const Rcpp::List& fw_prior_specs) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Mu out {Mu(1.0, 100000, true)};
+        Mu out {Mu(50000, true, 0.1)};
         return out;
     }
 
     // FIXME
     Nu build_nu(const Rcpp::List& fw_prior_specs) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Nu out {Nu(1.0, 100000, true)};
+        Nu out {Nu(50000, true, 0.1)};
         return out;
     }
 };

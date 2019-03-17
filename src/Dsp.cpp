@@ -117,5 +117,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
 
     return Rcpp::List::create(Rcpp::Named("coefs") = coefs.m_vals_rcpp,
                               Rcpp::Named("xi")    = xi.m_vals_rcpp,
-                              Rcpp::Named("phi")   = phi.m_vals_rcpp);
+                              Rcpp::Named("phi")   = phi.m_vals_rcpp,
+                              Rcpp::Named("mu")    = fw_priors.m_mu.m_vals_rcpp,
+                              Rcpp::Named("nu")    = fw_priors.m_nu.m_vals_rcpp);
 }

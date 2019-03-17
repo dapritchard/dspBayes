@@ -7,13 +7,16 @@
 #include "ProposalFcns.h"
 
 
-Nu::Nu(double proposal_dispersion, int n_samp, bool record_status) :
-    MHCont(proposal_dispersion, n_samp, record_status),
+Nu::Nu(int n_samp, bool record_status, double proposal_dispersion) :
+    MHCont(n_samp, record_status, proposal_dispersion),
     m_alpha_0_minus_1 {1.0},
     m_beta_0          {1.0},
     m_nu_val          {2.0},
     m_log_nu_val      {std::log(2.0)}
-{}
+{
+    // initialize with an arbitrary value
+    *m_vals = m_nu_val;
+}
 
 
 

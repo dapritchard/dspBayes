@@ -58,5 +58,7 @@ dsp <- function(dsp_data,
          xi       = xi_trans,
          phi      = out$phi,
          ugen     = out$ugen,
+         mu       = out$mu,
+         nu       = out$nu,
          run_time = run_time)
 }

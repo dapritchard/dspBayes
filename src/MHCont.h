@@ -21,10 +21,9 @@ public:
     const bool m_record_status;
 
     // constructor and base functions
-    MHCont(double proposal_dispersion, int n_samp, bool record_status);
+    MHCont(int n_samp, bool record_status, double proposal_dispersion);
     double update(double log_r, double proposal_val);
-    // double val() const { return *m_vals; }
-    double val() const { return 0.44; }
+    double val() const { return *m_vals; }
 };
 
 

@@ -3,7 +3,7 @@
 #include "MHCont.h"
 
 
-MHCont::MHCont(double proposal_dispersion, int n_samp, bool record_status) :
+MHCont::MHCont(int n_samp, bool record_status, double proposal_dispersion) :
     m_vals_rcpp     {(Rcpp::NumericVector(Rcpp::no_init(record_status ? n_samp : 1)))},
     m_vals          {(m_vals_rcpp.begin())},
     m_prp_disp      {proposal_dispersion},
