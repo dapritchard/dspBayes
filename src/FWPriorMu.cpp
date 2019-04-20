@@ -118,6 +118,9 @@ double Mu::calc_log_lik_gamma_term(const CoefGen& coefs,
             // current FW day index and coefficient value
             int curr_day_idx    = dynamic_cast<GammaFWDay*>(coefs.m_gamma[k])->m_day_idx;
             double curr_gam_val = coefs.m_gamma[k]->m_gam_val;
+            // if ((k == 0) || (k == 4)) curr_gam_val = 0.11;
+            // else if ((k == 1) || (k == 3)) curr_gam_val = 0.22;
+            // else curr_gam_val = 0.44;
 
             // calculate `delta^{|k-m|}`
             double day_dist  = abs(curr_day_idx - mday_val);

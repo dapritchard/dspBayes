@@ -56,6 +56,8 @@ public:
                                    double log_proposal_val) const;
 
     double calc_log_lik_mu_term(double proposal_val, double log_proposal_val) const;
+
+    double val() const { return 0.44; }  // CRITICAL: remove this!!
 };
 
 
@@ -124,6 +126,8 @@ public:
                                    double log_proposal_val) const;
 
     double calc_log_lik_nu_term(double proposal_val, double log_proposal_val) const;
+
+    double val() const { return 0.5; }  // CRITICAL: remove this!!
 };
 
 
@@ -138,11 +142,11 @@ public:
     Nu m_nu;
     Delta m_delta;
 
-    FWPriors(const Rcpp::List& fw_prior_specs) :
+    FWPriors(const Rcpp::List& fw_prior_specs, int n_samp) :
         m_mday  {MDay()},
-        m_mu    {build_mu(fw_prior_specs)},
-        m_nu    {build_nu(fw_prior_specs)},
-        m_delta {build_delta(fw_prior_specs)}
+        m_mu    {build_mu(fw_prior_specs, n_samp)},
+        m_nu    {build_nu(fw_prior_specs, n_samp)},
+        m_delta {build_delta(fw_prior_specs, n_samp)}
     {}
 
     void sample(const CoefGen& coefs) { // FIXME
@@ -152,24 +156,24 @@ public:
         m_delta.sample(coefs, m_mday, m_mu, m_nu);
     }
 
-    // FIXME
-    Delta build_delta(const Rcpp::List& fw_prior_specs) { // FIXME
+    // FIXME.  Everything here and below is hardcoded.
+    Delta build_delta(const Rcpp::List& fw_prior_specs, int n_samp) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Delta out {Delta(50000, true, 0.1)};
+        Delta out {Delta(n_samp, true, 0.7)};
         return out;
     }
 
     // FIXME
-    Mu build_mu(const Rcpp::List& fw_prior_specs) { // FIXME
+    Mu build_mu(const Rcpp::List& fw_prior_specs, int n_samp) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Mu out {Mu(50000, true, 0.1)};
+        Mu out {Mu(n_samp, true, 0.9)};
         return out;
     }
 
     // FIXME
-    Nu build_nu(const Rcpp::List& fw_prior_specs) { // FIXME
+    Nu build_nu(const Rcpp::List& fw_prior_specs, int n_samp) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Nu out {Nu(50000, true, 0.1)};
+        Nu out {Nu(n_samp, true, 15.0)};
         return out;
     }
 };

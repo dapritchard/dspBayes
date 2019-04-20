@@ -65,7 +65,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     UProdTau utau(utau_rcpp, tau_coefs);
     // UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
     Rcpp::List placeholder_list;  // FIXME
-    FWPriors fw_priors(placeholder_list);
+    FWPriors fw_priors(placeholder_list, n_samp);
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
@@ -114,6 +114,20 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     //                        Rcpp::Named("xi")    = xi.m_vals_rcpp,
     //                        Rcpp::Named("phi")   = phi.m_vals_rcpp,
     //                        Rcpp::Named("ugen")  = U.realized_samples());
+
+    if (Rcpp::as<Rcpp::NumericVector>(gamma_specs[0])["type"] == 3.0) {
+        Rcpp::Rcout << std::endl;
+        Rcpp::Rcout << "mu acceptance count:  " << fw_priors.m_mu.m_accept_ctr << std::endl;
+        Rcpp::Rcout << "nu acceptance count:  " << fw_priors.m_nu.m_accept_ctr << std::endl;
+        Rcpp::Rcout << "delta acceptance count:  " << fw_priors.m_delta.m_accept_ctr << std::endl;
+    }
+    if (Rcpp::as<Rcpp::NumericVector>(gamma_specs[0])["type"] > 0.0) {
+        Rcpp::Rcout << "gamma 0 acceptance count:  " << dynamic_cast<GammaContMH*>(coefs.m_gamma[0])->m_mh_accept_ctr << std::endl;
+        Rcpp::Rcout << "gamma 1 acceptance count:  " << dynamic_cast<GammaContMH*>(coefs.m_gamma[1])->m_mh_accept_ctr << std::endl;
+        Rcpp::Rcout << "gamma 2 acceptance count:  " << dynamic_cast<GammaContMH*>(coefs.m_gamma[2])->m_mh_accept_ctr << std::endl;
+        Rcpp::Rcout << "gamma 3 acceptance count:  " << dynamic_cast<GammaContMH*>(coefs.m_gamma[3])->m_mh_accept_ctr << std::endl;
+        Rcpp::Rcout << "gamma 4 acceptance count:  " << dynamic_cast<GammaContMH*>(coefs.m_gamma[4])->m_mh_accept_ctr << std::endl;
+    }
 
     return Rcpp::List::create(Rcpp::Named("coefs") = coefs.m_vals_rcpp,
                               Rcpp::Named("xi")    = xi.m_vals_rcpp,
