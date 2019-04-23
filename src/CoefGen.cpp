@@ -38,7 +38,8 @@ CoefGen::CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs, int n_samp) :
     // find the location one past the last fertile window day.  If there are no
     // fertile window days then it takes the value one past the last gamma
     // coefficient.
-    for (++t; t < gamma_specs.size(); ++t) {
+    if (t < gamma_specs.size()) ++t;
+    for (; t < gamma_specs.size(); ++t) {
         const Rcpp::NumericVector& curr_gamma_specs = Rcpp::as<Rcpp::NumericVector>(gamma_specs[t]);
         if (curr_gamma_specs["type"] != GAMMA_GEN_TYPE_FW_DAY) {
             break;

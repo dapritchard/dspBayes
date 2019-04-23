@@ -13,9 +13,10 @@ int sample_multi_index(std::vector<double> probs);
 
 
 MDay::MDay(int n_samp, int n_days_fw, bool record_status) :
-    m_vals_rcpp {(Rcpp::NumericVector(Rcpp::no_init(record_status ? n_samp : 1)))},
-    m_vals      {(m_vals_rcpp.begin())},
-    m_n_days_fw {n_days_fw}
+    m_vals_rcpp     {(Rcpp::NumericVector(Rcpp::no_init(record_status ? n_samp : 1)))},
+    m_vals          {(m_vals_rcpp.begin())},
+    m_n_days_fw     {n_days_fw},
+    m_record_status {record_status}
 {}
 
 
@@ -58,6 +59,12 @@ void MDay::sample(const CoefGen& coefs,
         conditional_probs[i] = std::exp(mday_log_liks[i] - log_sum_exp_mday_log_liks);
     }
 
+    // if we are past the burn-in phase then move the pointer past the samples
+    // so that we don't overwrite them
+    if (m_record_status && g_record_status) {
+        ++m_vals;
+    }
+
     // sample new value and update
     *m_vals = sample_multi_index(conditional_probs);
 }
@@ -68,12 +75,12 @@ void MDay::sample(const CoefGen& coefs,
 // sample a multinomial value
 int sample_multi_index(std::vector<double> probs) {
     double x = R::unif_rand();
-    unsigned int i;
-    for (i = 0; i < probs.size(); ++i) {
+    int i;
+    for (i = 0; ; ++i) {
         x -= probs[i];
         if (x < 0) break;
     }
-    return static_cast<int>(i);
+    return i;
 }
 
 

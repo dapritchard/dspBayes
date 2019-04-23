@@ -25,9 +25,12 @@ public:
     // number of fertile window days
     int m_n_days_fw;
 
+    // tracks whether we wish to save the samples of  to return to the user
+    bool m_record_status;
+
     MDay(int n_samp, int n_days_fw, bool record_status);
-    // double val() const { return *m_vals; }
-    double val() const { return 2; }
+    double val() const { return *m_vals; }
+    // double val() const { return 2; }
 
     // void sample();
     void sample(const CoefGen& coefs,

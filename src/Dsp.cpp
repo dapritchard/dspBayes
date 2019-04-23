@@ -80,7 +80,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
         // resulting values of the `U * beta`
         coefs.sample(W, xi, ubeta, X.vals(), fw_priors);
         ubeta.update_exp();  // <--- TODO: let's put this inside sample()
-        if (true) { // FIXME: have to change this
+        if (coefs.n_fw_days() > 0) {
             fw_priors.sample(coefs);
         }
 
@@ -132,6 +132,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     return Rcpp::List::create(Rcpp::Named("coefs") = coefs.m_vals_rcpp,
                               Rcpp::Named("xi")    = xi.m_vals_rcpp,
                               Rcpp::Named("phi")   = phi.m_vals_rcpp,
+                              Rcpp::Named("mday")  = fw_priors.m_mday.m_vals_rcpp,
                               Rcpp::Named("mu")    = fw_priors.m_mu.m_vals_rcpp,
                               Rcpp::Named("nu")    = fw_priors.m_nu.m_vals_rcpp,
                               Rcpp::Named("delta") = fw_priors.m_delta.m_vals_rcpp);

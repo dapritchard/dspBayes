@@ -41,8 +41,8 @@ void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta, con
     const int* x_vals = X.vals();
     const double* ubeta_exp_vals = ubeta.exp_vals();
 
-    // if we are past the burn phase then move the pointer past the samples so
-    // that we don't overwrite them
+    // if we are past the burn-in phase then move the pointer past the samples
+    // so that we don't overwrite them
     if (m_record_status && g_record_status) {
         m_vals += m_n_subj;
     }
