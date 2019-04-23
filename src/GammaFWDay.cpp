@@ -9,7 +9,7 @@
 GammaFWDay::GammaFWDay(const Rcpp::NumericMatrix& U,
                        const Rcpp::NumericVector& gamma_specs) :
     GammaContMH {U, gamma_specs},
-    m_day_idx   {static_cast<int>(gamma_specs["h"]) + 1}  // TODO: make this indep of loc in the design mat?
+    m_day_idx   {static_cast<int>(gamma_specs["h"])}  // TODO: make this indep of loc in the design mat?
 {
     m_is_fw_day = true;
 }

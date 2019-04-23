@@ -6,18 +6,46 @@
 #include "UProdBeta.h"
 #include "FWPriors.h"
 
+
+#define GAMMA_GEN_TYPE_FW_DAY 3
 extern bool g_record_status;
 
 
 
 
 CoefGen::CoefGen(Rcpp::NumericMatrix& U, Rcpp::List& gamma_specs, int n_samp) :
-    m_gamma     {GammaGen::create_arr(U, gamma_specs)},
-    m_vals_rcpp {Rcpp::NumericVector(Rcpp::no_init(gamma_specs.size() * n_samp))},
-    m_vals      {m_vals_rcpp.begin()},
-    m_n_psi     {0},
-    m_n_gamma   {static_cast<int>(gamma_specs.size())}
-{}
+    m_gamma         {GammaGen::create_arr(U, gamma_specs)},
+    m_fw_coef_start {nullptr},
+    m_fw_coef_end   {nullptr},
+    m_vals_rcpp     {Rcpp::NumericVector(Rcpp::no_init(gamma_specs.size() * n_samp))},
+    m_vals          {m_vals_rcpp.begin()},
+    m_n_psi         {0},
+    m_n_gamma       {static_cast<int>(gamma_specs.size())}
+{
+    int t;
+
+    // find the location of the first fertile window day.  If there are no
+    // fertile window days then it takes the value one past the last gamma
+    // coefficient.
+    for (t = 0; t < gamma_specs.size(); ++t) {
+        const Rcpp::NumericVector& curr_gamma_specs = Rcpp::as<Rcpp::NumericVector>(gamma_specs[t]);
+        if (curr_gamma_specs["type"] == GAMMA_GEN_TYPE_FW_DAY) {
+            break;
+        }
+    }
+    m_fw_coef_start = m_gamma + t;
+
+    // find the location one past the last fertile window day.  If there are no
+    // fertile window days then it takes the value one past the last gamma
+    // coefficient.
+    for (++t; t < gamma_specs.size(); ++t) {
+        const Rcpp::NumericVector& curr_gamma_specs = Rcpp::as<Rcpp::NumericVector>(gamma_specs[t]);
+        if (curr_gamma_specs["type"] != GAMMA_GEN_TYPE_FW_DAY) {
+            break;
+        }
+    }
+    m_fw_coef_end = m_gamma + t;
+}
 
 
 

@@ -233,6 +233,8 @@ FWPriorDelta.o : FWPriors.h CoefGen.h ProposalFcns.h
 
 FWPriorMu.o : FWPriors.h CoefGen.h ProposalFcns.h
 
+FWPriorMDay.o : FWPriors.h CoefGen.h
+
 FWPriorNu.o : FWPriors.h CoefGen.h ProposalFcns.h
 
 GammaCateg.o : GammaGen.h global_vars.h

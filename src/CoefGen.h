@@ -14,6 +14,8 @@ class CoefGen {
 public:
 
     GammaGen** m_gamma;
+    GammaGen** m_fw_coef_start;
+    GammaGen** m_fw_coef_end;
 
     Rcpp::NumericVector m_vals_rcpp;
     Rcpp::NumericVector::iterator m_vals;
@@ -31,6 +33,7 @@ public:
                 const FWPriors& fw_priors);
 
     const double* vals() const { return m_vals; }
+    int n_fw_days() const { return m_fw_coef_end - m_fw_coef_start; }
 };
 
 

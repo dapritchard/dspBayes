@@ -65,7 +65,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     UProdTau utau(utau_rcpp, tau_coefs);
     // UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
     Rcpp::List placeholder_list;  // FIXME
-    FWPriors fw_priors(placeholder_list, n_samp);
+    FWPriors fw_priors(placeholder_list, n_samp, coefs.n_fw_days(), true);  // CRITICAL: put real values in
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {

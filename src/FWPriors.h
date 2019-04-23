@@ -1,7 +1,9 @@
 #ifndef DSP_BAYES_FW_PRIORS_H_
 #define DSP_BAYES_FW_PRIORS_H_
 
+#include <vector>
 #include "MHCont.h"
+// #include "GammaFWDay.h"
 
 // note that CoefGen.h included at the bottom of the file
 class CoefGen;
@@ -16,12 +18,28 @@ class Delta;
 class MDay {
 public:
 
-    double m_peak_idx;
+    // storage for previous values
+    Rcpp::IntegerVector m_vals_rcpp;
+    Rcpp::IntegerVector::iterator m_vals;
 
-    MDay() : m_peak_idx {3} {}
-    double val() const { return m_peak_idx; }
+    // number of fertile window days
+    int m_n_days_fw;
+
+    MDay(int n_samp, int n_days_fw, bool record_status);
+    // double val() const { return *m_vals; }
+    double val() const { return 2; }
 
     // void sample();
+    void sample(const CoefGen& coefs,
+                const Mu& mu,
+                const Nu& nu,
+                const Delta& delta);
+
+    double calc_mday_log_lik(int proposal_peak_idx,
+                             const CoefGen& coefs,
+                             const Mu& mu,
+                             const Nu& nu,
+                             const Delta& delta);
 };
 
 
@@ -57,7 +75,7 @@ public:
 
     double calc_log_lik_mu_term(double proposal_val, double log_proposal_val) const;
 
-    double val() const { return 0.44; }  // CRITICAL: remove this!!
+    // double val() const { return 0.44; }  // CRITICAL: remove this!!
 };
 
 
@@ -127,7 +145,7 @@ public:
 
     double calc_log_lik_nu_term(double proposal_val, double log_proposal_val) const;
 
-    double val() const { return 0.5; }  // CRITICAL: remove this!!
+    // double val() const { return 0.5; }  // CRITICAL: remove this!!
 };
 
 
@@ -142,15 +160,15 @@ public:
     Nu m_nu;
     Delta m_delta;
 
-    FWPriors(const Rcpp::List& fw_prior_specs, int n_samp) :
-        m_mday  {MDay()},
+    FWPriors(const Rcpp::List& fw_prior_specs, int n_samp, int n_days_fw, bool record_status) :
+        m_mday  {MDay(n_samp, n_days_fw, record_status)},
         m_mu    {build_mu(fw_prior_specs, n_samp)},
         m_nu    {build_nu(fw_prior_specs, n_samp)},
         m_delta {build_delta(fw_prior_specs, n_samp)}
     {}
 
     void sample(const CoefGen& coefs) { // FIXME
-        // m_mday.sample();
+        m_mday.sample(coefs, m_mu, m_nu, m_delta);
         m_mu.sample(coefs, m_mday, m_nu, m_delta);
         m_nu.sample(coefs, m_mday, m_mu, m_delta);
         m_delta.sample(coefs, m_mday, m_mu, m_nu);
