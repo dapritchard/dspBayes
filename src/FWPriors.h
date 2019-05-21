@@ -194,7 +194,7 @@ public:
     // FIXME
     Nu build_nu(const Rcpp::List& fw_prior_specs, int n_samp) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Nu out {Nu(n_samp, true, 15.0)};
+        Nu out {Nu(n_samp, true, 25.0)};
         return out;
     }
 };
