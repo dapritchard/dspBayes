@@ -86,9 +86,9 @@ inline double GammaFWDay::get_log_r(const WGen& W,
 //
 //     (nu - 1)(log(proposal_gam) - log(current_gam))
 //
-//                   nu
-//         - ------------------ (proposal_gam - current_gam).
-//           delta^{|k - m|} mu
+//                nu
+//         - ----------- (proposal_gam - current_gam).
+//           S(k - m) mu
 //
 // Also recall that the logarithm of the h-th element of the gamma vector is the
 // h-th element of the beta vector.
@@ -101,15 +101,13 @@ double GammaFWDay::get_gam_log_lik(double proposal_beta,
     double mday_val  = fw_priors.m_mday.val();
     double mu_val    = fw_priors.m_mu.val();
     double nu_val    = fw_priors.m_nu.val();
-    double delta_val = fw_priors.m_delta.val();
+    double decay_val = decay(fw_priors.m_mday);
 
     // calculate `(nu - 1)(log(proposal_gam) - log(current_gam))`
     double term1 = (nu_val - 1) * (proposal_beta - m_beta_val);
 
-    // calculate `(nu / (delta^{|k - m|} mu)) * (proposal_gam - current_gam)`
-    double day_dist         = abs(m_day_idx - mday_val);
-    double ar_delta_pow     = pow(delta_val, day_dist);
-    double term2_multiplier = nu_val / (ar_delta_pow * mu_val);
+    // calculate `(nu / (S(k - m) mu)) * (proposal_gam - current_gam)`
+    double term2_multiplier = nu_val / (decay_val * mu_val);
     double term2_diff       = proposal_gam - m_gam_val;
     double term2            = term2_multiplier * term2_diff;
 

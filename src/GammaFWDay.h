@@ -12,9 +12,12 @@ public:
     // double m_beta_val;
     // double m_gam_val;
 
-    // // the FW day index
-    // const int m_day_idx;
+    // the FW day index
     int m_day_idx;
+
+    // the decay values and the index of the midpoint of the array
+    std::vector<double> decay_vals;
+    int midpoint_idx;
 
     // the proposal distribution
     double (*m_proposal_fcn)(double cond, double delta);
@@ -36,6 +39,7 @@ public:
     double get_gam_log_lik(double proposal_beta,
                            double proposal_gam,
                            FWPriors fw_priors);
+    double decay(int peak_intensity_idx) { return m_midpoint_idx + m_day_idx - peak_intensity_idx; }
     bool is_fw_day() const { return true; }
 };
 

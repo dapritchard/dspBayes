@@ -174,7 +174,7 @@ public:
         m_mday.sample(coefs, m_mu, m_nu, m_delta);
         m_mu.sample(coefs, m_mday, m_nu, m_delta);
         m_nu.sample(coefs, m_mday, m_mu, m_delta);
-        m_delta.sample(coefs, m_mday, m_mu, m_nu);
+        // m_delta.sample(coefs, m_mday, m_mu, m_nu);
     }
 
     // FIXME.  Everything here and below is hardcoded.
