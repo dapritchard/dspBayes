@@ -91,9 +91,9 @@ inline double GammaFWDay::get_log_r(const WGen& W,
 
 // calculate
 //
-//         p(proposal_gam | m, mu, nu, delta)
-//     log ----------------------------------,
-//         p(current_gam | m, mu, nu, delta)
+//         p(proposal_gam | m, mu, nu)
+//     log ---------------------------,
+//         p(current_gam | m, mu, nu)
 //
 // which simplifies to
 //

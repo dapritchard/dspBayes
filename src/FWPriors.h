@@ -35,14 +35,12 @@ public:
     // void sample();
     void sample(const CoefGen& coefs,
                 const Mu& mu,
-                const Nu& nu,
-                const Delta& delta);
+                const Nu& nu);
 
     double calc_mday_log_lik(int proposal_peak_idx,
                              const CoefGen& coefs,
                              const Mu& mu,
-                             const Nu& nu,
-                             const Delta& delta);
+                             const Nu& nu);
 };
 
 
@@ -60,19 +58,17 @@ public:
     double m_log_mu_val;
 
     Mu(int n_samp, bool record_status, double proposal_dispersion);
-    void sample(const CoefGen& coefs, const MDay& mday, const Nu& nu, const Delta& delta);
+    void sample(const CoefGen& coefs, const MDay& mday, const Nu& nu);
 
     double calc_log_r(const CoefGen& coefs,
                       const MDay& mday,
                       const Nu& nu,
-                      const Delta& delta,
                       double proposal_val,
                       double log_proposal_val) const;
 
     double calc_log_lik_gamma_term(const CoefGen& coefs,
                                    const MDay& mday,
                                    const Nu& nu,
-                                   const Delta& delta,
                                    double proposal_val,
                                    double log_proposal_val) const;
 
@@ -169,8 +165,8 @@ public:
     {}
 
     void sample(const CoefGen& coefs) { // FIXME
-        m_mday.sample(coefs, m_mu, m_nu, m_delta);
-        m_mu.sample(coefs, m_mday, m_nu, m_delta);
+        m_mday.sample(coefs, m_mu, m_nu);
+        m_mu.sample(coefs, m_mday, m_nu);
         m_nu.sample(coefs, m_mday, m_mu);
         // m_delta.sample(coefs, m_mday, m_mu, m_nu);
     }

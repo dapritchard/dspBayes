@@ -24,8 +24,7 @@ Mu::Mu(int n_samp, bool record_status, double proposal_dispersion) :
 // update the value of `m_mu_val` using a Metropolis step
 void Mu::sample(const CoefGen& coefs,
                 const MDay& mday,
-                const Nu& nu,
-                const Delta& delta) {
+                const Nu& nu) {
 
     // sample the proposal value for Metropolis step.  TODO: generalize
     const double proposal_val = ProposalFcns::abs_unif(*m_vals, m_prp_disp);
@@ -33,7 +32,7 @@ void Mu::sample(const CoefGen& coefs,
 
     // calculate `log(r)` where `r` is the acceptance ratio for the Metropolis
     // step
-    double log_r = calc_log_r(coefs, mday, nu, delta, proposal_val, log_proposal_val);
+    double log_r = calc_log_r(coefs, mday, nu, proposal_val, log_proposal_val);
 
     // sample the updated value by either accepting the proposal value or by
     // keeping the current value
@@ -59,11 +58,10 @@ void Mu::sample(const CoefGen& coefs,
 double Mu::calc_log_r(const CoefGen& coefs,
                       const MDay& mday,
                       const Nu& nu,
-                      const Delta& delta,
                       double proposal_val,
                       double log_proposal_val) const {
 
-    return calc_log_lik_gamma_term(coefs, mday, nu, delta, proposal_val, log_proposal_val)
+    return calc_log_lik_gamma_term(coefs, mday, nu, proposal_val, log_proposal_val)
         + calc_log_lik_mu_term(proposal_val, log_proposal_val);
 }
 
@@ -72,21 +70,21 @@ double Mu::calc_log_r(const CoefGen& coefs,
 
 // calculate
 //
-//         p(gamma_1, ..., gamma_K | m, proposal_mu, nu, delta)
-//     log ----------------------------------------------------
-//         p(gamma_1, ..., gamma_K | m, current_mu, nu, delta)
+//         p(gamma_1, ..., gamma_K | m, proposal_mu, nu)
+//     log ---------------------------------------------
+//         p(gamma_1, ..., gamma_K | m, current_mu, nu)
 //
-//                           p(gamma_k | m, proposal_mu, nu, delta)
-//         = sum_{k=1}^K log --------------------------------------.
-//                           p(gamma_k | m, current_mu, nu, delta)
+//                           p(gamma_k | m, proposal_mu, nu)
+//         = sum_{k=1}^K log -------------------------------.
+//                           p(gamma_k | m, current_mu, nu)
 //
 // We note that the k-th term of the sum simplifies to
 //
 //     -nu * (log(proposal_mu) - log(current_mu))
 //
 //           nu * gamma_k
-//         - ------------- ((1 / proposal_mu) - (1 / current_mu))
-//           delta^{|k-m|}
+//         - ------------ ((1 / proposal_mu) - (1 / current_mu))
+//              S(k-m)
 //
 // Additionally, the `-nu` term can be factored out of each term in the sum for
 // efficiency.
@@ -94,14 +92,12 @@ double Mu::calc_log_r(const CoefGen& coefs,
 double Mu::calc_log_lik_gamma_term(const CoefGen& coefs,
                                    const MDay& mday,
                                    const Nu& nu,
-                                   const Delta& delta,
                                    double proposal_val,
                                    double log_proposal_val) const {
 
     // extract priors for convenience
-    const double mday_val  = mday.val();
-    const double nu_val    = nu.val();
-    const double delta_val = delta.val();
+    const double mday_val = mday.val();
+    const double nu_val   = nu.val();
 
     // used to collect the sum log-likelihood ratio of the individual gamma terms
     double sum_term = 0;
@@ -116,23 +112,14 @@ double Mu::calc_log_lik_gamma_term(const CoefGen& coefs,
         if (coefs.m_gamma[k]->is_fw_day()) {
 
             // current FW day index and coefficient value
-            int curr_day_idx    = dynamic_cast<GammaFWDay*>(coefs.m_gamma[k])->m_day_idx;
             double curr_gam_val = coefs.m_gamma[k]->m_gam_val;
-            // if ((k == 0) || (k == 4)) curr_gam_val = 0.11;
-            // else if ((k == 1) || (k == 3)) curr_gam_val = 0.22;
-            // else curr_gam_val = 0.44;
+            double decay_val    = dynamic_cast<GammaFWDay*>(coefs.m_gamma[k])->decay(mday_val);
 
-            // calculate `delta^{|k-m|}`
-            double day_dist  = abs(curr_day_idx - mday_val);
-            double delta_pow = pow(delta_val, day_dist);
-
-            // add `gamma_k / delta^{|k-m|}` to the running total
-            sum_term += curr_gam_val / delta_pow;
+            // add `gamma_k / S(k - m)` to the running total
+            sum_term += curr_gam_val / decay_val;
             K += 1;
         }
     }
-
-    //
 
     // calculate the terms after including the non-indexed portions
     double term1 = K * (log_proposal_val - m_log_mu_val);

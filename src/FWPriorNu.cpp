@@ -69,13 +69,13 @@ double Nu::calc_log_r(const CoefGen& coefs,
 
 // calculate
 //
-//         p(gamma_1, ..., gamma_K | m, mu, proposal_val, delta)
-//     log ----------------------------------------------------
-//         p(gamma_1, ..., gamma_K | m, mu, m_nu_val, delta)
+//         p(gamma_1, ..., gamma_K | m, mu, proposal_val)
+//     log ----------------------------------------------
+//         p(gamma_1, ..., gamma_K | m, mu, m_nu_val)
 //
-//                           p(gamma_k | m, mu, proposal_val, delta)
-//         = sum_{k=1}^K log --------------------------------------.
-//                           p(gamma_k | m, mu, m_nu_val, delta)
+//                           p(gamma_k | m, mu, proposal_val)
+//         = sum_{k=1}^K log --------------------------------
+//                           p(gamma_k | m, mu, m_nu_val)
 //
 // Furthermore, the k-th term of the sum simplifies to
 //
@@ -87,7 +87,7 @@ double Nu::calc_log_r(const CoefGen& coefs,
 //
 //         + log(GammaFn(m_nu_val))
 //
-//         + (proposal_val - m_nu_val) * (log(gamma_k) - log(delta^{|k-m|} * mu) - (gamma_k / (delta^{|k-m|} * mu))).
+//         + (proposal_val - m_nu_val) * (log(gamma_k) - log(S(k-m) * mu) - (gamma_k / (S(k-m) * mu))).
 //
 // Additionally, note that terms not indexed by `k` can be factored out of each
 // term in the sum for efficiency (i.e. all but the last term).
@@ -121,9 +121,9 @@ double Nu::calc_log_lik_gamma_term(const CoefGen& coefs,
             double decay_val     = dynamic_cast<GammaFWDay*>(coefs.m_gamma[k])->decay(mday_val);
 
             // calculate terms in the sum
-            double term_a       = curr_beta_val;
-            double term_b       = std::log(decay_val * mu_val);
-            double term_c       = curr_gam_val / (decay_val * mu_val);
+            double term_a = curr_beta_val;
+            double term_b = std::log(decay_val * mu_val);
+            double term_c = curr_gam_val / (decay_val * mu_val);
 
             sum_log_lik += term_a - term_b - term_c;
             K += 1;
