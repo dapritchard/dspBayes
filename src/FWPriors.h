@@ -10,7 +10,6 @@ class CoefGen;
 class MDay;
 class Mu;
 class Nu;
-class Delta;
 
 
 
@@ -112,70 +111,23 @@ public:
 
 
 
-class Delta : public MHCont {
-public:
-
-    // hyperparameters for nu
-    const double m_alpha_0_minus_1;
-    const double m_beta_0_minus_1;
-
-    // current value and log-value
-    double m_delta_val;
-    double m_log_delta_val;
-
-    Delta(int n_samp, bool record_status, double proposal_dispersion);
-    void sample(const CoefGen& coefs, const MDay& mday, const Mu& mu, const Nu& nu);
-
-    double calc_log_r(const CoefGen& coefs,
-                      const MDay& mday,
-                      const Mu& mu,
-                      const Nu& nu,
-                      double proposal_val,
-                      double log_proposal_val) const;
-
-    double calc_log_lik_gamma_term(const CoefGen& coefs,
-                                   const MDay& mday,
-                                   const Mu& mu,
-                                   const Nu& nu,
-                                   double proposal_val,
-                                   double log_proposal_val) const;
-
-    double calc_log_lik_nu_term(double proposal_val, double log_proposal_val) const;
-
-    // double val() const { return 0.5; }  // CRITICAL: remove this!!
-};
-
-
-
-
-
 class FWPriors {
 public:
 
     MDay m_mday;
     Mu m_mu;
     Nu m_nu;
-    Delta m_delta;
 
     FWPriors(const Rcpp::List& fw_prior_specs, int n_samp, int n_days_fw, bool record_status) :
         m_mday  {MDay(n_samp, n_days_fw, record_status)},
         m_mu    {build_mu(fw_prior_specs, n_samp)},
-        m_nu    {build_nu(fw_prior_specs, n_samp)},
-        m_delta {build_delta(fw_prior_specs, n_samp)}
+        m_nu    {build_nu(fw_prior_specs, n_samp)}
     {}
 
     void sample(const CoefGen& coefs) { // FIXME
         m_mday.sample(coefs, m_mu, m_nu);
         m_mu.sample(coefs, m_mday, m_nu);
         m_nu.sample(coefs, m_mday, m_mu);
-        // m_delta.sample(coefs, m_mday, m_mu, m_nu);
-    }
-
-    // FIXME.  Everything here and below is hardcoded.
-    Delta build_delta(const Rcpp::List& fw_prior_specs, int n_samp) { // FIXME
-        // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Delta out {Delta(n_samp, true, 0.7)};
-        return out;
     }
 
     // FIXME
