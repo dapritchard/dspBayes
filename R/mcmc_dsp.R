@@ -12,6 +12,11 @@ dsp <- function(dsp_data,
                 fw_decay    = NULL) {
 
     stopifnot(! (fw_ar_model && is.null(fw_decay)))
+    # create dummy values to ensure that we don't pass a null in to the C++
+    # function
+    if (!fw_ar_model) {
+        fw_decay = rep(1, (2 * dsp_data$fw_len) - 1)
+    }
 
     # stub functions for gamma and phi specs
     gamma_hyper_list <- get_gamma_specs(dsp_data, fw_ar_model)
