@@ -6,12 +6,25 @@
 #include "ProposalFcns.h"
 
 
+
+
 GammaFWDay::GammaFWDay(const Rcpp::NumericMatrix& U,
                        const Rcpp::NumericVector& gamma_specs) :
     GammaContMH {U, gamma_specs},
     m_day_idx   {static_cast<int>(gamma_specs["h"])}  // TODO: make this indep of loc in the design mat?
 {
     m_is_fw_day = true;
+}
+
+
+
+
+void GammaFWDay::inject_decay_vals(const Rcpp::NumericVector& decay_vals) {
+    int i;
+    for (i = 0; i < decay_vals.size(); ++i) {
+        m_decay_vals.push_back(decay_vals[i]);
+    }
+    m_midpoint_idx = i / 2;
 }
 
 

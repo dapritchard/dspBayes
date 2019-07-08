@@ -8,7 +8,10 @@ dsp <- function(dsp_data,
                 tuningPhi   = 0.3,
                 trackProg   = "percent",
                 progQuants  = seq(0.1, 1.0, 0.1),
-                fw_ar_model = FALSE) {
+                fw_ar_model = FALSE,
+                fw_decay    = NULL) {
+
+    stopifnot(! (fw_ar_model && is.null(fw_decay)))
 
     # stub functions for gamma and phi specs
     gamma_hyper_list <- get_gamma_specs(dsp_data, fw_ar_model)
@@ -39,7 +42,8 @@ dsp <- function(dsp_data,
                 u_sex_map         = dsp_data$cov_miss_x_idx,
                 fw_len            = dsp_data$fw_len,
                 n_burn            = 0L,
-                n_samp            = n_samp)
+                n_samp            = n_samp,
+                fw_decay          = fw_decay)
 
     # end timer
     run_time <- proc.time() - start_time

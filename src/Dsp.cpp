@@ -6,6 +6,7 @@
 #include "XGen.h"
 #include "XiGen.h"
 #include "FWPriors.h"
+#include "GammaFWDay.h"
 
 #define DSP_BAYES_N_INTERRUPT_CHECK 1000
 
@@ -48,7 +49,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
                 Rcpp::IntegerVector u_sex_map,
                 int fw_len,
                 int n_burn,
-                int n_samp) {
+                int n_samp,
+                Rcpp::NumericVector fw_decay) {
 
     // initialize global variable in case the value was set to true elsewhere
     g_record_status = false;
@@ -66,6 +68,11 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     // UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
     Rcpp::List placeholder_list;  // FIXME
     FWPriors fw_priors(placeholder_list, n_samp, coefs.n_fw_days(), true);  // TODO: CRITICAL: put real values in
+
+    // inject decay values into FW day coefficients
+    for (GammaGen** curr_coef = coefs.m_fw_coef_start; curr_coef < coefs.m_fw_coef_end; ++curr_coef) {
+        dynamic_cast<GammaFWDay*>(*curr_coef)->inject_decay_vals(fw_decay);
+    }
 
     // begin sampler loop
     for (int s = 0; s < n_samp; s++) {
