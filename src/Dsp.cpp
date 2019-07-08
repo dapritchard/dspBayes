@@ -126,7 +126,6 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
         Rcpp::Rcout << std::endl;
         Rcpp::Rcout << "mu acceptance count:  " << fw_priors.m_mu.m_accept_ctr << std::endl;
         Rcpp::Rcout << "nu acceptance count:  " << fw_priors.m_nu.m_accept_ctr << std::endl;
-        Rcpp::Rcout << "delta acceptance count:  " << fw_priors.m_delta.m_accept_ctr << std::endl;
     }
     if (Rcpp::as<Rcpp::NumericVector>(gamma_specs[0])["type"] > 0.0) {
         Rcpp::Rcout << "gamma 0 acceptance count:  " << dynamic_cast<GammaContMH*>(coefs.m_gamma[0])->m_mh_accept_ctr << std::endl;
@@ -141,6 +140,5 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
                               Rcpp::Named("phi")   = phi.m_vals_rcpp,
                               Rcpp::Named("mday")  = fw_priors.m_mday.m_vals_rcpp,
                               Rcpp::Named("mu")    = fw_priors.m_mu.m_vals_rcpp,
-                              Rcpp::Named("nu")    = fw_priors.m_nu.m_vals_rcpp,
-                              Rcpp::Named("delta") = fw_priors.m_delta.m_vals_rcpp);
+                              Rcpp::Named("nu")    = fw_priors.m_nu.m_vals_rcpp);
 }
