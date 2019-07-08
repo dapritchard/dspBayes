@@ -23,8 +23,7 @@ Nu::Nu(int n_samp, bool record_status, double proposal_dispersion) :
 // update the value of `m_nu_val` using a Metropolis step
 void Nu::sample(const CoefGen& coefs,
                 const MDay& mday,
-                const Mu& mu,
-                const Delta& delta) {
+                const Mu& mu) {
 
     // sample the proposal value for Metropolis step.  TODO: generalize proposal function
     const double proposal_val     = ProposalFcns::abs_unif(*m_vals, m_prp_disp);
@@ -32,7 +31,7 @@ void Nu::sample(const CoefGen& coefs,
 
     // calculate `log(r)` where `r` is the acceptance ratio for the Metropolis
     // step
-    double log_r = calc_log_r(coefs, mday, mu, delta, proposal_val, log_proposal_val);
+    double log_r = calc_log_r(coefs, mday, mu, proposal_val, log_proposal_val);
 
     // sample the updated value by either accepting the proposal value or by
     // keeping the current value
@@ -58,11 +57,10 @@ void Nu::sample(const CoefGen& coefs,
 double Nu::calc_log_r(const CoefGen& coefs,
                       const MDay& mday,
                       const Mu& mu,
-                      const Delta& delta,
                       double proposal_val,
                       double log_proposal_val) const {
 
-    return calc_log_lik_gamma_term(coefs, mday, mu, delta, proposal_val, log_proposal_val)
+    return calc_log_lik_gamma_term(coefs, mday, mu, proposal_val, log_proposal_val)
         + calc_log_lik_nu_term(proposal_val, log_proposal_val);
 }
 
@@ -89,22 +87,20 @@ double Nu::calc_log_r(const CoefGen& coefs,
 //
 //         + log(GammaFn(m_nu_val))
 //
-//         + (proposal_val - m_nu_val) * (log(gamma_k) - log(delta^{|k-m|}) - (gamma_k / (delta^{|k-m|}))).
+//         + (proposal_val - m_nu_val) * (log(gamma_k) - log(delta^{|k-m|} * mu) - (gamma_k / (delta^{|k-m|} * mu))).
 //
-// Additionally, we note that terms not indexed by `k` can be factored out of
-// each term in the sum for efficiency.
+// Additionally, note that terms not indexed by `k` can be factored out of each
+// term in the sum for efficiency (i.e. all but the last term).
 
 double Nu::calc_log_lik_gamma_term(const CoefGen& coefs,
                                    const MDay& mday,
                                    const Mu& mu,
-                                   const Delta& delta,
                                    double proposal_val,
                                    double log_proposal_val) const {
 
     // extract priors for convenience
-    const double mday_val  = mday.val();
-    const double mu_val    = mu.val();
-    const double delta_val = delta.val();
+    const double mday_val = mday.val();
+    const double mu_val   = mu.val();
 
     // used to collect the sum log-likelihood ratio of the individual gamma
     // terms (not including the terms that aren't indexed by the sum)
@@ -120,19 +116,14 @@ double Nu::calc_log_lik_gamma_term(const CoefGen& coefs,
         if (coefs.m_gamma[k]->is_fw_day()) {
 
             // current FW day index and coefficient value
-            int curr_day_idx     = dynamic_cast<GammaFWDay*>(coefs.m_gamma[k])->m_day_idx;
             double curr_beta_val = coefs.m_gamma[k]->m_beta_val;
             double curr_gam_val  = coefs.m_gamma[k]->m_gam_val;
-
-            // calculate `delta^{|k-m|} * mu`
-            double day_dist          = abs(curr_day_idx - mday_val);
-            double delta_pow         = pow(delta_val, day_dist);
-            double delta_pow_prod_mu = delta_pow * mu_val;
+            double decay_val     = dynamic_cast<GammaFWDay*>(coefs.m_gamma[k])->decay(mday_val);
 
             // calculate terms in the sum
             double term_a       = curr_beta_val;
-            double term_b       = std::log(delta_pow_prod_mu);
-            double term_c       = curr_gam_val / delta_pow_prod_mu;
+            double term_b       = std::log(decay_val * mu_val);
+            double term_c       = curr_gam_val / (decay_val * mu_val);
 
             sum_log_lik += term_a - term_b - term_c;
             K += 1;

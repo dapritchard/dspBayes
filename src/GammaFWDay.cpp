@@ -108,13 +108,13 @@ inline double GammaFWDay::get_log_r(const WGen& W,
 
 double GammaFWDay::get_gam_log_lik(double proposal_beta,
                                    double proposal_gam,
-                                   FWPriors fw_priors) {
+                                   const FWPriors& fw_priors) const {
 
     // extract priors for convenience
     double mday_val  = fw_priors.m_mday.val();
     double mu_val    = fw_priors.m_mu.val();
     double nu_val    = fw_priors.m_nu.val();
-    double decay_val = decay(fw_priors.m_mday);
+    double decay_val = decay(mday_val);
 
     // calculate `(nu - 1)(log(proposal_gam) - log(current_gam))`
     double term1 = (nu_val - 1) * (proposal_beta - m_beta_val);
