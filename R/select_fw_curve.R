@@ -8,35 +8,40 @@ dskewnorm <- function(x, mu = 0, sigma = 1, shape = 0) {
 
 # calculate the density function for a scaled version of the skew normal
 # distribution C * f(x), such that C is chosen so that `max_x { C * f(x) } = 1`
-standardized_dskewnorm <- function(x, mu = 0, sigma = 1, shape = 0) {
-    normalizing_const <- find_skewnorn_mode(mu, sigma, shape)
-    dskewnorm(x, mu, sigma, shape) / normalizing_const
+standardized_dskewnorm <- function(x, sigma = 1, shape = 0) {
+    mode_info <- find_skewnorn_mode(sigma, shape)
+    # sometimes the mode can't be found
+    if (is.atomic(mode_info)) {
+        return(rep(0, length(x)))
+    }
+    normalizing_const <- mode_info$objective
+    shift_const <- mode_info$maximum
+    dskewnorm(x + shift_const, 0, sigma, shape) / normalizing_const
 }
 
 
 # find the maximum value of the skewnorm density function for the specified
 # parameters
-find_skewnorn_mode <- function(mu = 0, sigma = 1, shape = 0) {
-    f <- function(x) dskewnorm(x, mu, sigma, shape)
+find_skewnorn_mode <- function(sigma = 1, shape = 0) {
+    f <- function(x) dskewnorm(x, 0, sigma, shape)
     if (sigma <= 0) return(0)
-    optimize(f, c(-10, 10), maximum = TRUE)$objective
+    optimize(f, c(-10, 10), maximum = TRUE)
 }
 
 
 # find the parameters that minimize the squared-error loss between the observed
 # values `y` and the predicted values y, where predicted y is constrained to be
 # follow a standardized skew normal distribution
-find_optimal_params <- function(x, y, starting = c(mu = 0, sigma = 1, shape = 0)) {
+find_optimal_params <- function(x, y, starting = c(sigma = 1, shape = 0)) {
 
     # calculate the objective function for the choice of standardized skew
     # normal distribution using the parameters specified by `params`
     calc_scaled_dskew_objective <- function(params) {
 
-        mu    = params[1L]
-        sigma = params[2L]
-        shape = params[3L]
+        sigma = params[1L]
+        shape = params[2L]
 
-        y_hat <- standardized_dskewnorm(x, mu = mu, sigma = sigma, shape = shape)
+        y_hat <- standardized_dskewnorm(x, sigma = sigma, shape = shape)
         crossprod(y - y_hat)
     }
 
@@ -46,18 +51,17 @@ find_optimal_params <- function(x, y, starting = c(mu = 0, sigma = 1, shape = 0)
 
 # fit the empirical curves provided in `probs_df`, for each triplet of starting
 # values obtained by taking the cartesian product of all the parameter vectors
-grid_search_optimal_params <- function(probs_df, grid_vals_mu, grid_vals_sigma, grid_vals_shape) {
+grid_search_optimal_params <- function(probs_df, grid_vals_sigma, grid_vals_shape) {
 
-    grid_df <- expand.grid(grid_vals_mu, grid_vals_sigma, grid_vals_shape)
+    grid_df <- expand.grid(grid_vals_sigma, grid_vals_shape)
     grid_mat <- as.matrix(grid_df)
 
     opt <- apply(grid_mat, 1, find_optimal_params, x = probs_df$x, y = probs_df$y)
     opt_df <- tibble::as_tibble(purrr::transpose(opt))
 
     tibble::tibble(
-                grid_vals_mu    = grid_df[, 1L],
-                grid_vals_sigma = grid_df[, 2L],
-                grid_vals_shape = grid_df[, 3L],
+                grid_vals_sigma = grid_df[, 1L],
+                grid_vals_shape = grid_df[, 2L],
                 convergence     = (unlist(opt_df$convergence) == 0),
                 objective       = unlist(opt_df$value),
                 n_iter          = opt_df$counts,
