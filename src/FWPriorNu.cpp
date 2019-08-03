@@ -9,10 +9,10 @@
 
 Nu::Nu(int n_samp, bool record_status, double proposal_dispersion) :
     MHCont(n_samp, record_status, proposal_dispersion),
-    m_alpha_0_minus_1 {0.1},
-    m_beta_0          {0.1},
-    m_nu_val          {2.0},
-    m_log_nu_val      {std::log(2.0)}
+    m_alpha_0_minus_1 {(25.0 / 8.0) - 1.0},
+    m_beta_0          {1.0 / 8.0},
+    m_nu_val          {25.0},
+    m_log_nu_val      {std::log(25.0)}
 {
     *m_vals = m_nu_val;
 }

@@ -135,3 +135,12 @@ plot_probs <- function(prob_list) {
 # points(x, standardized_dskewnorm(x, 0, 1, 4), type = "l", col = "green")
 # points(x, standardized_dskewnorm(x, 0, 1, 5), type = "l", col = "purple")
 # points(x, standardized_dskewnorm(x, 0, 1, 10), type = "l", col = "pink")
+
+
+
+
+# find the value of nu ---------------------------------------------------------
+
+find_probs <- function(decay) {
+    0
+}

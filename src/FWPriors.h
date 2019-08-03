@@ -133,14 +133,14 @@ public:
     // FIXME
     Mu build_mu(const Rcpp::List& fw_prior_specs, int n_samp) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Mu out {Mu(n_samp, true, 0.9)};
+        Mu out {Mu(n_samp, true, 0.2)};
         return out;
     }
 
     // FIXME
     Nu build_nu(const Rcpp::List& fw_prior_specs, int n_samp) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Nu out {Nu(n_samp, true, 25.0)};
+        Nu out {Nu(n_samp, true, 95.0)};
         return out;
     }
 };

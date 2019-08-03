@@ -1,6 +1,6 @@
 get_gamma_specs <- function(dsp_data, fw_ar_model) {
 
-    true_vals <- c(0.11, 0.22, 0.44, 0.22, 0.11)
+    true_vals <- c(0.115, 0.196, 0.288, 0.34, 0.264)
     a_lookup <- true_vals^2
     b_lookup <- true_vals
 
