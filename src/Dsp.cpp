@@ -50,7 +50,8 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
                 int fw_len,
                 int n_burn,
                 int n_samp,
-                Rcpp::NumericVector fw_decay) {
+                Rcpp::NumericVector fw_decay,
+                Rcpp::NumericVector log_mday_priors) {
 
     // initialize global variable in case the value was set to true elsewhere
     g_record_status = false;
@@ -67,7 +68,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
     UProdTau utau(utau_rcpp, tau_coefs);
     // UGen U(u_rcpp, u_miss_info, u_miss_type, u_preg_map, u_sex_map, is_verbose);
     Rcpp::List placeholder_list;  // FIXME
-    FWPriors fw_priors(placeholder_list, n_samp, coefs.n_fw_days(), true);  // TODO: CRITICAL: put real values in
+    FWPriors fw_priors(placeholder_list, log_mday_priors, n_samp, coefs.n_fw_days(), true);  // TODO: CRITICAL: put real values in
 
     // inject decay values into FW day coefficients
     for (GammaGen** curr_coef = coefs.m_fw_coef_start; curr_coef < coefs.m_fw_coef_end; ++curr_coef) {

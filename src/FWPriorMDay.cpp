@@ -12,11 +12,13 @@ int sample_multi_index(std::vector<double> probs);
 
 
 
-MDay::MDay(int n_samp, int n_days_fw, bool record_status) :
-    m_vals_rcpp     {(Rcpp::NumericVector(Rcpp::no_init(record_status ? n_samp : 1)))},
-    m_vals          {(m_vals_rcpp.begin())},
-    m_n_days_fw     {n_days_fw},
-    m_record_status {record_status}
+MDay::MDay(Rcpp::NumericVector log_prior_probs_rcpp, int n_samp, bool record_status):
+    m_vals_rcpp            {(Rcpp::NumericVector(Rcpp::no_init(record_status ? n_samp : 1)))},
+    m_vals                 {(m_vals_rcpp.begin())},
+    m_log_prior_probs_rcpp {log_prior_probs_rcpp},
+    m_log_prior_probs      {(m_log_prior_probs_rcpp.begin())},
+    m_n_days_fw            {static_cast<int>(log_prior_probs_rcpp.size())},
+    m_record_status        {record_status}
 {}
 
 
@@ -36,7 +38,7 @@ void MDay::sample(const CoefGen& coefs,
     // and store the maximum value in `max_mday_log_lik`
     for (int i = 0; i < m_n_days_fw; ++i) {
 
-        mday_log_liks[i] = calc_mday_log_lik(i, coefs, mu, nu);
+        mday_log_liks[i] = calc_mday_log_lik(i, coefs, mu, nu) + m_log_prior_probs[i];
 
         if (mday_log_liks[i] > max_mday_log_lik) {
             max_mday_log_lik = mday_log_liks[i];

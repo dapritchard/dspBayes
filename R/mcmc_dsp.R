@@ -9,7 +9,9 @@ dsp <- function(dsp_data,
                 trackProg   = "percent",
                 progQuants  = seq(0.1, 1.0, 0.1),
                 fw_ar_model = FALSE,
-                fw_decay    = NULL) {
+                fw_decay    = NULL,
+                mday_priors = NULL,
+                noninf_model = FALSE) {
 
     stopifnot(! (fw_ar_model && is.null(fw_decay)))
     # create dummy values to ensure that we don't pass a null in to the C++
@@ -18,8 +20,17 @@ dsp <- function(dsp_data,
         fw_decay = rep(1, (2 * dsp_data$fw_len) - 1)
     }
 
+    # provide default values for the peak intensity days if necessary, and
+    # ensure that the values sum to 1
+    if (is.null(mday_priors)) {
+        mday_priors <- rep(1 / dsp_data$fw_len, dsp_data$fw_len)
+    }
+    else if (sum(mday_priors) != 1) {
+        mday_priors <- mday_priors / sum(mday_priors)
+    }
+
     # stub functions for gamma and phi specs
-    gamma_hyper_list <- get_gamma_specs(dsp_data, fw_ar_model)
+    gamma_hyper_list <- get_gamma_specs(dsp_data, fw_ar_model, noninf_model)
     phi_specs <- get_phi_specs()
 
     # TODO: need to insert a way to add priors for UGen
@@ -48,7 +59,8 @@ dsp <- function(dsp_data,
                 fw_len            = dsp_data$fw_len,
                 n_burn            = 0L,
                 n_samp            = n_samp,
-                fw_decay          = fw_decay)
+                fw_decay          = fw_decay,
+                log_mday_priors   = log(mday_priors))
 
     # end timer
     run_time <- proc.time() - start_time

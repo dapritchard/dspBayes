@@ -21,13 +21,17 @@ public:
     Rcpp::IntegerVector m_vals_rcpp;
     Rcpp::IntegerVector::iterator m_vals;
 
+    // storage for prior probabilities
+    Rcpp::NumericVector m_log_prior_probs_rcpp;
+    Rcpp::NumericVector::iterator m_log_prior_probs;
+
     // number of fertile window days
     int m_n_days_fw;
 
     // tracks whether we wish to save the samples of  to return to the user
     bool m_record_status;
 
-    MDay(int n_samp, int n_days_fw, bool record_status);
+    MDay(Rcpp::NumericVector log_prior_probs_rcpp, int n_samp, bool record_status);
     double val() const { return *m_vals; }
     // double val() const { return 2; }
 
@@ -118,10 +122,10 @@ public:
     Mu m_mu;
     Nu m_nu;
 
-    FWPriors(const Rcpp::List& fw_prior_specs, int n_samp, int n_days_fw, bool record_status) :
-        m_mday  {MDay(n_samp, n_days_fw, record_status)},
-        m_mu    {build_mu(fw_prior_specs, n_samp)},
-        m_nu    {build_nu(fw_prior_specs, n_samp)}
+    FWPriors(const Rcpp::List& fw_prior_specs, Rcpp::NumericVector log_mday_priors, int n_samp, int n_days_fw, bool record_status) :
+        m_mday {MDay(log_mday_priors, n_samp, record_status)},
+        m_mu   {build_mu(fw_prior_specs, n_samp)},
+        m_nu   {build_nu(fw_prior_specs, n_samp)}
     {}
 
     void sample(const CoefGen& coefs) { // FIXME
