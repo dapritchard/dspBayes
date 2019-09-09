@@ -50,6 +50,10 @@ void XiGen::sample(const WGen& W, const PhiGen& phi, const UProdBeta& ubeta, con
     // each iteration samples the i-th value of `xi_i` and stores it `m_xi_vals`
     for (int i = 0; i < m_n_subj; ++i) {
 
+        // critical: remove this prior to final version
+        m_vals[i] = 1;
+        continue;
+
         int curr_idx, curr_end;
         double curr_w_sum, curr_sum_exp_ubeta;
 
