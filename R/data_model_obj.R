@@ -21,8 +21,8 @@ derive_model_obj <- function(comb_dat,
     U <- expand_model_rhs(comb_dat, dsp_model)
     #### TODO check if data is collinear or constant within outcome ####
 
-    # obtain intercourse values with missing filled in, and track which values
-    # were originally missing
+    # obtain intercourse values with missing filled in (as having had
+    # intercourse), and track which values were originally missing
     x_vals <- get_intercourse_data_v2(comb_dat, var_nm, fw_incl)
     x_miss <- is.na(comb_dat[[var_nm$sex]]) %>% as.integer
 

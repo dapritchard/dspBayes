@@ -97,11 +97,12 @@
 #'     we want to specify days 13 through 17 as belonging to the fertile window,
 #'     then this can be done using e.g. the argument \code{13:17}.
 #'
-#' @param use_na One of either \code{"none"} or \code{"sex"}.  If \code{"none"}
-#'     then observations with missing data are removed from the model.  If
-#'     \code{"sex"} then observations with missing intercourse data are included
-#'     in the model conditional on no other data missing in the observation.
-#'     See \emph{Data Processing Steps} for more details.  TODO: update
+#' @param use_na One of either \code{"none"} or \code{"intercourse"}.  If
+#'     \code{"none"} then observations with missing data are removed from the
+#'     model.  If \code{"intercourse"} then observations with missing intercourse
+#'     data are included in the model conditional on no other data missing in the
+#'     observation.  See \emph{Data Processing Steps} for more details.  TODO:
+#'     update
 #'
 #' @param req_min_days A single nonnegative numeric value specifying a minimum
 #'     number of day-specific observations in the data for a given cycle which

@@ -124,6 +124,11 @@ double GammaContMH::get_w_log_lik(const WGen& W,
         // if intercourse did not occur on this day then `W` is non-random and
         // the log ratio is 0
         if (! X[i]) {
+            // advance indexes into W if necessary before continuing
+            if (*w_days_idx == i) {
+                ++w_days_idx;
+                ++w_vals;
+            }
             continue;
         }
 
@@ -148,8 +153,8 @@ double GammaContMH::get_w_log_lik(const WGen& W,
 
         if (*w_days_idx == i) {
             term1 = *w_vals * m_Uh[i] * beta_diff;
-            ++w_vals;
             ++w_days_idx;
+            ++w_vals;
         }
         else {
             term1 = 0.0;

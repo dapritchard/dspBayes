@@ -1,7 +1,7 @@
 strip_days <- function(comb_dat, var_nm, fw_incl, use_na) {
 
 
-    if (! ((use_na == "sex") || (use_na == "all"))) {
+    if (! ((use_na == "intercourse") || (use_na == "all"))) {
         sex_miss_bool <- vector("logical", nrow(comb_dat))
     }
     else {
@@ -59,7 +59,9 @@ strip_days <- function(comb_dat, var_nm, fw_incl, use_na) {
 
     # data where any sex occured, or else we need to keep the day because there
     # were missing covariates or it was in a cycle with missing intercourse
-    comb_dat <- comb_dat[sex_yes_bool | sex_miss_bool | covs_miss_bool, ]
+    # TODO: is it correct to keep rows that have missing covariates even though we know that sex didn't occur on that day?  This code was originally there, but I commented it out because it seems wrong
+    comb_dat <- comb_dat[sex_yes_bool | sex_miss_bool, ]
+    # comb_dat <- comb_dat[sex_yes_bool | sex_miss_bool | covs_miss_bool, ]
 
     # list(comb_dat         = comb_dat,
     #      miss_sex_cyc_idx = miss_sex_cyc_idx,

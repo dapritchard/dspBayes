@@ -32,9 +32,9 @@ get_gamma_specs <- function(dsp_data, fw_ar_model, noninf_model) {
     for (i in seq_len(ncol(dsp_data$U))) {
         gamma_hyper_list[[i]] <- c(type     = 1,
                                    h        = i - 1,
-                                   hyp_a    = a_lookup[i],
-                                   hyp_b    = b_lookup[i],
-                                   hyp_p    = 0,
+                                   hyp_a    = `if`(i <= length(a_lookup), a_lookup[i], 1),
+                                   hyp_b    = `if`(i <= length(b_lookup), b_lookup[i], 1),
+                                   hyp_p    = `if`(i <= length(b_lookup), 0, 0.5),
                                    # hyp_a    = 1,
                                    # hyp_b    = 1,
                                    # hyp_p    = 0.5,
@@ -44,7 +44,7 @@ get_gamma_specs <- function(dsp_data, fw_ar_model, noninf_model) {
                                    mh_delta = c(mh_delta_vals, (rep(0.5, 20)))[i])
     }
 
-    if (fw_ar_model) {       # FIXME: hardcoded number of FW days!!
+    if (fw_ar_model) {
         for (i in seq_along(prior_expected_val)) {
             gamma_hyper_list[[i]]["type"] <- 3
             # hyp_p <- 0
