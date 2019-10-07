@@ -104,7 +104,7 @@ dsp_v2 <- function(dsp_data,
 
     # stub functions for gamma and phi specs
     gamma_hyper_list <- get_gamma_specs(dsp_data, fw_ar_model)
-    for (i in 1:5) gamma_hyper_list[[i]]["type"] <- 0
+    for (i in 1:length(gamma_hyper_list)) gamma_hyper_list[[i]]["type"] <- 0
     phi_specs <- get_phi_specs()
 
     # TODO: need to insert a way to add priors for UGen

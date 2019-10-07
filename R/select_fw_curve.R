@@ -109,7 +109,7 @@ plot_probs <- function(prob_list) {
     xlim <- c(min(xvals), max(xvals))
     ylim <- c(0, max(yvals))
 
-    plot(-100, xlim = xlim, ylim = ylim, xlab = "Ovulation Day", ylab = "Standardized probability of conception")
+    plot(-100, xlim = xlim, ylim = ylim, xlab = "Centered Ovulation Day", ylab = "Standardized probability of conception")
     purrr::walk(prob_list, plot_single)
 }
 

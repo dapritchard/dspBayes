@@ -19,7 +19,7 @@ remove_cycs_with_miss <- function(comb_dat, var_nm, fw_incl, use_na) {
     # indices of the variables which must be nonmissing for us to keep the cycle
     # case: use missing for intercourse, but not for covariates
     if (identical(use_na, "intercourse")) {
-        check_idx <- which(colnames(comb_dat) != var_nm$sex)
+        check_idx <- which(!(colnames(comb_dat) %in% c(var_nm$sex, "sex_yester")))
     }
     # case: use missing for covariates, but not for intercourse
     else if (identical(use_na, "covariates")) {
@@ -27,7 +27,7 @@ remove_cycs_with_miss <- function(comb_dat, var_nm, fw_incl, use_na) {
     }
     # case: don't use any cycles with any missing
     else if (identical(use_na, "none")) {
-        check_idx <- seq_along(comb_dat)
+        check_idx <- which(colnames(comb_dat) != "sex_yester")
     }
 
     # container to store the indices of the columns that we wish to keep,
