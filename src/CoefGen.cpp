@@ -73,7 +73,7 @@ void CoefGen::sample(const WGen& W,
         m_vals += m_n_gamma;
     }
 
-    // each iteration updates one gamma_h term and correspondingly udjusts
+    // each iteration updates one gamma_h term and correspondingly adjusts
     // the value of `ubeta`.
     for (int j = 0; j < m_n_gamma; ++j) {
         m_vals[j] = m_gamma[j]->sample(W, xi, ubeta, X, fw_priors);

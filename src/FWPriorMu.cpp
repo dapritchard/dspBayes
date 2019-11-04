@@ -9,8 +9,10 @@
 
 Mu::Mu(int n_samp, bool record_status, double proposal_dispersion) :
     MHCont(n_samp, record_status, proposal_dispersion),
-    m_alpha_0_minus_1 {(0.34 / 0.2) - 1.0},
-    m_beta_0          {1.0 / 0.2},
+    // m_alpha_0_minus_1 {(0.34 / 0.2) - 1.0},
+    // m_beta_0          {1.0 / 0.2},
+    m_alpha_0_minus_1 {(0.34 / 0.25) - 1.0},
+    m_beta_0          {1.0 / 0.25},
     m_mu_val          {0.34},
     m_log_mu_val      {std::log(0.34)}
 {
@@ -106,6 +108,11 @@ double Mu::calc_log_lik_gamma_term(const CoefGen& coefs,
     // each iteration conditionally calculates the log-likelihood ratio portion
     // in the sum of the k-th gamma term and adds it to `sum_term`
     for (int k = 0; k < coefs.m_n_gamma; ++k) {
+
+        // // don't include the term when we are on the peak FW day
+        // if (k == mday_val) {
+        //     continue;
+        // }
 
         // only consider the gamma terms that are part of the fertile window
         // TODO: can we make an interface for gamma params?

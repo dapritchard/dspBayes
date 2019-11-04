@@ -110,6 +110,8 @@ public:
                                    double log_proposal_val) const;
 
     double calc_log_lik_nu_term(double proposal_val, double log_proposal_val) const;
+
+    double val() const { return 0.001; }
 };
 
 
@@ -129,9 +131,9 @@ public:
     {}
 
     void sample(const CoefGen& coefs) { // FIXME
-        m_mday.sample(coefs, m_mu, m_nu);
         m_mu.sample(coefs, m_mday, m_nu);
         m_nu.sample(coefs, m_mday, m_mu);
+        m_mday.sample(coefs, m_mu, m_nu);
     }
 
     // FIXME
@@ -144,7 +146,8 @@ public:
     // FIXME
     Nu build_nu(const Rcpp::List& fw_prior_specs, int n_samp) { // FIXME
         // Rcpp::List mu_specs {fw_prior_specs["mu_specs"]};
-        Nu out {Nu(n_samp, true, 95.0)};
+        // Nu out {Nu(n_samp, true, 95.0)};
+        Nu out {Nu(n_samp, true, 0.9)};
         return out;
     }
 };
