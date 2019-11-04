@@ -1,10 +1,10 @@
+#include <math.h>
 #include "Rcpp.h"
 
 #include "GammaGen.h"
 #include "GammaFWDay.h"
 #include "global_vars.h"
 #include "ProposalFcns.h"
-
 
 
 
@@ -38,9 +38,20 @@ double GammaFWDay::sample(const WGen& W,
                           const int* X,
                           const FWPriors& fw_priors) {
 
+    // if (m_day_idx == fw_priors.m_mday.val()) {
+    //     return fw_priors.m_mu.val();
+    // }
+
     // const double proposal_beta = m_proposal_fcn(m_beta_val, m_mh_delta);
-    const double proposal_beta = (m_beta_val - m_mh_delta) + (2.0 * m_mh_delta * R::unif_rand());
-    const double proposal_gam  = exp(proposal_beta);
+    double proposal_beta = (m_beta_val - m_mh_delta) + (2.0 * m_mh_delta * R::unif_rand());
+    double proposal_gam  = exp(proposal_beta);
+
+    // Winsorize small gamma coefficients, too small of values can cause
+    // numerical issues
+    if ((proposal_gam < 0.0001) || isnan(proposal_gam)) {
+        proposal_gam = 0.0001;
+        proposal_beta = log(proposal_gam);
+    }
 
     // calculate the log acceptance ratio
     const double log_r = get_log_r(W, xi, ubeta, X, proposal_beta, proposal_gam, fw_priors);
@@ -81,6 +92,11 @@ inline double GammaFWDay::get_log_r(const WGen& W,
                                     double proposal_beta,
                                     double proposal_gam,
                                     const FWPriors& fw_priors) {
+
+    // std::cout << get_w_log_lik(W, xi, ubeta, X, proposal_beta)
+    //           << "        "
+    //           << get_gam_log_lik(proposal_beta, proposal_gam, fw_priors)
+    //           << "\n";
 
     return get_w_log_lik(W, xi, ubeta, X, proposal_beta)
         + get_gam_log_lik(proposal_beta, proposal_gam, fw_priors);

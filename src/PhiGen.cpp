@@ -40,10 +40,11 @@ void PhiGen::sample(const XiGen& xi) {
     // step
     log_r = calc_log_r(xi, proposal_val);
 
-    // // sample the updated value of phi by either accepting the proposal value or
-    // // by keeping the current value
-    // new_val = update_phi(log_r, proposal_val);
-    new_val = 1;  // critical: remove this prior to final version
+    // sample the updated value of phi by either accepting the proposal value or
+    // by keeping the current value
+    new_val = update_phi(log_r, proposal_val);
+
+    // new_val = 1;  // critical: remove this prior to final version
 
     // save the value of the new sample.  If we are recording samples then
     // increment `m_vals` so that we don't overwrite the previous sample.

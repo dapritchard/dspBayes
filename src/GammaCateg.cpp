@@ -1,3 +1,4 @@
+#include <math.h>
 #include "Rcpp.h"
 
 // TODO: missing header files
@@ -45,6 +46,14 @@ double GammaCateg::sample(const WGen& W,
     // sample a new value for gamma_h and update beta_h
     m_gam_val = sample_gamma(a_tilde, b_tilde, p_tilde);
     m_beta_val = log(m_gam_val);
+
+    // TODO: can we be more sophisticated about doing this???
+    // Winsorize small gamma coefficients, too small of values can cause
+    // numerical issues
+    if ((m_gam_val < 0.0001) || isnan(m_gam_val)) {
+        m_gam_val = 0.0001;
+        m_beta_val = log(m_gam_val);
+    }
 
     // change the values of the data pointed to by `ubeta` to take the values of
     // `U * beta` using the newly sampled value of `gamma_h`
