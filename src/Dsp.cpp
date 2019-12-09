@@ -90,6 +90,7 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
         ubeta.update_exp();  // <--- TODO: let's put this inside sample()
         if (coefs.n_fw_days() > 0) {
             fw_priors.sample(coefs);
+            fw_priors.m_mu.sample(W, xi, ubeta, X.vals(), coefs, fw_priors.m_mday, fw_priors.m_nu);
         }
 
         // update phi, the variance parameter for xi

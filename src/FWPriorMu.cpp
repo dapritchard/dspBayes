@@ -24,7 +24,11 @@ Mu::Mu(int n_samp, bool record_status, double proposal_dispersion) :
 
 
 // update the value of `m_mu_val` using a Metropolis step
-void Mu::sample(const CoefGen& coefs,
+void Mu::sample(const WGen& W,
+                const XiGen& xi,
+                const UProdBeta& ubeta,
+                const int* X,
+                const CoefGen& coefs,
                 const MDay& mday,
                 const Nu& nu) {
 
@@ -34,7 +38,7 @@ void Mu::sample(const CoefGen& coefs,
 
     // calculate `log(r)` where `r` is the acceptance ratio for the Metropolis
     // step
-    double log_r = calc_log_r(coefs, mday, nu, proposal_val, log_proposal_val);
+    double log_r = calc_log_r(W, xi, ubeta, X, coefs, mday, nu, proposal_val, log_proposal_val);
 
     // sample the updated value by either accepting the proposal value or by
     // keeping the current value
@@ -57,13 +61,27 @@ void Mu::sample(const CoefGen& coefs,
 
 // calculate the value of `log(r)`, where `r` is the value such that the
 // proposal value is accepted with probability `min(1,r)`
-double Mu::calc_log_r(const CoefGen& coefs,
+double Mu::calc_log_r(const WGen& W,
+                      const XiGen& xi,
+                      const UProdBeta& ubeta,
+                      const int* X,
+                      const CoefGen& coefs,
                       const MDay& mday,
                       const Nu& nu,
                       double proposal_val,
                       double log_proposal_val) const {
 
-    return calc_log_lik_gamma_term(coefs, mday, nu, proposal_val, log_proposal_val)
+    // find the peak-intensity day
+    // FIXME: this dynamic_cast stuff needs to go
+    GammaGen** curr_coef = coefs.m_fw_coef_start;
+    for (; curr_coef != coefs.m_fw_coef_end; curr_coef++) {
+        if (dynamic_cast<GammaFWDay*>(*curr_coef)->m_day_idx == mday.val()) {
+            break;
+        }
+    }
+
+    return dynamic_cast<GammaFWDay*>(*curr_coef)->get_w_log_lik(W, xi, ubeta, X, proposal_val)
+        + calc_log_lik_gamma_term(coefs, mday, nu, proposal_val, log_proposal_val)
         + calc_log_lik_mu_term(proposal_val, log_proposal_val);
 }
 

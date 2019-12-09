@@ -61,9 +61,17 @@ public:
     double m_log_mu_val;
 
     Mu(int n_samp, bool record_status, double proposal_dispersion);
-    void sample(const CoefGen& coefs, const MDay& mday, const Nu& nu);
+    void sample(const WGen& W,
+                const XiGen& xi,
+                const UProdBeta& ubeta,
+                const int* X,
+                const CoefGen& coefs, const MDay& mday, const Nu& nu);
 
-    double calc_log_r(const CoefGen& coefs,
+    double calc_log_r(const WGen& W,
+                      const XiGen& xi,
+                      const UProdBeta& ubeta,
+                      const int* X,
+                      const CoefGen& coefs,
                       const MDay& mday,
                       const Nu& nu,
                       double proposal_val,
@@ -111,7 +119,7 @@ public:
 
     double calc_log_lik_nu_term(double proposal_val, double log_proposal_val) const;
 
-    double val() const { return 0.001; }
+    // double val() const { return 0.001; }
 };
 
 
@@ -131,7 +139,7 @@ public:
     {}
 
     void sample(const CoefGen& coefs) { // FIXME
-        m_mu.sample(coefs, m_mday, m_nu);
+        // m_mu.sample(coefs, m_mday, m_nu);
         m_nu.sample(coefs, m_mday, m_mu);
         m_mday.sample(coefs, m_mu, m_nu);
     }
