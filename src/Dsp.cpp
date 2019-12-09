@@ -86,12 +86,12 @@ Rcpp::List dsp_(Rcpp::NumericMatrix u_rcpp,
 
         // update the regression coefficients gamma and psi, and update the
         // resulting values of the `U * beta`
-        coefs.sample(W, xi, ubeta, X.vals(), fw_priors);
-        ubeta.update_exp();  // <--- TODO: let's put this inside sample()
         if (coefs.n_fw_days() > 0) {
             fw_priors.sample(coefs);
             fw_priors.m_mu.sample(W, xi, ubeta, X.vals(), coefs, fw_priors.m_mday, fw_priors.m_nu);
         }
+        coefs.sample(W, xi, ubeta, X.vals(), fw_priors);
+        ubeta.update_exp();  // <--- TODO: let's put this inside sample()
 
         // update phi, the variance parameter for xi
         phi.sample(xi);

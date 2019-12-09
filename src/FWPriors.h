@@ -63,7 +63,7 @@ public:
     Mu(int n_samp, bool record_status, double proposal_dispersion);
     void sample(const WGen& W,
                 const XiGen& xi,
-                const UProdBeta& ubeta,
+                UProdBeta& ubeta,
                 const int* X,
                 const CoefGen& coefs, const MDay& mday, const Nu& nu);
 

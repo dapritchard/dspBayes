@@ -38,9 +38,9 @@ double GammaFWDay::sample(const WGen& W,
                           const int* X,
                           const FWPriors& fw_priors) {
 
-    // if (m_day_idx == fw_priors.m_mday.val()) {
-    //     return fw_priors.m_mu.val();
-    // }
+    if (m_day_idx == fw_priors.m_mday.val()) {
+        return m_gam_val;
+    }
 
     // const double proposal_beta = m_proposal_fcn(m_beta_val, m_mh_delta);
     double proposal_beta = (m_beta_val - m_mh_delta) + (2.0 * m_mh_delta * R::unif_rand());

@@ -26,7 +26,7 @@ Mu::Mu(int n_samp, bool record_status, double proposal_dispersion) :
 // update the value of `m_mu_val` using a Metropolis step
 void Mu::sample(const WGen& W,
                 const XiGen& xi,
-                const UProdBeta& ubeta,
+                UProdBeta& ubeta,
                 const int* X,
                 const CoefGen& coefs,
                 const MDay& mday,
@@ -44,8 +44,28 @@ void Mu::sample(const WGen& W,
     // keeping the current value
     double new_val = update(log_r, proposal_val);
     if (new_val != m_mu_val) {
+
         m_mu_val = new_val;
         m_log_mu_val = std::log(m_mu_val);
+
+        // find the peak-intensity day
+        // FIXME: this dynamic_cast stuff needs to go.  Also used in a later routine
+        GammaGen** curr_gamma_ptr = coefs.m_fw_coef_start;
+        for (; curr_gamma_ptr != coefs.m_fw_coef_end; curr_gamma_ptr++) {
+            if (dynamic_cast<GammaFWDay*>(*curr_gamma_ptr)->m_day_idx == mday.val()) {
+                break;
+            }
+        }
+        GammaFWDay* gamma_mu = dynamic_cast<GammaFWDay*>(*curr_gamma_ptr);
+
+        // update `U * beta` and `exp(U * beta)` based upon accepting the
+        // proposal value
+        ubeta.update(gamma_mu->m_Uh, m_mu_val, m_log_mu_val);
+
+        // update member variables to based upon accepting the proposal value
+        gamma_mu->m_beta_val = m_mu_val;
+        gamma_mu->m_gam_val = m_log_mu_val;
+        ++gamma_mu->m_mh_accept_ctr;
     }
 
     // save the value of the new sample.  If we are recording samples then
